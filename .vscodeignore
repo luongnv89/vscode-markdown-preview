@@ -1,5 +1,6 @@
 .vscode/**
 .vscode-test/**
+.claude/**
 src/**
 webview/**
 test/**
@@ -11,3 +12,6 @@ webpack.config.js
 **/*.ts
 **/*.map
 .eslintrc.json
+install.sh
+test-sample.md
+package-lock.json

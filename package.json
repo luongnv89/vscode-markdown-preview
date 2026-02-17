@@ -4,6 +4,11 @@
   "description": "Clean, minimal markdown preview inspired by Zed editor with syntax highlighting, mermaid diagrams, math rendering, and interactive features",
   "version": "0.1.0",
   "publisher": "montimage",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/luongnv89/vscode-markdown-preview"
+  },
   "engines": {
     "vscode": "^1.85.0"
   },
@@ -102,6 +107,7 @@
     "@types/markdown-it": "^14.1.2",
     "@types/node": "^20.11.0",
     "@types/vscode": "^1.85.0",
+    "copy-webpack-plugin": "^13.0.1",
     "css-loader": "^6.9.0",
     "mini-css-extract-plugin": "^2.7.7",
     "style-loader": "^3.3.4",

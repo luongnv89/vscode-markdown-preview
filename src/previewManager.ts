@@ -43,9 +43,6 @@ export class PreviewManager {
         retainContextWhenHidden: true,
         localResourceRoots: [
           vscode.Uri.joinPath(this.extensionUri, 'dist', 'webview'),
-          vscode.Uri.joinPath(this.extensionUri, 'node_modules', 'katex', 'dist'),
-          vscode.Uri.joinPath(this.extensionUri, 'node_modules', 'highlight.js', 'styles'),
-          vscode.Uri.joinPath(this.extensionUri, 'node_modules', 'mermaid', 'dist'),
           // Allow access to workspace folders for local images
           ...(vscode.workspace.workspaceFolders?.map((f) => f.uri) || []),
           // Allow access to the document's directory
@@ -226,9 +223,7 @@ export class PreviewManager {
   private getWebviewHtml(webview: vscode.Webview): string {
     const nonce = getNonce();
 
-    const webviewDistUri = webview.asWebviewUri(
-      vscode.Uri.joinPath(this.extensionUri, 'dist', 'webview')
-    );
+    const vendorUri = vscode.Uri.joinPath(this.extensionUri, 'dist', 'webview', 'vendor');
     const mainScript = webview.asWebviewUri(
       vscode.Uri.joinPath(this.extensionUri, 'dist', 'webview', 'main.js')
     );
@@ -236,16 +231,16 @@ export class PreviewManager {
       vscode.Uri.joinPath(this.extensionUri, 'dist', 'webview', 'main.css')
     );
     const katexStyle = webview.asWebviewUri(
-      vscode.Uri.joinPath(this.extensionUri, 'node_modules', 'katex', 'dist', 'katex.min.css')
+      vscode.Uri.joinPath(vendorUri, 'katex.min.css')
     );
     const katexScript = webview.asWebviewUri(
-      vscode.Uri.joinPath(this.extensionUri, 'node_modules', 'katex', 'dist', 'katex.min.js')
+      vscode.Uri.joinPath(vendorUri, 'katex.min.js')
     );
     const hljsStyle = webview.asWebviewUri(
-      vscode.Uri.joinPath(this.extensionUri, 'node_modules', 'highlight.js', 'styles', 'github-dark.min.css')
+      vscode.Uri.joinPath(vendorUri, 'github-dark.min.css')
     );
     const mermaidScript = webview.asWebviewUri(
-      vscode.Uri.joinPath(this.extensionUri, 'node_modules', 'mermaid', 'dist', 'mermaid.min.js')
+      vscode.Uri.joinPath(vendorUri, 'mermaid.min.js')
     );
 
     return `<!DOCTYPE html>

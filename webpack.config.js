@@ -3,6 +3,7 @@
 
 const path = require('path');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
+const CopyPlugin = require('copy-webpack-plugin');
 
 /** @type {import('webpack').Configuration} */
 const extensionConfig = {
@@ -50,9 +51,6 @@ const webviewConfig = {
   output: {
     path: path.resolve(__dirname, 'dist', 'webview'),
     filename: 'main.js',
-    // Dynamic imports need to know the base URL at runtime
-    // The extension will set window.__webpack_public_path__ before loading main.js
-    publicPath: '',
   },
   resolve: {
     extensions: ['.ts', '.js'],
@@ -80,6 +78,16 @@ const webviewConfig = {
   plugins: [
     new MiniCssExtractPlugin({
       filename: 'main.css',
+    }),
+    // Copy vendor runtime files needed by the webview (loaded via script/link tags)
+    new CopyPlugin({
+      patterns: [
+        { from: 'node_modules/katex/dist/katex.min.css', to: 'vendor/' },
+        { from: 'node_modules/katex/dist/katex.min.js', to: 'vendor/' },
+        { from: 'node_modules/katex/dist/fonts', to: 'vendor/fonts' },
+        { from: 'node_modules/mermaid/dist/mermaid.min.js', to: 'vendor/' },
+        { from: 'node_modules/highlight.js/styles/github-dark.min.css', to: 'vendor/' },
+      ],
     }),
   ],
   devtool: 'nosources-source-map',
