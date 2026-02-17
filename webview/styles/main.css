@@ -1,0 +1,91 @@
+/* Markdown Preview Pro - Zed-inspired base styles */
+:root {
+  --bg-primary: var(--vscode-editor-background);
+  --fg-primary: var(--vscode-editor-foreground);
+  --fg-muted: var(--vscode-descriptionForeground);
+  --border-color: var(--vscode-editorWidget-border, rgba(127, 127, 127, 0.2));
+  --accent-color: var(--vscode-editorCursor-foreground, #528bff);
+  --code-bg: var(--vscode-textCodeBlock-background, rgba(127, 127, 127, 0.1));
+  --link-color: var(--vscode-textLink-foreground, #3794ff);
+  --link-hover: var(--vscode-textLink-activeForeground, #3794ff);
+  --selection-bg: var(--vscode-editor-selectionBackground, rgba(38, 79, 120, 0.5));
+  --hover-bg: var(--vscode-list-hoverBackground, rgba(127, 127, 127, 0.1));
+  --panel-bg: var(--vscode-panel-background, var(--bg-primary));
+  --input-bg: var(--vscode-input-background, rgba(127, 127, 127, 0.1));
+  --button-bg: var(--vscode-button-background, #0e639c);
+  --button-fg: var(--vscode-button-foreground, #ffffff);
+  --button-hover-bg: var(--vscode-button-hoverBackground, #1177bb);
+
+  /* Spacing */
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 16px;
+  --spacing-lg: 24px;
+  --spacing-xl: 32px;
+
+  /* Typography */
+  --font-size-base: 15px;
+  --line-height: 1.7;
+  --max-width: 860px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: auto;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans', Helvetica, Arial, sans-serif;
+  font-size: var(--font-size-base);
+  line-height: var(--line-height);
+  color: var(--fg-primary);
+  background-color: var(--bg-primary);
+  padding: var(--spacing-lg) var(--spacing-xl);
+  margin: 0;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+#preview-content {
+  max-width: var(--max-width);
+  margin: 0 auto;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+/* Selection */
+::selection {
+  background-color: var(--selection-bg);
+}
+
+/* Scrollbar - Zed-inspired minimal */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--vscode-scrollbarSlider-background, rgba(127, 127, 127, 0.3));
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--vscode-scrollbarSlider-hoverBackground, rgba(127, 127, 127, 0.5));
+}
+
+::-webkit-scrollbar-thumb:active {
+  background: var(--vscode-scrollbarSlider-activeBackground, rgba(127, 127, 127, 0.7));
+}
+
+/* Focus styles */
+:focus-visible {
+  outline: 2px solid var(--accent-color);
+  outline-offset: 2px;
+}

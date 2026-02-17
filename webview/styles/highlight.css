@@ -1,0 +1,59 @@
+/* Markdown Preview Pro - Active block highlight (Zed-style) */
+
+/* Active block left border indicator */
+.active-block {
+  position: relative;
+}
+
+.active-block::before {
+  content: '';
+  position: absolute;
+  left: -20px;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background-color: var(--accent-color);
+  border-radius: 2px;
+  transition: background-color 0.2s ease, opacity 0.2s ease;
+  opacity: 0.7;
+}
+
+.active-block:hover::before {
+  opacity: 1;
+}
+
+/* Hover effect on blocks */
+#preview-content > *:hover {
+  transition: background-color 0.15s ease;
+}
+
+/* Smooth cursor for double-click navigation hint */
+#preview-content > *[data-line] {
+  cursor: default;
+}
+
+#preview-content > *[data-line]:hover {
+  cursor: text;
+}
+
+/* Print styles */
+@media print {
+  .active-block::before {
+    display: none;
+  }
+
+  .copy-button {
+    display: none !important;
+  }
+
+  .code-block-header {
+    background: none;
+    border-bottom: 1px solid #ccc;
+  }
+
+  body {
+    padding: 0;
+    background: white;
+    color: black;
+  }
+}

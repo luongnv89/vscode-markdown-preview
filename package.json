@@ -1,0 +1,120 @@
+{
+  "name": "markdown-preview-pro",
+  "displayName": "Markdown Preview Pro",
+  "description": "Clean, minimal markdown preview inspired by Zed editor with syntax highlighting, mermaid diagrams, math rendering, and interactive features",
+  "version": "0.1.0",
+  "publisher": "montimage",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Programming Languages",
+    "Visualization"
+  ],
+  "keywords": [
+    "markdown",
+    "preview",
+    "mermaid",
+    "katex",
+    "math",
+    "zed"
+  ],
+  "icon": "media/icon.png",
+  "activationEvents": [
+    "onLanguage:markdown"
+  ],
+  "main": "./dist/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "markdownPreviewPro.showPreview",
+        "title": "Markdown Preview Pro: Open Preview",
+        "icon": "$(open-preview)"
+      },
+      {
+        "command": "markdownPreviewPro.showPreviewToSide",
+        "title": "Markdown Preview Pro: Open Preview to Side",
+        "icon": "$(open-preview)"
+      }
+    ],
+    "keybindings": [
+      {
+        "command": "markdownPreviewPro.showPreviewToSide",
+        "key": "ctrl+shift+v",
+        "mac": "cmd+shift+v",
+        "when": "editorLangId == markdown"
+      }
+    ],
+    "menus": {
+      "editor/title": [
+        {
+          "when": "resourceLangId == markdown",
+          "command": "markdownPreviewPro.showPreviewToSide",
+          "group": "navigation"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "Markdown Preview Pro",
+      "properties": {
+        "markdownPreviewPro.scrollSync": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable bidirectional scroll synchronization between editor and preview"
+        },
+        "markdownPreviewPro.enableMermaid": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable Mermaid diagram rendering"
+        },
+        "markdownPreviewPro.enableKatex": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable KaTeX math rendering"
+        },
+        "markdownPreviewPro.enableCheckboxes": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable interactive task list checkboxes"
+        },
+        "markdownPreviewPro.typographer": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable smart quotes and typographic replacements"
+        },
+        "markdownPreviewPro.lineBreaks": {
+          "type": "boolean",
+          "default": false,
+          "description": "Convert newlines in paragraphs to <br> tags"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run package",
+    "compile": "webpack",
+    "watch": "webpack --watch",
+    "package": "webpack --mode production --devtool hidden-source-map",
+    "lint": "eslint src --ext ts",
+    "test": "node ./dist/test/runTest.js"
+  },
+  "devDependencies": {
+    "@types/markdown-it": "^14.1.2",
+    "@types/node": "^20.11.0",
+    "@types/vscode": "^1.85.0",
+    "css-loader": "^6.9.0",
+    "mini-css-extract-plugin": "^2.7.7",
+    "style-loader": "^3.3.4",
+    "ts-loader": "^9.5.1",
+    "typescript": "^5.3.3",
+    "webpack": "^5.89.0",
+    "webpack-cli": "^5.1.4"
+  },
+  "dependencies": {
+    "highlight.js": "^11.9.0",
+    "katex": "^0.16.9",
+    "markdown-it": "^14.0.0",
+    "markdown-it-task-lists": "^2.1.1",
+    "mermaid": "^10.6.1"
+  }
+}

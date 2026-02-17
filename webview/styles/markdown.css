@@ -1,0 +1,289 @@
+/* Markdown Preview Pro - Zed-inspired markdown element styles */
+
+/* Headings - Clean hierarchy like Zed */
+h1, h2, h3, h4, h5, h6 {
+  font-weight: 600;
+  line-height: 1.25;
+  margin-top: 1.5em;
+  margin-bottom: 0.5em;
+  color: var(--fg-primary);
+}
+
+h1 {
+  font-size: 2em;
+  padding-bottom: 0.3em;
+  border-bottom: 1px solid var(--border-color);
+}
+
+h2 {
+  font-size: 1.5em;
+  padding-bottom: 0.2em;
+  border-bottom: 1px solid var(--border-color);
+}
+
+h3 {
+  font-size: 1.25em;
+}
+
+h4 {
+  font-size: 1.1em;
+}
+
+h5 {
+  font-size: 1em;
+}
+
+h6 {
+  font-size: 0.85em;
+  color: var(--fg-muted);
+}
+
+/* First heading no top margin */
+#preview-content > h1:first-child,
+#preview-content > h2:first-child,
+#preview-content > h3:first-child {
+  margin-top: 0;
+}
+
+/* Paragraphs */
+p {
+  margin: 0.8em 0;
+}
+
+/* Strong / Bold */
+strong, b {
+  font-weight: 600;
+}
+
+/* Emphasis */
+em, i {
+  font-style: italic;
+}
+
+/* Strikethrough */
+del, s {
+  text-decoration: line-through;
+  opacity: 0.7;
+}
+
+/* Links */
+a {
+  color: var(--link-color);
+  text-decoration: none;
+  transition: color 0.15s ease;
+}
+
+a:hover {
+  color: var(--link-hover);
+  text-decoration: underline;
+}
+
+/* Lists */
+ul, ol {
+  padding-left: 2em;
+  margin: 0.8em 0;
+}
+
+li {
+  margin: 0.25em 0;
+}
+
+li > p {
+  margin: 0.4em 0;
+}
+
+/* Nested lists tighter */
+li ul, li ol {
+  margin: 0.2em 0;
+}
+
+/* Task list */
+li.task-list-item {
+  list-style-type: none;
+  position: relative;
+  margin-left: -1.5em;
+  padding-left: 0;
+}
+
+li.task-list-item input[type="checkbox"] {
+  margin-right: 0.5em;
+  cursor: pointer;
+  accent-color: var(--accent-color);
+  width: 15px;
+  height: 15px;
+  vertical-align: middle;
+  position: relative;
+  top: -1px;
+}
+
+li.task-list-item input[type="checkbox"]:hover {
+  transform: scale(1.1);
+}
+
+/* Blockquotes - Zed-style left accent border */
+blockquote {
+  margin: 1em 0;
+  padding: 0.5em 1em;
+  border-left: 4px solid var(--accent-color);
+  background-color: transparent;
+  color: var(--fg-muted);
+}
+
+blockquote > p:first-child {
+  margin-top: 0;
+}
+
+blockquote > p:last-child {
+  margin-bottom: 0;
+}
+
+blockquote blockquote {
+  border-left-color: var(--border-color);
+}
+
+/* Tables */
+table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 1em 0;
+  font-size: 0.95em;
+}
+
+thead {
+  border-bottom: 2px solid var(--border-color);
+}
+
+th {
+  font-weight: 600;
+  text-align: left;
+  padding: 0.6em 1em;
+  background-color: var(--hover-bg);
+}
+
+td {
+  padding: 0.6em 1em;
+  border-bottom: 1px solid var(--border-color);
+}
+
+/* Alternating row colors like Zed */
+tbody tr:nth-child(odd) {
+  background-color: transparent;
+}
+
+tbody tr:nth-child(even) {
+  background-color: var(--hover-bg);
+}
+
+tbody tr:hover {
+  background-color: var(--hover-bg);
+}
+
+/* Horizontal rule */
+hr {
+  border: none;
+  border-top: 1px solid var(--border-color);
+  margin: 2em 0;
+}
+
+/* Inline code */
+code {
+  font-family: var(--vscode-editor-font-family, 'SF Mono', 'Fira Code', 'Fira Mono', Menlo, Monaco, Consolas, monospace);
+  font-size: 0.88em;
+  background-color: var(--code-bg);
+  padding: 0.15em 0.4em;
+  border-radius: 4px;
+  word-break: break-word;
+}
+
+/* Images */
+img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 6px;
+  margin: 1em 0;
+  display: block;
+}
+
+/* Excalidraw diagrams */
+.excalidraw-container {
+  margin: 1.5em 0;
+  text-align: center;
+}
+
+.excalidraw-diagram {
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  background-color: var(--panel-bg);
+  padding: var(--spacing-sm);
+}
+
+/* Keyboard shortcut */
+kbd {
+  font-family: var(--vscode-editor-font-family, monospace);
+  font-size: 0.85em;
+  background-color: var(--code-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 3px;
+  padding: 0.1em 0.4em;
+  box-shadow: inset 0 -1px 0 var(--border-color);
+}
+
+/* Abbreviation */
+abbr[title] {
+  text-decoration: underline dotted;
+  cursor: help;
+}
+
+/* Definition lists */
+dt {
+  font-weight: 600;
+  margin-top: 1em;
+}
+
+dd {
+  margin-left: 2em;
+  margin-bottom: 0.5em;
+}
+
+/* Superscript / Subscript */
+sup, sub {
+  font-size: 0.75em;
+  line-height: 0;
+  position: relative;
+  vertical-align: baseline;
+}
+
+sup {
+  top: -0.5em;
+}
+
+sub {
+  bottom: -0.25em;
+}
+
+/* Mark / highlight */
+mark {
+  background-color: rgba(255, 213, 0, 0.3);
+  padding: 0.1em 0.2em;
+  border-radius: 2px;
+}
+
+/* Details/Summary */
+details {
+  margin: 1em 0;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  padding: 0.5em 1em;
+}
+
+summary {
+  cursor: pointer;
+  font-weight: 600;
+  padding: 0.3em 0;
+}
+
+details[open] summary {
+  margin-bottom: 0.5em;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 0.5em;
+}

@@ -1,0 +1,105 @@
+/* Markdown Preview Pro - Code block styles */
+
+/* Code block wrapper */
+.code-block-wrapper {
+  position: relative;
+  margin: 1.2em 0;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid var(--border-color);
+  background-color: var(--code-bg);
+}
+
+/* Code block header with language label and copy button */
+.code-block-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 12px;
+  background-color: var(--hover-bg);
+  border-bottom: 1px solid var(--border-color);
+  min-height: 32px;
+}
+
+.code-block-lang {
+  font-family: var(--vscode-editor-font-family, monospace);
+  font-size: 0.75em;
+  color: var(--fg-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 500;
+}
+
+/* Pre element inside wrapper */
+.code-block-wrapper pre {
+  margin: 0;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+}
+
+/* Standalone pre (not wrapped yet) */
+pre {
+  background-color: var(--code-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 1em 1.2em;
+  overflow-x: auto;
+  line-height: 1.5;
+  font-size: 0.9em;
+  margin: 1.2em 0;
+}
+
+pre > code {
+  background: none;
+  padding: 0;
+  border-radius: 0;
+  font-size: inherit;
+  word-break: normal;
+  white-space: pre;
+}
+
+/* Copy button */
+.copy-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 8px;
+  background: transparent;
+  color: var(--fg-muted);
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  opacity: 0;
+  transition: all 0.15s ease;
+  font-size: 12px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.code-block-wrapper:hover .copy-button,
+.code-block-header .copy-button {
+  opacity: 0.6;
+}
+
+.copy-button:hover {
+  opacity: 1 !important;
+  background-color: var(--hover-bg);
+  color: var(--fg-primary);
+}
+
+.copy-button.copied {
+  color: #4caf50;
+  opacity: 1 !important;
+}
+
+.copy-button svg {
+  width: 14px;
+  height: 14px;
+}
+
+/* Syntax highlighting overrides - respect VS Code theme */
+.hljs {
+  background: transparent;
+  color: inherit;
+}

@@ -1,0 +1,74 @@
+/* Markdown Preview Pro - Mermaid diagram styles */
+
+.mermaid-block {
+  margin: 1.5em 0;
+  padding: 1em;
+  text-align: center;
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+  background-color: var(--panel-bg);
+  overflow-x: auto;
+}
+
+.mermaid-rendered {
+  border-color: transparent;
+  background-color: transparent;
+}
+
+.mermaid-rendered svg {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Error state */
+.mermaid-error {
+  color: var(--vscode-errorForeground, #f44747);
+  font-family: var(--vscode-editor-font-family, monospace);
+  font-size: 0.85em;
+  padding: 1em;
+  background-color: var(--vscode-inputValidation-errorBackground, rgba(255, 0, 0, 0.1));
+  border: 1px solid var(--vscode-inputValidation-errorBorder, #f44747);
+  border-radius: 6px;
+  text-align: left;
+  white-space: pre-wrap;
+}
+
+/* Loading animation for mermaid */
+.mermaid-block[data-processed="false"] pre.mermaid {
+  color: var(--fg-muted);
+  font-family: var(--vscode-editor-font-family, monospace);
+  font-size: 0.85em;
+  text-align: left;
+  white-space: pre-wrap;
+  animation: mermaid-pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes mermaid-pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+/* KaTeX styles */
+.katex-inline {
+  font-size: 1em;
+}
+
+.katex-block {
+  margin: 1.2em 0;
+  padding: 1em;
+  text-align: center;
+  overflow-x: auto;
+}
+
+.katex-block .katex-display {
+  margin: 0;
+}
+
+/* KaTeX error */
+.katex-error {
+  color: var(--vscode-errorForeground, #f44747);
+}
