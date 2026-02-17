@@ -1,4 +1,34 @@
+# Dependencies
 node_modules/
+
+# Build output
 dist/
+out/
+
+# Packaged extension
 *.vsix
+
+# VS Code test runner
 .vscode-test/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor directories
+.idea/
+*.swp
+*.swo
+*~
+
+# Environment files
+.env
+.env.local
+
+# Debug logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# TypeScript cache
+*.tsbuildinfo
