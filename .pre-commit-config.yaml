@@ -1,0 +1,47 @@
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.5.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-json
+      - id: check-added-large-files
+
+  - repo: local
+    hooks:
+      - id: prettier
+        name: prettier
+        entry: npx prettier --write --ignore-unknown
+        language: system
+        types: [text]
+        files: \.(ts|json|css|md)$
+        exclude: ^(package-lock\.json|dist/)
+
+      - id: eslint
+        name: eslint
+        entry: npx eslint --fix
+        language: system
+        files: \.(ts)$
+        exclude: ^(dist/|node_modules/)
+
+      - id: typecheck
+        name: typecheck (src)
+        entry: npx tsc --noEmit -p tsconfig.json
+        language: system
+        pass_filenames: false
+        files: ^src/.*\.ts$
+
+      - id: typecheck-webview
+        name: typecheck (webview)
+        entry: npx tsc --noEmit -p tsconfig.webview.json
+        language: system
+        pass_filenames: false
+        files: ^webview/.*\.ts$
+
+      - id: build
+        name: webpack build
+        entry: npm run compile
+        language: system
+        pass_filenames: false
+        stages: [pre-push]

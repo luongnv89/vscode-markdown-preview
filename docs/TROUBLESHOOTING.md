@@ -9,6 +9,7 @@ Common issues and solutions when using or developing Markdown Preview Pro.
 **Symptoms:** The preview panel opens but shows nothing.
 
 **Solutions:**
+
 1. Open the webview DevTools (Command Palette → **Developer: Open Webview Developer Tools**) and check the console for errors
 2. Ensure the extension is built: run `npm run compile`
 3. Reload the VS Code window: `Cmd+Shift+P` → **Developer: Reload Window**
@@ -18,6 +19,7 @@ Common issues and solutions when using or developing Markdown Preview Pro.
 **Symptoms:** Edits to the markdown file are not reflected in the preview.
 
 **Solutions:**
+
 1. Make sure `npm run watch` is running if you're developing
 2. Check that the preview is showing the correct file (title bar shows the filename)
 3. Switching to a different file and back can trigger a re-render
@@ -27,6 +29,7 @@ Common issues and solutions when using or developing Markdown Preview Pro.
 **Symptoms:** Console shows CSP violation warnings, some content doesn't render.
 
 **Solutions:**
+
 - This is expected for inline scripts or styles from external sources
 - Local images must be in the workspace folder or the document's directory
 - Remote images over `https://` are allowed; `http://` images are blocked
@@ -38,6 +41,7 @@ Common issues and solutions when using or developing Markdown Preview Pro.
 **Symptoms:** A red error message appears instead of the diagram.
 
 **Solutions:**
+
 1. Verify the diagram syntax at [Mermaid Live Editor](https://mermaid.js.org/docs/community/n00b-syntaxReference.html)
 2. Ensure the code block uses the `mermaid` language identifier:
    ````
@@ -53,6 +57,7 @@ Common issues and solutions when using or developing Markdown Preview Pro.
 **Symptoms:** Diagram theme doesn't match your VS Code theme.
 
 **Solutions:**
+
 - Switch your VS Code theme, then switch back - this triggers a re-render
 - Mermaid auto-detects `vscode-dark` and `vscode-high-contrast` body classes
 - Reload the window if theme detection fails
@@ -62,6 +67,7 @@ Common issues and solutions when using or developing Markdown Preview Pro.
 **Symptoms:** Raw mermaid code is displayed instead of a diagram.
 
 **Solutions:**
+
 1. Ensure `markdownPreviewPro.enableMermaid` is `true` in settings
 2. Open webview DevTools and check if `mermaid` is available on `window`
 3. Rebuild the extension: `npm run compile`
@@ -73,6 +79,7 @@ Common issues and solutions when using or developing Markdown Preview Pro.
 **Symptoms:** Raw LaTeX syntax (`$E = mc^2$`) shows instead of rendered math.
 
 **Solutions:**
+
 1. Ensure `markdownPreviewPro.enableKatex` is `true` in settings
 2. Check syntax: inline math uses single `$...$`, block math uses `$$...$$`
 3. Don't put spaces right after the opening `$` or before the closing `$`:
@@ -84,6 +91,7 @@ Common issues and solutions when using or developing Markdown Preview Pro.
 **Symptoms:** Math shows an error message or raw text fallback.
 
 **Solutions:**
+
 - KaTeX uses `throwOnError: false` so it will show the raw text on errors
 - Validate your LaTeX syntax at [KaTeX Supported Functions](https://katex.org/docs/supported)
 - Escape special characters: use `\$` for a literal dollar sign
@@ -93,6 +101,7 @@ Common issues and solutions when using or developing Markdown Preview Pro.
 **Symptoms:** `$$...$$` displays as text instead of rendered math.
 
 **Solutions:**
+
 - `$$` must be on its own line:
   ```
   $$
@@ -108,6 +117,7 @@ Common issues and solutions when using or developing Markdown Preview Pro.
 **Symptoms:** Preview and editor scroll positions drift apart.
 
 **Solutions:**
+
 - Scroll sync uses a 300ms lock to prevent feedback loops - small delays are expected
 - The sync maps `data-line` attributes on block-level HTML elements to source lines
 - Long inline content (e.g., large tables) may not map precisely
@@ -117,6 +127,7 @@ Common issues and solutions when using or developing Markdown Preview Pro.
 **Symptoms:** Editor and preview scroll independently.
 
 **Solutions:**
+
 1. Ensure `markdownPreviewPro.scrollSync` is `true`
 2. The sync only works when the active editor matches the previewed file
 3. Embedded HTML blocks without `data-line` attributes won't have sync targets
@@ -128,6 +139,7 @@ Common issues and solutions when using or developing Markdown Preview Pro.
 **Symptoms:** Clicking a checkbox in the preview does nothing.
 
 **Solutions:**
+
 1. Ensure `markdownPreviewPro.enableCheckboxes` is `true`
 2. The source file must not be read-only
 3. Task list syntax must be correct: `- [ ] Task` or `- [x] Task`
@@ -137,6 +149,7 @@ Common issues and solutions when using or developing Markdown Preview Pro.
 **Symptoms:** Checkbox reverts after clicking.
 
 **Solutions:**
+
 - The extension modifies the source file via a workspace edit
 - If the file has unsaved changes, check that auto-save is enabled or save manually
 - Check for file permission issues
@@ -148,6 +161,7 @@ Common issues and solutions when using or developing Markdown Preview Pro.
 **Symptoms:** Broken image icon appears in preview.
 
 **Solutions:**
+
 1. Use relative paths from the markdown file's location: `![Alt](./images/photo.png)`
 2. The image must be within the workspace folder or document directory (enforced by `localResourceRoots`)
 3. Absolute file paths are not supported - use relative paths
@@ -158,6 +172,7 @@ Common issues and solutions when using or developing Markdown Preview Pro.
 **Symptoms:** Excalidraw `.excalidraw` files show as broken images.
 
 **Solutions:**
+
 - Export the Excalidraw diagram as `.excalidraw.png` or `.excalidraw.svg`
 - Raw `.excalidraw` JSON files cannot be rendered as images
 

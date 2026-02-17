@@ -1,8 +1,5 @@
 // Messages sent from Extension -> Webview
-export type ExtensionMessage =
-  | UpdateContentMessage
-  | ScrollToLineMessage
-  | ConfigChangedMessage;
+export type ExtensionMessage = UpdateContentMessage | ScrollToLineMessage | ConfigChangedMessage;
 
 export interface UpdateContentMessage {
   type: 'updateContent';

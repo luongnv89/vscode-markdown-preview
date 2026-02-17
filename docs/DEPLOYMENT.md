@@ -27,6 +27,7 @@ code --install-extension markdown-preview-pro-*.vsix
 ### Steps
 
 1. Login to vsce:
+
    ```bash
    npx @vscode/vsce login <publisher-name>
    ```
@@ -54,6 +55,7 @@ npm version major
 ## Distribution via GitHub Releases
 
 1. Tag the release:
+
    ```bash
    git tag v0.1.0
    git push origin v0.1.0
