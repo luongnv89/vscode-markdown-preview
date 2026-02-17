@@ -115,6 +115,18 @@ vscode-markdown-preview/
 | Task Lists | [markdown-it-task-lists](https://github.com/revin/markdown-it-task-lists) |
 | Build Tool | [Webpack](https://webpack.js.org/) v5 |
 
+## Documentation
+
+| Document | Description |
+|----------|-------------|
+| [User Guide](docs/USER_GUIDE.md) | Comprehensive feature guide with examples |
+| [Architecture](docs/ARCHITECTURE.md) | System design and component overview |
+| [API Reference](docs/API.md) | Internal APIs and message protocol |
+| [Development](docs/DEVELOPMENT.md) | Local setup and debugging |
+| [Deployment](docs/DEPLOYMENT.md) | Building and publishing |
+| [Troubleshooting](docs/TROUBLESHOOTING.md) | Common issues and solutions |
+| [Changelog](docs/CHANGELOG.md) | Version history |
+
 ## Contributing
 
 Contributions are welcome! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
