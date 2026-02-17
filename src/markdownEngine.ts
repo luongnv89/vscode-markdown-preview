@@ -126,10 +126,7 @@ export class MarkdownEngine {
             // Replace the checkbox text with an actual checkbox element
             const checkedAttr = checked ? ' checked' : '';
             const line = listItemToken.attrGet('data-line') || '0';
-            tokens[i].content = content.replace(
-              /^\[([ xX])\]\s*/,
-              ''
-            );
+            tokens[i].content = content.replace(/^\[([ xX])\]\s*/, '');
             const children = tokens[i].children || [];
             tokens[i].children = children;
 
@@ -217,10 +214,7 @@ export class MarkdownEngine {
         const lineStartPos = state.bMarks[nextLine] + state.tShift[nextLine];
         const lineMaxPos = state.eMarks[nextLine];
 
-        if (
-          lineStartPos < lineMaxPos &&
-          state.src.slice(lineStartPos, lineStartPos + 2) === '$$'
-        ) {
+        if (lineStartPos < lineMaxPos && state.src.slice(lineStartPos, lineStartPos + 2) === '$$') {
           hasEnding = true;
           break;
         }
@@ -259,7 +253,11 @@ export class MarkdownEngine {
       const alt = token.content || '';
 
       // Handle excalidraw files
-      if (src.endsWith('.excalidraw') || src.endsWith('.excalidraw.png') || src.endsWith('.excalidraw.svg')) {
+      if (
+        src.endsWith('.excalidraw') ||
+        src.endsWith('.excalidraw.png') ||
+        src.endsWith('.excalidraw.svg')
+      ) {
         const resolvedSrc = this.resolveUri(src);
         return `<div class="excalidraw-container"><img src="${resolvedSrc}" alt="${md.utils.escapeHtml(alt)}" class="excalidraw-diagram"></div>`;
       }

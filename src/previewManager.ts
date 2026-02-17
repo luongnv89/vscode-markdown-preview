@@ -82,7 +82,10 @@ export class PreviewManager {
     // Watch for text document changes
     this.disposables.push(
       vscode.workspace.onDidChangeTextDocument((event) => {
-        if (this.activeDocument && event.document.uri.toString() === this.activeDocument.uri.toString()) {
+        if (
+          this.activeDocument &&
+          event.document.uri.toString() === this.activeDocument.uri.toString()
+        ) {
           this.debouncedUpdate(event.document);
         }
       })
@@ -151,8 +154,11 @@ export class PreviewManager {
       case 'revealLine':
         if (this.config.scrollSync && !this.scrollSync.isLocked()) {
           const editor = vscode.window.activeTextEditor;
-          if (editor && this.activeDocument &&
-              editor.document.uri.toString() === this.activeDocument.uri.toString()) {
+          if (
+            editor &&
+            this.activeDocument &&
+            editor.document.uri.toString() === this.activeDocument.uri.toString()
+          ) {
             this.scrollSync.lock();
             this.scrollSync.revealEditorLine(editor, message.line);
           }
@@ -167,8 +173,11 @@ export class PreviewManager {
 
       case 'navigateToLine': {
         const editor = vscode.window.activeTextEditor;
-        if (editor && this.activeDocument &&
-            editor.document.uri.toString() === this.activeDocument.uri.toString()) {
+        if (
+          editor &&
+          this.activeDocument &&
+          editor.document.uri.toString() === this.activeDocument.uri.toString()
+        ) {
           const position = new vscode.Position(message.line, 0);
           editor.selection = new vscode.Selection(position, position);
           editor.revealRange(
@@ -230,18 +239,10 @@ export class PreviewManager {
     const mainStyle = webview.asWebviewUri(
       vscode.Uri.joinPath(this.extensionUri, 'dist', 'webview', 'main.css')
     );
-    const katexStyle = webview.asWebviewUri(
-      vscode.Uri.joinPath(vendorUri, 'katex.min.css')
-    );
-    const katexScript = webview.asWebviewUri(
-      vscode.Uri.joinPath(vendorUri, 'katex.min.js')
-    );
-    const hljsStyle = webview.asWebviewUri(
-      vscode.Uri.joinPath(vendorUri, 'github-dark.min.css')
-    );
-    const mermaidScript = webview.asWebviewUri(
-      vscode.Uri.joinPath(vendorUri, 'mermaid.min.js')
-    );
+    const katexStyle = webview.asWebviewUri(vscode.Uri.joinPath(vendorUri, 'katex.min.css'));
+    const katexScript = webview.asWebviewUri(vscode.Uri.joinPath(vendorUri, 'katex.min.js'));
+    const hljsStyle = webview.asWebviewUri(vscode.Uri.joinPath(vendorUri, 'github-dark.min.css'));
+    const mermaidScript = webview.asWebviewUri(vscode.Uri.joinPath(vendorUri, 'mermaid.min.js'));
 
     return `<!DOCTYPE html>
 <html lang="en">

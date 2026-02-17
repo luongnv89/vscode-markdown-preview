@@ -19,10 +19,7 @@ function setupObserver(): void {
       let topEntry: IntersectionObserverEntry | null = null;
       for (const entry of entries) {
         if (entry.isIntersecting) {
-          if (
-            !topEntry ||
-            entry.boundingClientRect.top < topEntry.boundingClientRect.top
-          ) {
+          if (!topEntry || entry.boundingClientRect.top < topEntry.boundingClientRect.top) {
             topEntry = entry;
           }
         }
@@ -40,11 +37,11 @@ function setupObserver(): void {
 
   const blocks = document.querySelectorAll(
     '#preview-content > h1, #preview-content > h2, #preview-content > h3, ' +
-    '#preview-content > h4, #preview-content > h5, #preview-content > h6, ' +
-    '#preview-content > p, #preview-content > pre, #preview-content > .hljs, ' +
-    '#preview-content > blockquote, #preview-content > ul, #preview-content > ol, ' +
-    '#preview-content > table, #preview-content > .mermaid-block, ' +
-    '#preview-content > .katex-block, #preview-content > .code-block-wrapper'
+      '#preview-content > h4, #preview-content > h5, #preview-content > h6, ' +
+      '#preview-content > p, #preview-content > pre, #preview-content > .hljs, ' +
+      '#preview-content > blockquote, #preview-content > ul, #preview-content > ol, ' +
+      '#preview-content > table, #preview-content > .mermaid-block, ' +
+      '#preview-content > .katex-block, #preview-content > .code-block-wrapper'
   );
 
   blocks.forEach((block) => observer!.observe(block));

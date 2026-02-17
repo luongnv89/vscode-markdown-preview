@@ -7,6 +7,7 @@ A comprehensive guide to all features in Markdown Preview Pro.
 Open any `.md` file and press `Cmd+Shift+V` (macOS) or `Ctrl+Shift+V` (Windows/Linux) to open the preview side by side.
 
 You can also:
+
 - Use the Command Palette: **Markdown Preview Pro: Open Preview to Side**
 - Click the preview icon in the editor title bar
 
@@ -152,16 +153,16 @@ $$
 
 ### Common Examples
 
-| Syntax | Result |
-|--------|--------|
-| `$x^2$` | Superscript |
-| `$x_i$` | Subscript |
-| `$\frac{a}{b}$` | Fraction |
-| `$\sqrt{x}$` | Square root |
-| `$\sum_{i=1}^{n} i$` | Summation |
-| `$\alpha, \beta, \gamma$` | Greek letters |
-| `$\mathbf{v}$` | Bold vector |
-| `$\begin{pmatrix} a & b \\ c & d \end{pmatrix}$` | Matrix |
+| Syntax                                           | Result        |
+| ------------------------------------------------ | ------------- |
+| `$x^2$`                                          | Superscript   |
+| `$x_i$`                                          | Subscript     |
+| `$\frac{a}{b}$`                                  | Fraction      |
+| `$\sqrt{x}$`                                     | Square root   |
+| `$\sum_{i=1}^{n} i$`                             | Summation     |
+| `$\alpha, \beta, \gamma$`                        | Greek letters |
+| `$\mathbf{v}$`                                   | Bold vector   |
+| `$\begin{pmatrix} a & b \\ c & d \end{pmatrix}$` | Matrix        |
 
 For the full function list, see [KaTeX Supported Functions](https://katex.org/docs/supported).
 
@@ -218,13 +219,13 @@ Reference exported Excalidraw files:
 
 When `typographer` is enabled (default), markdown-it applies:
 
-| Input | Output |
-|-------|--------|
+| Input      | Output         |
+| ---------- | -------------- |
 | `"quotes"` | "smart quotes" |
 | `'single'` | 'smart single' |
-| `--` | en-dash |
-| `---` | em-dash |
-| `...` | ellipsis |
+| `--`       | en-dash        |
+| `---`      | em-dash        |
+| `...`      | ellipsis       |
 
 Disable via `markdownPreviewPro.typographer: false`.
 
@@ -258,8 +259,8 @@ Convert single newlines in paragraphs to `<br>` tags. By default, adjacent lines
 
 ## Keyboard Shortcuts
 
-| Action | macOS | Windows/Linux |
-|--------|-------|---------------|
+| Action               | macOS         | Windows/Linux  |
+| -------------------- | ------------- | -------------- |
 | Open Preview to Side | `Cmd+Shift+V` | `Ctrl+Shift+V` |
 | Open Command Palette | `Cmd+Shift+P` | `Ctrl+Shift+P` |
 

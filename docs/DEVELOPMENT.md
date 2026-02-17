@@ -37,13 +37,13 @@ This creates an optimized build with hidden source maps in `dist/`.
 
 ## Key Scripts
 
-| Script | Command | Description |
-|--------|---------|-------------|
+| Script    | Command           | Description            |
+| --------- | ----------------- | ---------------------- |
 | `compile` | `npm run compile` | One-time Webpack build |
-| `watch` | `npm run watch` | Webpack watch mode |
-| `package` | `npm run package` | Production build |
-| `lint` | `npm run lint` | ESLint check |
-| `test` | `npm test` | Run test suite |
+| `watch`   | `npm run watch`   | Webpack watch mode     |
+| `package` | `npm run package` | Production build       |
+| `lint`    | `npm run lint`    | ESLint check           |
+| `test`    | `npm test`        | Run test suite         |
 
 ## Debugging Tips
 
@@ -54,6 +54,7 @@ Open **Output** panel in VS Code (`Cmd+Shift+U`) and select "Markdown Preview Pr
 ### Webview DevTools
 
 In the Extension Development Host window:
+
 1. Open Command Palette (`Cmd+Shift+P`)
 2. Run **Developer: Open Webview Developer Tools**
 3. Use the browser DevTools to inspect the preview panel

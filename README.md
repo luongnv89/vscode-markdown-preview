@@ -31,12 +31,14 @@ curl -sSL https://raw.githubusercontent.com/luongnv89/vscode-markdown-preview/ma
 ### Manual Install
 
 1. Clone the repository:
+
    ```bash
    git clone https://github.com/luongnv89/vscode-markdown-preview.git
    cd vscode-markdown-preview
    ```
 
 2. Install dependencies and build:
+
    ```bash
    npm install
    npm run package
@@ -65,14 +67,14 @@ curl -sSL https://raw.githubusercontent.com/luongnv89/vscode-markdown-preview/ma
 
 Configure via VS Code Settings (`markdownPreviewPro.*`):
 
-| Setting | Default | Description |
-|---------|---------|-------------|
-| `scrollSync` | `true` | Bidirectional scroll synchronization |
-| `enableMermaid` | `true` | Mermaid diagram rendering |
-| `enableKatex` | `true` | KaTeX math rendering |
-| `enableCheckboxes` | `true` | Interactive task list checkboxes |
-| `typographer` | `true` | Smart quotes and typography |
-| `lineBreaks` | `false` | Convert newlines to `<br>` tags |
+| Setting            | Default | Description                          |
+| ------------------ | ------- | ------------------------------------ |
+| `scrollSync`       | `true`  | Bidirectional scroll synchronization |
+| `enableMermaid`    | `true`  | Mermaid diagram rendering            |
+| `enableKatex`      | `true`  | KaTeX math rendering                 |
+| `enableCheckboxes` | `true`  | Interactive task list checkboxes     |
+| `typographer`      | `true`  | Smart quotes and typography          |
+| `lineBreaks`       | `false` | Convert newlines to `<br>` tags      |
 
 ## Project Structure
 
@@ -105,27 +107,27 @@ vscode-markdown-preview/
 
 ## Technology Stack
 
-| Component | Technology |
-|-----------|-----------|
-| Language | TypeScript |
-| Markdown Parser | [markdown-it](https://github.com/markdown-it/markdown-it) v14 |
-| Syntax Highlighting | [highlight.js](https://highlightjs.org/) v11 |
-| Math Rendering | [KaTeX](https://katex.org/) v0.16 |
-| Diagrams | [Mermaid](https://mermaid.js.org/) v10 |
-| Task Lists | [markdown-it-task-lists](https://github.com/revin/markdown-it-task-lists) |
-| Build Tool | [Webpack](https://webpack.js.org/) v5 |
+| Component           | Technology                                                                |
+| ------------------- | ------------------------------------------------------------------------- |
+| Language            | TypeScript                                                                |
+| Markdown Parser     | [markdown-it](https://github.com/markdown-it/markdown-it) v14             |
+| Syntax Highlighting | [highlight.js](https://highlightjs.org/) v11                              |
+| Math Rendering      | [KaTeX](https://katex.org/) v0.16                                         |
+| Diagrams            | [Mermaid](https://mermaid.js.org/) v10                                    |
+| Task Lists          | [markdown-it-task-lists](https://github.com/revin/markdown-it-task-lists) |
+| Build Tool          | [Webpack](https://webpack.js.org/) v5                                     |
 
 ## Documentation
 
-| Document | Description |
-|----------|-------------|
-| [User Guide](docs/USER_GUIDE.md) | Comprehensive feature guide with examples |
-| [Architecture](docs/ARCHITECTURE.md) | System design and component overview |
-| [API Reference](docs/API.md) | Internal APIs and message protocol |
-| [Development](docs/DEVELOPMENT.md) | Local setup and debugging |
-| [Deployment](docs/DEPLOYMENT.md) | Building and publishing |
-| [Troubleshooting](docs/TROUBLESHOOTING.md) | Common issues and solutions |
-| [Changelog](docs/CHANGELOG.md) | Version history |
+| Document                                   | Description                               |
+| ------------------------------------------ | ----------------------------------------- |
+| [User Guide](docs/USER_GUIDE.md)           | Comprehensive feature guide with examples |
+| [Architecture](docs/ARCHITECTURE.md)       | System design and component overview      |
+| [API Reference](docs/API.md)               | Internal APIs and message protocol        |
+| [Development](docs/DEVELOPMENT.md)         | Local setup and debugging                 |
+| [Deployment](docs/DEPLOYMENT.md)           | Building and publishing                   |
+| [Troubleshooting](docs/TROUBLESHOOTING.md) | Common issues and solutions               |
+| [Changelog](docs/CHANGELOG.md)             | Version history                           |
 
 ## Contributing
 

@@ -6,7 +6,7 @@ This is a sample document to test the **Markdown Preview Pro** extension.
 
 ### Text Formatting
 
-This text is **bold**, this is *italic*, and this is ~~strikethrough~~.
+This text is **bold**, this is _italic_, and this is ~~strikethrough~~.
 You can also combine **_bold and italic_** together.
 
 Here's some `inline code` in a sentence.
@@ -72,14 +72,14 @@ fn main() {
 
 ### Tables
 
-| Feature | Status | Priority |
-|---------|--------|----------|
-| Markdown rendering | Done | High |
-| Syntax highlighting | Done | High |
-| Scroll sync | Done | Medium |
-| Mermaid diagrams | Done | Medium |
-| KaTeX math | Done | Low |
-| Excalidraw | Planned | Low |
+| Feature             | Status  | Priority |
+| ------------------- | ------- | -------- |
+| Markdown rendering  | Done    | High     |
+| Syntax highlighting | Done    | High     |
+| Scroll sync         | Done    | Medium   |
+| Mermaid diagrams    | Done    | Medium   |
+| KaTeX math          | Done    | Low      |
+| Excalidraw          | Planned | Low      |
 
 ### Math (KaTeX)
 
@@ -162,4 +162,4 @@ This is hidden content that appears when you click the summary.
 
 ---
 
-*Thank you for testing Markdown Preview Pro!*
+_Thank you for testing Markdown Preview Pro!_

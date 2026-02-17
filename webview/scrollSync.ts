@@ -57,9 +57,7 @@ export function scrollToLine(line: number): void {
       const previousRect = previous.element.getBoundingClientRect();
       const nextRect = next.element.getBoundingClientRect();
       scrollTarget =
-        window.scrollY +
-        previousRect.top +
-        progress * (nextRect.top - previousRect.top);
+        window.scrollY + previousRect.top + progress * (nextRect.top - previousRect.top);
     } else {
       scrollTarget = window.scrollY + previous.element.getBoundingClientRect().top;
     }
@@ -73,9 +71,7 @@ export function scrollToLine(line: number): void {
 }
 
 function getLineAtScrollPosition(): number {
-  const elements = Array.from(
-    document.querySelectorAll('.code-line[data-line]')
-  );
+  const elements = Array.from(document.querySelectorAll('.code-line[data-line]'));
 
   for (let i = elements.length - 1; i >= 0; i--) {
     const rect = elements[i].getBoundingClientRect();
@@ -87,10 +83,7 @@ function getLineAtScrollPosition(): number {
         const nextRect = nextElement.getBoundingClientRect();
         if (nextRect.top > rect.top) {
           const progress = -rect.top / (nextRect.top - rect.top);
-          const nextLine = parseInt(
-            nextElement.getAttribute('data-line') || '0',
-            10
-          );
+          const nextLine = parseInt(nextElement.getAttribute('data-line') || '0', 10);
           return line + Math.max(0, progress) * (nextLine - line);
         }
       }

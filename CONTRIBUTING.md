@@ -76,6 +76,7 @@ We follow [Conventional Commits](https://www.conventionalcommits.org/):
 ```
 
 **Types:**
+
 - `feat` - New feature
 - `fix` - Bug fix
 - `docs` - Documentation only
@@ -85,6 +86,7 @@ We follow [Conventional Commits](https://www.conventionalcommits.org/):
 - `chore` - Build process, dependencies
 
 **Examples:**
+
 ```
 feat(mermaid): add support for gantt charts
 fix(scroll): correct sync offset for code blocks

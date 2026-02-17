@@ -34,7 +34,7 @@
 }
 
 /* Loading animation for mermaid */
-.mermaid-block[data-processed="false"] pre.mermaid {
+.mermaid-block[data-processed='false'] pre.mermaid {
   color: var(--fg-muted);
   font-family: var(--vscode-editor-font-family, monospace);
   font-size: 0.85em;
@@ -44,7 +44,8 @@
 }
 
 @keyframes mermaid-pulse {
-  0%, 100% {
+  0%,
+  100% {
     opacity: 1;
   }
   50% {

@@ -66,8 +66,9 @@ async function renderMermaid(): Promise<void> {
   }
 
   if (!mermaidInitialized) {
-    const isDark = document.body.classList.contains('vscode-dark') ||
-                   document.body.classList.contains('vscode-high-contrast');
+    const isDark =
+      document.body.classList.contains('vscode-dark') ||
+      document.body.classList.contains('vscode-high-contrast');
 
     mermaid.initialize({
       startOnLoad: false,
@@ -150,10 +151,7 @@ export function watchThemeChanges(): void {
 
   themeObserver = new MutationObserver((mutations) => {
     for (const mutation of mutations) {
-      if (
-        mutation.type === 'attributes' &&
-        mutation.attributeName === 'class'
-      ) {
+      if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
         // Theme changed, reinitialize mermaid
         mermaidInitialized = false;
 
