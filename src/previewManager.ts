@@ -45,6 +45,7 @@ export class PreviewManager {
           vscode.Uri.joinPath(this.extensionUri, 'dist', 'webview'),
           vscode.Uri.joinPath(this.extensionUri, 'node_modules', 'katex', 'dist'),
           vscode.Uri.joinPath(this.extensionUri, 'node_modules', 'highlight.js', 'styles'),
+          vscode.Uri.joinPath(this.extensionUri, 'node_modules', 'mermaid', 'dist'),
           // Allow access to workspace folders for local images
           ...(vscode.workspace.workspaceFolders?.map((f) => f.uri) || []),
           // Allow access to the document's directory
@@ -243,6 +244,9 @@ export class PreviewManager {
     const hljsStyle = webview.asWebviewUri(
       vscode.Uri.joinPath(this.extensionUri, 'node_modules', 'highlight.js', 'styles', 'github-dark.min.css')
     );
+    const mermaidScript = webview.asWebviewUri(
+      vscode.Uri.joinPath(this.extensionUri, 'node_modules', 'mermaid', 'dist', 'mermaid.min.js')
+    );
 
     return `<!DOCTYPE html>
 <html lang="en">
@@ -266,10 +270,7 @@ export class PreviewManager {
 <body>
   <div id="preview-content"></div>
   <script nonce="${nonce}" src="${katexScript}"></script>
-  <script nonce="${nonce}">
-    // Set webpack public path for dynamic chunk loading (mermaid, etc.)
-    window.__webpack_public_path__ = "${webviewDistUri}/";
-  </script>
+  <script nonce="${nonce}" src="${mermaidScript}"></script>
   <script nonce="${nonce}" src="${mainScript}"></script>
 </body>
 </html>`;

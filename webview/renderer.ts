@@ -58,53 +58,46 @@ async function renderMermaid(): Promise<void> {
     return;
   }
 
-  if (!mermaidInitialized) {
-    try {
-      const mermaid = (await import('mermaid')).default;
-
-      // Detect theme
-      const isDark = document.body.classList.contains('vscode-dark') ||
-                     document.body.classList.contains('vscode-high-contrast');
-
-      mermaid.initialize({
-        startOnLoad: false,
-        theme: isDark ? 'dark' : 'default',
-        securityLevel: 'strict',
-        fontFamily: 'var(--vscode-editor-font-family)',
-      });
-
-      mermaidInitialized = true;
-    } catch {
-      console.warn('Mermaid library not available');
-      return;
-    }
+  // Access mermaid from global scope (loaded via script tag)
+  const mermaid = (window as any).mermaid;
+  if (!mermaid) {
+    console.warn('Mermaid library not available on window');
+    return;
   }
 
-  try {
-    const mermaid = (await import('mermaid')).default;
+  if (!mermaidInitialized) {
+    const isDark = document.body.classList.contains('vscode-dark') ||
+                   document.body.classList.contains('vscode-high-contrast');
 
-    for (let i = 0; i < mermaidBlocks.length; i++) {
-      const block = mermaidBlocks[i];
-      const pre = block.querySelector('pre.mermaid');
-      if (!pre) {
-        continue;
-      }
+    mermaid.initialize({
+      startOnLoad: false,
+      theme: isDark ? 'dark' : 'default',
+      securityLevel: 'loose',
+      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif',
+    });
 
-      const code = pre.textContent || '';
-      const id = `mermaid-${Date.now()}-${i}`;
+    mermaidInitialized = true;
+  }
 
-      try {
-        const { svg } = await mermaid.render(id, code);
-        block.innerHTML = svg;
-        block.setAttribute('data-processed', 'true');
-        (block as HTMLElement).classList.add('mermaid-rendered');
-      } catch (err) {
-        block.innerHTML = `<div class="mermaid-error">Mermaid diagram error: ${escapeHtml((err as Error).message)}</div>`;
-        block.setAttribute('data-processed', 'true');
-      }
+  for (let i = 0; i < mermaidBlocks.length; i++) {
+    const block = mermaidBlocks[i];
+    const pre = block.querySelector('pre.mermaid');
+    if (!pre) {
+      continue;
     }
-  } catch {
-    // Mermaid rendering failed silently
+
+    const code = pre.textContent || '';
+    const id = `mermaid-${Date.now()}-${i}`;
+
+    try {
+      const { svg } = await mermaid.render(id, code);
+      block.innerHTML = svg;
+      block.setAttribute('data-processed', 'true');
+      (block as HTMLElement).classList.add('mermaid-rendered');
+    } catch (err) {
+      block.innerHTML = `<div class="mermaid-error">Mermaid diagram error: ${escapeHtml((err as Error).message)}</div>`;
+      block.setAttribute('data-processed', 'true');
+    }
   }
 }
 

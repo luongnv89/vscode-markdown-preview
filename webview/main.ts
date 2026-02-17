@@ -1,9 +1,3 @@
-// Set webpack public path from the global set by the extension host
-declare let __webpack_public_path__: string;
-if ((window as any).__webpack_public_path__) {
-  __webpack_public_path__ = (window as any).__webpack_public_path__;
-}
-
 import './styles/main.css';
 import './styles/markdown.css';
 import './styles/code.css';
