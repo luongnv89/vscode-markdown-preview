@@ -2,9 +2,9 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![VS Code](https://img.shields.io/badge/VS%20Code-%3E%3D1.85.0-blue.svg)](https://code.visualstudio.com/)
-[![Version](https://img.shields.io/badge/version-0.1.0-green.svg)](https://github.com/luongnv89/vscode-markdown-preview/releases)
+[![Version](https://img.shields.io/badge/version-0.3.0-green.svg)](https://github.com/luongnv89/vscode-markdown-preview/releases)
 
-A clean, minimal markdown preview for Visual Studio Code inspired by the [Zed editor](https://zed.dev/). Provides an enhanced markdown viewing experience with syntax highlighting, interactive diagrams, math rendering, and real-time synchronization.
+A clean, minimal markdown preview for Visual Studio Code inspired by the [Zed editor](https://zed.dev/). Provides an enhanced markdown viewing experience with syntax highlighting, interactive diagrams, math rendering, real-time synchronization, and export to HTML/PDF.
 
 ![Markdown Preview Pro — editor with syntax-highlighted code on the left, live preview with tables, KaTeX math, and Mermaid diagrams on the right](media/screenshot.png)
 
@@ -18,6 +18,8 @@ A clean, minimal markdown preview for Visual Studio Code inspired by the [Zed ed
 - **Copy Code Blocks** - One-click copy button on all code blocks
 - **Image Support** - Local images, workspace-relative paths, and Excalidraw diagrams
 - **Smart Typography** - Optional smart quotes and typographic replacements
+- **Export to HTML** - Generate standalone HTML files with fully rendered diagrams and math
+- **Export to PDF** - Export markdown to PDF using Chrome/Chromium
 - **Theme-Aware** - Adapts to your VS Code light/dark theme
 
 ## Quick Start
@@ -86,6 +88,11 @@ vscode-markdown-preview/
 │   ├── markdownEngine.ts   # Markdown rendering engine
 │   ├── checkboxHandler.ts  # Interactive checkbox logic
 │   ├── scrollSync.ts       # Scroll synchronization
+│   ├── export/             # HTML & PDF export
+│   │   ├── exportManager.ts        # Export orchestration
+│   │   ├── standaloneHtmlBuilder.ts # Self-contained HTML generation
+│   │   ├── pdfExporter.ts          # PDF generation via Chrome
+│   │   └── browserFinder.ts        # Chrome/Chromium detection
 │   ├── types/              # TypeScript type definitions
 │   └── utils/              # Configuration & URI utilities
 ├── webview/                # Webview client (Browser)
@@ -115,6 +122,7 @@ vscode-markdown-preview/
 | Math Rendering      | [KaTeX](https://katex.org/) v0.16                                         |
 | Diagrams            | [Mermaid](https://mermaid.js.org/) v10                                    |
 | Task Lists          | [markdown-it-task-lists](https://github.com/revin/markdown-it-task-lists) |
+| PDF Export          | [puppeteer-core](https://pptr.dev/) v24                                   |
 | Build Tool          | [Webpack](https://webpack.js.org/) v5                                     |
 
 ## Documentation

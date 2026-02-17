@@ -2,6 +2,7 @@
 'use strict';
 
 const path = require('path');
+const webpack = require('webpack');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const CopyPlugin = require('copy-webpack-plugin');
 
@@ -18,6 +19,10 @@ const extensionConfig = {
   externals: {
     vscode: 'commonjs vscode',
   },
+  plugins: [
+    // Force everything into a single chunk - VS Code extensions must be a single file
+    new webpack.optimize.LimitChunkCountPlugin({ maxChunks: 1 }),
+  ],
   resolve: {
     extensions: ['.ts', '.js'],
   },

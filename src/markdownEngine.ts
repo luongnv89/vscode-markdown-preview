@@ -271,7 +271,7 @@ export class MarkdownEngine {
   }
 
   private resolveUri(src: string): string {
-    if (this.documentUri && this.webview) {
+    if (this.documentUri) {
       return resolveImageUri(src, this.documentUri, this.webview);
     }
     return src;
@@ -280,6 +280,11 @@ export class MarkdownEngine {
   public setContext(documentUri: vscode.Uri, webview: vscode.Webview): void {
     this.documentUri = documentUri;
     this.webview = webview;
+  }
+
+  public setExportContext(documentUri: vscode.Uri): void {
+    this.documentUri = documentUri;
+    this.webview = undefined;
   }
 
   public updateConfig(config: PreviewConfig): void {

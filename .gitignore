@@ -32,3 +32,10 @@ yarn-error.log*
 
 # TypeScript cache
 *.tsbuildinfo
+
+# Claude/AI agent config
+.agents/
+.claude/
+
+# Test output files
+test-sample.*

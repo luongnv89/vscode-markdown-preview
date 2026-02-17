@@ -2,7 +2,7 @@
   "name": "markdown-preview-pro",
   "displayName": "Markdown Preview Pro",
   "description": "Clean, minimal markdown preview inspired by Zed editor with syntax highlighting, mermaid diagrams, math rendering, and interactive features",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "publisher": "luongnv89",
   "license": "MIT",
   "repository": {
@@ -26,7 +26,9 @@
   ],
   "icon": "media/icon.png",
   "activationEvents": [
-    "onLanguage:markdown"
+    "onLanguage:markdown",
+    "onCommand:markdownPreviewPro.exportToHtml",
+    "onCommand:markdownPreviewPro.exportToPdf"
   ],
   "main": "./dist/extension.js",
   "contributes": {
@@ -40,6 +42,16 @@
         "command": "markdownPreviewPro.showPreviewToSide",
         "title": "Markdown Preview Pro: Open Preview to Side",
         "icon": "$(open-preview)"
+      },
+      {
+        "command": "markdownPreviewPro.exportToHtml",
+        "title": "Markdown Preview Pro: Export to HTML",
+        "icon": "$(file-code)"
+      },
+      {
+        "command": "markdownPreviewPro.exportToPdf",
+        "title": "Markdown Preview Pro: Export to PDF",
+        "icon": "$(file-pdf)"
       }
     ],
     "keybindings": [
@@ -56,6 +68,16 @@
           "when": "resourceLangId == markdown",
           "command": "markdownPreviewPro.showPreviewToSide",
           "group": "navigation"
+        },
+        {
+          "when": "resourceLangId == markdown",
+          "command": "markdownPreviewPro.exportToHtml",
+          "group": "export@1"
+        },
+        {
+          "when": "resourceLangId == markdown",
+          "command": "markdownPreviewPro.exportToPdf",
+          "group": "export@2"
         }
       ],
       "editor/context": [
@@ -63,6 +85,16 @@
           "when": "resourceLangId == markdown",
           "command": "markdownPreviewPro.showPreviewToSide",
           "group": "navigation"
+        },
+        {
+          "when": "resourceLangId == markdown",
+          "command": "markdownPreviewPro.exportToHtml",
+          "group": "export@1"
+        },
+        {
+          "when": "resourceLangId == markdown",
+          "command": "markdownPreviewPro.exportToPdf",
+          "group": "export@2"
         }
       ],
       "explorer/context": [
@@ -70,6 +102,16 @@
           "when": "resourceLangId == markdown",
           "command": "markdownPreviewPro.showPreviewToSide",
           "group": "navigation"
+        },
+        {
+          "when": "resourceLangId == markdown",
+          "command": "markdownPreviewPro.exportToHtml",
+          "group": "export@1"
+        },
+        {
+          "when": "resourceLangId == markdown",
+          "command": "markdownPreviewPro.exportToPdf",
+          "group": "export@2"
         }
       ]
     },
@@ -142,6 +184,7 @@
     "katex": "^0.16.9",
     "markdown-it": "^14.0.0",
     "markdown-it-task-lists": "^2.1.1",
-    "mermaid": "^10.6.1"
+    "mermaid": "^10.6.1",
+    "puppeteer-core": "^24.37.3"
   }
 }

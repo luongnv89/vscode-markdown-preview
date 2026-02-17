@@ -257,6 +257,40 @@ Enable smart quotes and typographic replacements (em-dash, en-dash, ellipsis).
 
 Convert single newlines in paragraphs to `<br>` tags. By default, adjacent lines are joined into a single paragraph (standard markdown behavior).
 
+## Export
+
+### Export to HTML
+
+Generate a standalone HTML file with all styles, fonts, and scripts embedded. Mermaid diagrams are rendered to SVG and KaTeX math is fully resolved.
+
+**How to export:**
+
+1. Open a `.md` file
+2. Use one of these methods:
+   - Open the Command Palette and run **Markdown Preview Pro: Export to HTML**
+   - Right-click in the editor and select **Export to HTML**
+   - Right-click a `.md` file in the Explorer and select **Export to HTML**
+   - Click the HTML icon in the editor title bar
+
+The output file is saved alongside the source markdown file with the `.html` extension.
+
+### Export to PDF
+
+Generate a PDF file using a locally installed Chrome or Chromium browser.
+
+**How to export:**
+
+1. Open a `.md` file
+2. Use one of these methods:
+   - Open the Command Palette and run **Markdown Preview Pro: Export to PDF**
+   - Right-click in the editor and select **Export to PDF**
+   - Right-click a `.md` file in the Explorer and select **Export to PDF**
+   - Click the PDF icon in the editor title bar
+
+The output file is saved alongside the source markdown file with the `.pdf` extension.
+
+**Requirements:** A Chrome or Chromium browser must be installed on your system. The extension automatically detects the browser on macOS, Windows, and Linux.
+
 ## Keyboard Shortcuts
 
 | Action               | macOS         | Windows/Linux  |

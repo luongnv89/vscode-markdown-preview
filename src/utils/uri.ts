@@ -1,10 +1,9 @@
 import * as vscode from 'vscode';
-import * as path from 'path';
 
 export function resolveImageUri(
   src: string,
   documentUri: vscode.Uri,
-  webview: vscode.Webview
+  webview?: vscode.Webview
 ): string {
   // Data URIs pass through
   if (src.startsWith('data:')) {
@@ -19,6 +18,12 @@ export function resolveImageUri(
   // Resolve relative paths against the document's directory
   const docDir = vscode.Uri.joinPath(documentUri, '..');
   const imageUri = vscode.Uri.joinPath(docDir, src);
+
+  // For export mode (no webview), return the file system path
+  if (!webview) {
+    return imageUri.fsPath;
+  }
+
   return webview.asWebviewUri(imageUri).toString();
 }
 
