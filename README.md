@@ -6,7 +6,7 @@
 
 A clean, minimal markdown preview for Visual Studio Code inspired by the [Zed editor](https://zed.dev/). Provides an enhanced markdown viewing experience with syntax highlighting, interactive diagrams, math rendering, and real-time synchronization.
 
-![Markdown Preview Pro](media/icon.png)
+![Markdown Preview Pro — editor with syntax-highlighted code on the left, live preview with tables, KaTeX math, and Mermaid diagrams on the right](media/screenshot.png)
 
 ## Features
 
