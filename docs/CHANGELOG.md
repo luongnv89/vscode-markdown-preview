@@ -5,6 +5,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.0] - 2026-02-17
+
+### Added
+
+- Right-click context menu to open preview from editor and Explorer sidebar
+- Pre-commit hooks with Prettier, ESLint, and typecheck
+- GitHub Actions CI pipeline
+- API reference, user guide, and troubleshooting documentation
+- Open-source community files (CONTRIBUTING, CODE_OF_CONDUCT, etc.)
+- Screenshot in README
+
+### Changed
+
+- Updated publisher to luongnv89
+
 ## [0.1.0] - 2026-02-17
 
 ### Added
@@ -22,4 +37,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - One-line installation script
 - Configuration options for all features
 
+[0.2.0]: https://github.com/luongnv89/vscode-markdown-preview/releases/tag/v0.2.0
 [0.1.0]: https://github.com/luongnv89/vscode-markdown-preview/releases/tag/v0.1.0
