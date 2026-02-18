@@ -293,7 +293,18 @@ export class MarkdownEngine {
   }
 
   public render(content: string): RenderResult {
-    const html = this.md.render(content);
+    let html = this.md.render(content);
+
+    // Post-process: resolve image src attributes in raw HTML blocks/inlines
+    // that bypass the markdown-it image renderer rule (e.g. <img src="...">).
+    html = html.replace(
+      /(<img\s[^>]*?\bsrc\s*=\s*)(["'])(.*?)\2/gi,
+      (_match, prefix, quote, src) => {
+        const resolved = this.resolveUri(src);
+        return `${prefix}${quote}${resolved}${quote}`;
+      }
+    );
+
     return { html };
   }
 }

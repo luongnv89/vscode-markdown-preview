@@ -15,9 +15,19 @@ export function resolveImageUri(
     return src;
   }
 
-  // Resolve relative paths against the document's directory
-  const docDir = vscode.Uri.joinPath(documentUri, '..');
-  const imageUri = vscode.Uri.joinPath(docDir, src);
+  let imageUri: vscode.Uri;
+
+  if (src.startsWith('file:')) {
+    // file: scheme URI — parse directly
+    imageUri = vscode.Uri.parse(src);
+  } else if (src.startsWith('/') || /^[a-zA-Z]:[\\/]/.test(src)) {
+    // Absolute filesystem path (Unix or Windows drive letter)
+    imageUri = vscode.Uri.file(src);
+  } else {
+    // Resolve relative paths against the document's directory
+    const docDir = vscode.Uri.joinPath(documentUri, '..');
+    imageUri = vscode.Uri.joinPath(docDir, src);
+  }
 
   // For export mode (no webview), return the file system path
   if (!webview) {

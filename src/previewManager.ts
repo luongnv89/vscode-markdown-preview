@@ -14,6 +14,8 @@ export class PreviewManager {
   private activeDocument: vscode.TextDocument | undefined;
   private updateTimeout: NodeJS.Timeout | undefined;
   private disposables: vscode.Disposable[] = [];
+  private currentResourceRoots: vscode.Uri[] = [];
+  private lastViewColumn: vscode.ViewColumn = vscode.ViewColumn.Beside;
 
   constructor(private readonly extensionUri: vscode.Uri) {
     this.config = getPreviewConfig();
@@ -34,20 +36,49 @@ export class PreviewManager {
       return;
     }
 
+    this.lastViewColumn = viewColumn;
+    this.createPanel(editor.document, viewColumn);
+  }
+
+  private getLocalResourceRoots(documentUri: vscode.Uri): vscode.Uri[] {
+    const roots: vscode.Uri[] = [
+      vscode.Uri.joinPath(this.extensionUri, 'dist', 'webview'),
+      ...(vscode.workspace.workspaceFolders?.map((f) => f.uri) || []),
+      // Always include the document's parent directory
+      vscode.Uri.joinPath(documentUri, '..'),
+    ];
+
+    // Always add the filesystem root so local images from any location can
+    // be resolved. This matches the approach used by the VS Code built-in
+    // markdown preview.
+    if (process.platform === 'win32') {
+      const driveLetter = documentUri.fsPath.match(/^([a-zA-Z]):\\/);
+      if (driveLetter) {
+        roots.push(vscode.Uri.file(`${driveLetter[1]}:\\`));
+      }
+    } else {
+      roots.push(vscode.Uri.file('/'));
+    }
+
+    return roots;
+  }
+
+  private isDocumentCoveredByRoots(documentUri: vscode.Uri): boolean {
+    const docDir = vscode.Uri.joinPath(documentUri, '..').fsPath;
+    return this.currentResourceRoots.some((root) => docDir.startsWith(root.fsPath));
+  }
+
+  private createPanel(document: vscode.TextDocument, viewColumn: vscode.ViewColumn): void {
+    this.currentResourceRoots = this.getLocalResourceRoots(document.uri);
+
     this.panel = vscode.window.createWebviewPanel(
       'markdownPreviewPro',
-      'Preview: ' + this.getTitle(editor.document),
+      'Preview: ' + this.getTitle(document),
       viewColumn,
       {
         enableScripts: true,
         retainContextWhenHidden: true,
-        localResourceRoots: [
-          vscode.Uri.joinPath(this.extensionUri, 'dist', 'webview'),
-          // Allow access to workspace folders for local images
-          ...(vscode.workspace.workspaceFolders?.map((f) => f.uri) || []),
-          // Allow access to the document's directory
-          vscode.Uri.joinPath(editor.document.uri, '..'),
-        ],
+        localResourceRoots: this.currentResourceRoots,
         enableFindWidget: true,
       }
     );
@@ -58,13 +89,22 @@ export class PreviewManager {
     };
 
     this.panel.webview.html = this.getWebviewHtml(this.panel.webview);
-    this.setupEventListeners(editor.document);
-    this.activeDocument = editor.document;
+    this.setupEventListeners(document);
+    this.activeDocument = document;
 
     this.panel.onDidDispose(() => {
       this.panel = undefined;
       this.disposeListeners();
     });
+  }
+
+  private recreatePanel(document: vscode.TextDocument): void {
+    const viewColumn = this.panel?.viewColumn || this.lastViewColumn;
+    this.disposeListeners();
+    this.panel?.dispose();
+    this.panel = undefined;
+    this.createPanel(document, viewColumn);
+    this.updatePreview(document);
   }
 
   private setupEventListeners(document: vscode.TextDocument): void {
@@ -95,6 +135,11 @@ export class PreviewManager {
     this.disposables.push(
       vscode.window.onDidChangeActiveTextEditor((editor) => {
         if (editor && editor.document.languageId === 'markdown') {
+          // Check if the new document's directory is covered by current roots
+          if (this.panel && !this.isDocumentCoveredByRoots(editor.document.uri)) {
+            this.recreatePanel(editor.document);
+            return;
+          }
           this.activeDocument = editor.document;
           if (this.panel) {
             this.panel.title = 'Preview: ' + this.getTitle(editor.document);

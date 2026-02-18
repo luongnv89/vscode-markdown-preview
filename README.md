@@ -2,7 +2,7 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![VS Code](https://img.shields.io/badge/VS%20Code-%3E%3D1.85.0-blue.svg)](https://code.visualstudio.com/)
-[![Version](https://img.shields.io/badge/version-0.3.0-green.svg)](https://github.com/luongnv89/vscode-markdown-preview/releases)
+[![Version](https://img.shields.io/badge/version-0.4.0-green.svg)](https://github.com/luongnv89/vscode-markdown-preview/releases)
 
 A clean, minimal markdown preview for Visual Studio Code inspired by the [Zed editor](https://zed.dev/). Provides an enhanced markdown viewing experience with syntax highlighting, interactive diagrams, math rendering, real-time synchronization, and export to HTML/PDF.
 

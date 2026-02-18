@@ -5,6 +5,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.0] - 2026-02-18
+
+### Fixed
+
+- Local image rendering (SVG, PNG, etc.) broken in webview preview
+- Raw HTML `<img>` tags with local paths not resolved to webview URIs
+- `localResourceRoots` too restrictive, blocking images outside workspace folders
+
+### Changed
+
+- `localResourceRoots` now includes filesystem root, matching VS Code built-in preview behavior
+- Image URI resolver handles `file:` scheme URIs and absolute file paths
+- Preview panel automatically recreates when switching to documents in uncovered directories
+
 ## [0.3.0] - 2026-02-17
 
 ### Added
@@ -53,6 +67,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - One-line installation script
 - Configuration options for all features
 
+[0.4.0]: https://github.com/luongnv89/vscode-markdown-preview/releases/tag/v0.4.0
 [0.3.0]: https://github.com/luongnv89/vscode-markdown-preview/releases/tag/v0.3.0
 [0.2.0]: https://github.com/luongnv89/vscode-markdown-preview/releases/tag/v0.2.0
 [0.1.0]: https://github.com/luongnv89/vscode-markdown-preview/releases/tag/v0.1.0
