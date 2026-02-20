@@ -26,6 +26,12 @@ const htmlIcon = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fi
   <polyline points="8 6 2 12 8 18"/>
 </svg>`;
 
+const infoIcon = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+  <circle cx="12" cy="12" r="10"/>
+  <line x1="12" y1="16" x2="12" y2="12"/>
+  <line x1="12" y1="8" x2="12.01" y2="8"/>
+</svg>`;
+
 function detectInitialTheme(): 'light' | 'dark' {
   if (
     document.body.classList.contains('vscode-dark') ||
@@ -79,9 +85,53 @@ export function initToolbar(vscode: VsCodeApi): void {
     vscode.postMessage({ type: 'exportToHtml' });
   });
 
+  // About popup
+  let aboutPopup: HTMLDivElement | null = null;
+
+  function dismissAbout() {
+    if (aboutPopup) {
+      aboutPopup.remove();
+      aboutPopup = null;
+    }
+  }
+
+  const aboutButton = createButton(infoIcon, 'About', () => {
+    if (aboutPopup) {
+      dismissAbout();
+      return;
+    }
+
+    const { version, commit, publisher, repo } = document.body.dataset;
+    const versionText = [version, commit].filter(Boolean).join(' (') + (commit ? ')' : '');
+
+    aboutPopup = document.createElement('div');
+    aboutPopup.className = 'about-popup';
+    aboutPopup.innerHTML = `
+      <div class="about-title">Markdown Preview Pro</div>
+      <div class="about-row"><span class="about-label">Maintainer:</span> ${publisher || 'unknown'}</div>
+      <div class="about-row"><span class="about-label">Repository:</span> <a href="${repo || '#'}">${repo ? repo.replace(/^https?:\/\//, '') : 'N/A'}</a></div>
+      <div class="about-row"><span class="about-label">Version:</span> ${versionText || 'unknown'}</div>
+    `;
+
+    toolbar.appendChild(aboutPopup);
+  });
+
+  // Dismiss popup on click outside
+  document.addEventListener('click', (e) => {
+    if (
+      aboutPopup &&
+      !aboutPopup.contains(e.target as Node) &&
+      e.target !== aboutButton &&
+      !aboutButton.contains(e.target as Node)
+    ) {
+      dismissAbout();
+    }
+  });
+
   toolbar.appendChild(themeButton);
   toolbar.appendChild(pdfButton);
   toolbar.appendChild(htmlButton);
+  toolbar.appendChild(aboutButton);
 
   document.body.appendChild(toolbar);
 }

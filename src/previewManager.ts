@@ -1,4 +1,7 @@
 import * as vscode from 'vscode';
+import * as fs from 'fs';
+import * as path from 'path';
+import { execSync } from 'child_process';
 import { MarkdownEngine } from './markdownEngine';
 import { ScrollSync } from './scrollSync';
 import { toggleCheckbox } from './checkboxHandler';
@@ -17,8 +20,33 @@ export class PreviewManager {
   private currentResourceRoots: vscode.Uri[] = [];
   private lastViewColumn: vscode.ViewColumn = vscode.ViewColumn.Beside;
   private checkboxToggleInProgress = false;
+  private readonly aboutInfo: { version: string; publisher: string; repo: string; commit: string };
 
   constructor(private readonly extensionUri: vscode.Uri) {
+    // Read about info from package.json using fs (webpack-safe)
+    let version = '';
+    let publisher = '';
+    let repo = '';
+    try {
+      const pkgPath = path.join(extensionUri.fsPath, 'package.json');
+      const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8'));
+      version = pkg.version || '';
+      publisher = pkg.publisher || '';
+      repo = pkg.repository?.url || '';
+    } catch {
+      // package.json not readable — use empty defaults
+    }
+    let commit = '';
+    try {
+      commit = execSync('git rev-parse --short HEAD', {
+        cwd: extensionUri.fsPath,
+        encoding: 'utf8',
+        timeout: 3000,
+      }).trim();
+    } catch {
+      // Not in a git repo or git not available
+    }
+    this.aboutInfo = { version, publisher, repo, commit };
     this.config = getPreviewConfig();
     this.engine = new MarkdownEngine(this.config);
     this.scrollSync = new ScrollSync();
@@ -332,7 +360,7 @@ export class PreviewManager {
   <link rel="stylesheet" href="${mainStyle}">
   <title>Markdown Preview Pro</title>
 </head>
-<body>
+<body data-version="${this.aboutInfo.version}" data-commit="${this.aboutInfo.commit}" data-publisher="${this.aboutInfo.publisher}" data-repo="${this.aboutInfo.repo}">
   <div id="preview-content"></div>
   <script nonce="${nonce}" src="${katexScript}"></script>
   <script nonce="${nonce}" src="${mermaidScript}"></script>
