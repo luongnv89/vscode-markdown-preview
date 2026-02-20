@@ -125,7 +125,7 @@ export class MarkdownEngine {
 
             // Replace the checkbox text with an actual checkbox element
             const checkedAttr = checked ? ' checked' : '';
-            const line = listItemToken.attrGet('data-line') || '0';
+            const line = listItemToken.map ? String(listItemToken.map[0]) : '0';
             tokens[i].content = content.replace(/^\[([ xX])\]\s*/, '');
             const children = tokens[i].children || [];
             tokens[i].children = children;

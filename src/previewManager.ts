@@ -16,6 +16,7 @@ export class PreviewManager {
   private disposables: vscode.Disposable[] = [];
   private currentResourceRoots: vscode.Uri[] = [];
   private lastViewColumn: vscode.ViewColumn = vscode.ViewColumn.Beside;
+  private checkboxToggleInProgress = false;
 
   constructor(private readonly extensionUri: vscode.Uri) {
     this.config = getPreviewConfig();
@@ -126,6 +127,12 @@ export class PreviewManager {
           this.activeDocument &&
           event.document.uri.toString() === this.activeDocument.uri.toString()
         ) {
+          // Skip debounced re-render when the change was triggered by our
+          // own checkbox toggle. The toggle handler will issue a re-render
+          // after the edit completes.
+          if (this.checkboxToggleInProgress) {
+            return;
+          }
           this.debouncedUpdate(event.document);
         }
       })
@@ -212,7 +219,16 @@ export class PreviewManager {
 
       case 'toggleCheckbox':
         if (this.activeDocument) {
-          toggleCheckbox(this.activeDocument, message.line, message.checked);
+          this.checkboxToggleInProgress = true;
+          toggleCheckbox(this.activeDocument, message.line, message.checked)
+            .then(() => {
+              if (this.activeDocument) {
+                this.updatePreview(this.activeDocument);
+              }
+            })
+            .finally(() => {
+              this.checkboxToggleInProgress = false;
+            });
         }
         break;
 
