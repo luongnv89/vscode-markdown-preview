@@ -3,6 +3,7 @@ import './styles/markdown.css';
 import './styles/code.css';
 import './styles/mermaid.css';
 import './styles/highlight.css';
+import './styles/toolbar.css';
 
 import { initScrollSync, scrollToLine } from './scrollSync';
 import { initBlockHighlighter } from './blockHighlighter';
@@ -10,6 +11,7 @@ import { initCopyButtons } from './copyButton';
 import { initCheckboxHandler } from './checkboxHandler';
 import { initNavigationHandler } from './navigationHandler';
 import { updateContent, watchThemeChanges } from './renderer';
+import { initToolbar } from './toolbar';
 
 const vscode = acquireVsCodeApi();
 
@@ -19,6 +21,7 @@ initBlockHighlighter();
 initCopyButtons();
 initCheckboxHandler(vscode);
 initNavigationHandler(vscode);
+initToolbar(vscode);
 watchThemeChanges();
 
 // Listen for messages from extension

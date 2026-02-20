@@ -241,6 +241,14 @@ export class PreviewManager {
         }
         break;
       }
+
+      case 'exportToPdf':
+        vscode.commands.executeCommand('markdownPreviewPro.exportToPdf');
+        break;
+
+      case 'exportToHtml':
+        vscode.commands.executeCommand('markdownPreviewPro.exportToHtml');
+        break;
     }
   }
 

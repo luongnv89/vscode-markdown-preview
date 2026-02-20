@@ -8,7 +8,8 @@ export function initNavigationHandler(vscode: VsCodeApi): void {
       target.tagName === 'A' ||
       target.tagName === 'INPUT' ||
       target.closest('.copy-button') ||
-      target.closest('a')
+      target.closest('a') ||
+      target.closest('.preview-toolbar')
     ) {
       return;
     }

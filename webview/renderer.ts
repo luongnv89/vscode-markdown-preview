@@ -67,8 +67,10 @@ async function renderMermaid(): Promise<void> {
 
   if (!mermaidInitialized) {
     const isDark =
-      document.body.classList.contains('vscode-dark') ||
-      document.body.classList.contains('vscode-high-contrast');
+      document.body.classList.contains('preview-theme-dark') ||
+      (!document.body.classList.contains('preview-theme-light') &&
+        (document.body.classList.contains('vscode-dark') ||
+          document.body.classList.contains('vscode-high-contrast')));
 
     mermaid.initialize({
       startOnLoad: false,

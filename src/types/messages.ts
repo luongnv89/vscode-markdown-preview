@@ -25,7 +25,9 @@ export type WebviewMessage =
   | RevealLineMessage
   | ToggleCheckboxMessage
   | NavigateToLineMessage
-  | OpenLinkMessage;
+  | OpenLinkMessage
+  | ExportToPdfMessage
+  | ExportToHtmlMessage;
 
 export interface ReadyMessage {
   type: 'ready';
@@ -51,6 +53,14 @@ export interface NavigateToLineMessage {
 export interface OpenLinkMessage {
   type: 'openLink';
   href: string;
+}
+
+export interface ExportToPdfMessage {
+  type: 'exportToPdf';
+}
+
+export interface ExportToHtmlMessage {
+  type: 'exportToHtml';
 }
 
 // Configuration

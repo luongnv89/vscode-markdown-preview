@@ -1,0 +1,91 @@
+/* Preview Toolbar */
+.preview-toolbar {
+  position: fixed;
+  top: 12px;
+  right: 16px;
+  z-index: 1000;
+  display: flex;
+  gap: 2px;
+  padding: 4px;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  opacity: 0.4;
+  transition: opacity 0.2s ease;
+}
+
+.preview-toolbar:hover {
+  opacity: 1;
+}
+
+.toolbar-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: none;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--fg-muted);
+  cursor: pointer;
+  transition:
+    background-color 0.15s ease,
+    color 0.15s ease;
+}
+
+.toolbar-button:hover {
+  background: var(--hover-bg);
+  color: var(--fg-primary);
+}
+
+.toolbar-button svg {
+  width: 16px;
+  height: 16px;
+}
+
+/* Theme overrides - Light */
+body.preview-theme-light {
+  --bg-primary: #ffffff;
+  --fg-primary: #1f2328;
+  --fg-muted: #656d76;
+  --border-color: #d0d7de;
+  --accent-color: #0969da;
+  --code-bg: #f6f8fa;
+  --link-color: #0969da;
+  --link-hover: #0550ae;
+  --selection-bg: rgba(9, 105, 218, 0.2);
+  --hover-bg: rgba(208, 215, 222, 0.32);
+  --panel-bg: #f6f8fa;
+  --input-bg: #f6f8fa;
+  --button-bg: #0969da;
+  --button-fg: #ffffff;
+  --button-hover-bg: #0550ae;
+}
+
+/* Theme overrides - Dark */
+body.preview-theme-dark {
+  --bg-primary: #0d1117;
+  --fg-primary: #e6edf3;
+  --fg-muted: #8b949e;
+  --border-color: #30363d;
+  --accent-color: #58a6ff;
+  --code-bg: #161b22;
+  --link-color: #58a6ff;
+  --link-hover: #79c0ff;
+  --selection-bg: rgba(56, 139, 253, 0.3);
+  --hover-bg: rgba(177, 186, 196, 0.12);
+  --panel-bg: #161b22;
+  --input-bg: #0d1117;
+  --button-bg: #238636;
+  --button-fg: #ffffff;
+  --button-hover-bg: #2ea043;
+}
+
+/* Hide toolbar in print */
+@media print {
+  .preview-toolbar {
+    display: none !important;
+  }
+}

@@ -2,7 +2,7 @@
   "name": "markdown-preview-pro",
   "displayName": "Markdown Preview Pro",
   "description": "Clean, minimal markdown preview inspired by Zed editor with syntax highlighting, mermaid diagrams, math rendering, and interactive features",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "publisher": "luongnv89",
   "license": "MIT",
   "repository": {
