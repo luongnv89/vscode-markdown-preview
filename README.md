@@ -4,7 +4,7 @@
 [![Installs](https://img.shields.io/visual-studio-marketplace/i/luongnv89.markdown-preview-pro)](https://marketplace.visualstudio.com/items?itemName=luongnv89.markdown-preview-pro)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-A clean, minimal markdown preview for Visual Studio Code inspired by the [Zed editor](https://zed.dev/). Provides an enhanced markdown viewing experience with syntax highlighting, interactive diagrams, math rendering, real-time synchronization, and export capabilities.
+A clean, minimal markdown preview for Visual Studio Code. Provides an enhanced markdown viewing experience with syntax highlighting, interactive diagrams, math rendering, real-time synchronization, and export capabilities.
 
 ![Markdown Preview Pro — editor with syntax-highlighted code on the left, live preview with tables, KaTeX math, and Mermaid diagrams on the right](media/screenshot.png)
 

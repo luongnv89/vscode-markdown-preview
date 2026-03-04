@@ -1,7 +1,7 @@
 {
   "name": "markdown-preview-pro",
   "displayName": "Markdown Preview Pro",
-  "description": "Clean, minimal markdown preview inspired by Zed editor with syntax highlighting, mermaid diagrams, math rendering, and interactive features",
+  "description": "Clean, minimal markdown preview with syntax highlighting, mermaid diagrams, math rendering, and interactive features",
   "version": "0.6.1",
   "publisher": "luongnv89",
   "license": "MIT",
@@ -22,7 +22,7 @@
     "mermaid",
     "katex",
     "math",
-    "zed"
+    "preview"
   ],
   "icon": "media/icon.png",
   "activationEvents": [
