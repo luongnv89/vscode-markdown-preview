@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.6.1
+
+- Default preview theme is now light, independent of VS Code theme
+- Rewrite README for VS Code Marketplace — focus on installation and usage
+
+## 0.6.0
+
+- Add About button to preview toolbar with version, commit hash, maintainer, and repository link
+- Clicking About toggles an info popup; clicking outside or clicking again dismisses it
+- Repository link opens in external browser
+
 ## 0.5.0
 
 - Add floating toolbar to preview with dark/light theme toggle, Export PDF, and Export HTML buttons

@@ -1,73 +1,96 @@
 # Markdown Preview Pro
 
+[![VS Code Marketplace](https://img.shields.io/visual-studio-marketplace/v/luongnv89.markdown-preview-pro?label=VS%20Code%20Marketplace&color=blue)](https://marketplace.visualstudio.com/items?itemName=luongnv89.markdown-preview-pro)
+[![Installs](https://img.shields.io/visual-studio-marketplace/i/luongnv89.markdown-preview-pro)](https://marketplace.visualstudio.com/items?itemName=luongnv89.markdown-preview-pro)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![VS Code](https://img.shields.io/badge/VS%20Code-%3E%3D1.85.0-blue.svg)](https://code.visualstudio.com/)
-[![Version](https://img.shields.io/badge/version-0.4.0-green.svg)](https://github.com/luongnv89/vscode-markdown-preview/releases)
 
-A clean, minimal markdown preview for Visual Studio Code inspired by the [Zed editor](https://zed.dev/). Provides an enhanced markdown viewing experience with syntax highlighting, interactive diagrams, math rendering, real-time synchronization, and export to HTML/PDF.
+A clean, minimal markdown preview for Visual Studio Code inspired by the [Zed editor](https://zed.dev/). Provides an enhanced markdown viewing experience with syntax highlighting, interactive diagrams, math rendering, real-time synchronization, and export capabilities.
 
 ![Markdown Preview Pro — editor with syntax-highlighted code on the left, live preview with tables, KaTeX math, and Mermaid diagrams on the right](media/screenshot.png)
 
-## Features
+## Installation
 
-- **Syntax Highlighting** - Powered by highlight.js with GitHub Dark theme and auto-language detection
-- **Mermaid Diagrams** - Render flowcharts, sequence diagrams, and more directly in preview
-- **KaTeX Math** - Inline (`$...$`) and block (`$$...$$`) math rendering
-- **Interactive Task Lists** - Toggle checkboxes in preview and sync changes back to source
-- **Bidirectional Scroll Sync** - Editor and preview scroll positions stay in sync
-- **Copy Code Blocks** - One-click copy button on all code blocks
-- **Image Support** - Local images, workspace-relative paths, and Excalidraw diagrams
-- **Smart Typography** - Optional smart quotes and typographic replacements
-- **Export to HTML** - Generate standalone HTML files with fully rendered diagrams and math
-- **Export to PDF** - Export markdown to PDF using Chrome/Chromium
-- **Theme-Aware** - Adapts to your VS Code light/dark theme
+Search for **"Markdown Preview Pro"** in the VS Code Extensions sidebar (`Cmd+Shift+X` / `Ctrl+Shift+X`) and click **Install**.
 
-## Quick Start
-
-### One-Line Install
+Or install from the command line:
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/luongnv89/vscode-markdown-preview/main/install.sh | bash
+code --install-extension luongnv89.markdown-preview-pro
 ```
 
-### Manual Install
-
-1. Clone the repository:
-
-   ```bash
-   git clone https://github.com/luongnv89/vscode-markdown-preview.git
-   cd vscode-markdown-preview
-   ```
-
-2. Install dependencies and build:
-
-   ```bash
-   npm install
-   npm run package
-   ```
-
-3. Package and install the extension:
-   ```bash
-   npx @vscode/vsce package --no-dependencies
-   code --install-extension markdown-preview-pro-*.vsix
-   ```
-
-### Prerequisites
-
-- [VS Code](https://code.visualstudio.com/) >= 1.85.0
-- [Node.js](https://nodejs.org/) >= 18
-
-## Usage
+## Getting Started
 
 1. Open any `.md` file in VS Code
-2. Use one of these methods to open the preview:
+2. Open the preview using one of these methods:
    - Press `Cmd+Shift+V` (macOS) or `Ctrl+Shift+V` (Windows/Linux)
-   - Open the Command Palette (`Cmd+Shift+P` / `Ctrl+Shift+P`) and search for **Markdown Preview Pro: Open Preview to Side**
+   - Open the Command Palette (`Cmd+Shift+P` / `Ctrl+Shift+P`) and run **Markdown Preview Pro: Open Preview to Side**
    - Click the preview icon in the editor title bar
+   - Right-click a markdown file and select **Open Preview to Side**
+
+## Features
+
+### Syntax Highlighting
+
+Code blocks are highlighted with the GitHub Dark theme and automatic language detection powered by highlight.js. A one-click copy button appears on every code block.
+
+### Mermaid Diagrams
+
+Write diagrams directly in your markdown using [Mermaid](https://mermaid.js.org/) syntax:
+
+````markdown
+```mermaid
+graph TD
+    A[Start] --> B{Decision}
+    B -->|Yes| C[Action]
+    B -->|No| D[End]
+```
+````
+
+### Math Rendering
+
+Render math equations with [KaTeX](https://katex.org/):
+
+- **Inline math**: `$E = mc^2$`
+- **Block math**:
+  ```
+  $$
+  \int_0^\infty e^{-x^2} dx = \frac{\sqrt{\pi}}{2}
+  $$
+  ```
+
+### Interactive Task Lists
+
+Toggle checkboxes directly in the preview — changes sync back to your source file automatically.
+
+```markdown
+- [x] Completed task
+- [ ] Click to toggle in preview
+```
+
+### Bidirectional Scroll Sync
+
+Editor and preview scroll positions stay in sync. Scroll in either pane and the other follows.
+
+### Preview Toolbar
+
+A floating toolbar in the top-right corner of the preview provides quick access to:
+
+- **Theme toggle** — switch between light and dark preview independently from your VS Code theme
+- **Export to HTML** — generate a standalone HTML file with all diagrams and math fully rendered
+- **Export to PDF** — export to PDF using Chrome/Chromium (must be installed on your system)
+- **About** — view extension version and links
+
+### Image Support
+
+Local images, workspace-relative paths, absolute paths, and Excalidraw (`.excalidraw.svg`) diagrams are all supported.
+
+### Smart Typography
+
+Optional typographic enhancements: smart quotes, em-dashes, and other replacements.
 
 ## Configuration
 
-Configure via VS Code Settings (`markdownPreviewPro.*`):
+All settings are under `markdownPreviewPro.*` in VS Code Settings:
 
 | Setting            | Default | Description                          |
 | ------------------ | ------- | ------------------------------------ |
@@ -78,69 +101,28 @@ Configure via VS Code Settings (`markdownPreviewPro.*`):
 | `typographer`      | `true`  | Smart quotes and typography          |
 | `lineBreaks`       | `false` | Convert newlines to `<br>` tags      |
 
-## Project Structure
+## Commands
 
-```
-vscode-markdown-preview/
-├── src/                    # Extension source (Node.js)
-│   ├── extension.ts        # Entry point
-│   ├── previewManager.ts   # Preview panel management
-│   ├── markdownEngine.ts   # Markdown rendering engine
-│   ├── checkboxHandler.ts  # Interactive checkbox logic
-│   ├── scrollSync.ts       # Scroll synchronization
-│   ├── export/             # HTML & PDF export
-│   │   ├── exportManager.ts        # Export orchestration
-│   │   ├── standaloneHtmlBuilder.ts # Self-contained HTML generation
-│   │   ├── pdfExporter.ts          # PDF generation via Chrome
-│   │   └── browserFinder.ts        # Chrome/Chromium detection
-│   ├── types/              # TypeScript type definitions
-│   └── utils/              # Configuration & URI utilities
-├── webview/                # Webview client (Browser)
-│   ├── main.ts             # Webview entry point
-│   ├── renderer.ts         # Content rendering
-│   ├── scrollSync.ts       # Client-side scroll sync
-│   ├── blockHighlighter.ts # Code block highlighting
-│   ├── copyButton.ts       # Copy-to-clipboard
-│   ├── checkboxHandler.ts  # Checkbox interaction
-│   ├── navigationHandler.ts# Link navigation
-│   └── styles/             # CSS stylesheets
-├── dist/                   # Compiled output
-├── test/                   # Test suite
-├── docs/                   # Documentation
-├── package.json            # Extension manifest
-├── webpack.config.js       # Build configuration
-└── tsconfig.json           # TypeScript configuration
-```
+Open the Command Palette (`Cmd+Shift+P` / `Ctrl+Shift+P`) and search for:
 
-## Technology Stack
+| Command                                      | Description                  |
+| -------------------------------------------- | ---------------------------- |
+| `Markdown Preview Pro: Open Preview`         | Open preview in current pane |
+| `Markdown Preview Pro: Open Preview to Side` | Open preview in a side pane  |
+| `Markdown Preview Pro: Export to HTML`       | Export as standalone HTML    |
+| `Markdown Preview Pro: Export to PDF`        | Export as PDF                |
 
-| Component           | Technology                                                                |
-| ------------------- | ------------------------------------------------------------------------- |
-| Language            | TypeScript                                                                |
-| Markdown Parser     | [markdown-it](https://github.com/markdown-it/markdown-it) v14             |
-| Syntax Highlighting | [highlight.js](https://highlightjs.org/) v11                              |
-| Math Rendering      | [KaTeX](https://katex.org/) v0.16                                         |
-| Diagrams            | [Mermaid](https://mermaid.js.org/) v10                                    |
-| Task Lists          | [markdown-it-task-lists](https://github.com/revin/markdown-it-task-lists) |
-| PDF Export          | [puppeteer-core](https://pptr.dev/) v24                                   |
-| Build Tool          | [Webpack](https://webpack.js.org/) v5                                     |
+## Requirements
 
-## Documentation
-
-| Document                                   | Description                               |
-| ------------------------------------------ | ----------------------------------------- |
-| [User Guide](docs/USER_GUIDE.md)           | Comprehensive feature guide with examples |
-| [Architecture](docs/ARCHITECTURE.md)       | System design and component overview      |
-| [API Reference](docs/API.md)               | Internal APIs and message protocol        |
-| [Development](docs/DEVELOPMENT.md)         | Local setup and debugging                 |
-| [Deployment](docs/DEPLOYMENT.md)           | Building and publishing                   |
-| [Troubleshooting](docs/TROUBLESHOOTING.md) | Common issues and solutions               |
-| [Changelog](docs/CHANGELOG.md)             | Version history                           |
+- **VS Code** >= 1.85.0
+- **Chrome or Chromium** (only required for PDF export)
 
 ## Contributing
 
-Contributions are welcome! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
+Contributions are welcome! See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
+
+For development setup, see [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md).
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+MIT — see [LICENSE](LICENSE) for details.

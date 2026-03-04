@@ -33,12 +33,6 @@ const infoIcon = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fi
 </svg>`;
 
 function detectInitialTheme(): 'light' | 'dark' {
-  if (
-    document.body.classList.contains('vscode-dark') ||
-    document.body.classList.contains('vscode-high-contrast')
-  ) {
-    return 'dark';
-  }
   return 'light';
 }
 
@@ -56,6 +50,9 @@ export function initToolbar(vscode: VsCodeApi): void {
   toolbar.className = 'preview-toolbar';
 
   let currentTheme = detectInitialTheme();
+
+  // Apply light theme by default
+  document.body.classList.add('preview-theme-light');
 
   const themeButton = createButton(
     currentTheme === 'dark' ? sunIcon : moonIcon,
