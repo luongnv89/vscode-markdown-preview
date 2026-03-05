@@ -29,6 +29,22 @@ code --install-extension luongnv89.markdown-preview-pro
 
 ## Features
 
+| Feature                   | Description                                                                          |
+| ------------------------- | ------------------------------------------------------------------------------------ |
+| Syntax Highlighting       | GitHub Dark theme, auto language detection, one-click copy                           |
+| Mermaid Diagrams          | Flowcharts, sequence diagrams, and more via [Mermaid](https://mermaid.js.org/)       |
+| Math Rendering            | Inline and block equations via [KaTeX](https://katex.org/)                           |
+| Interactive Task Lists    | Toggle checkboxes in preview — syncs back to source file                             |
+| Bidirectional Scroll Sync | Editor and preview scroll positions stay in sync                                     |
+| Table of Contents         | Collapsible sidebar listing all headings with scroll-to and active section highlight |
+| Word Count & Stats        | Bottom bar showing word count, character count, and estimated reading time           |
+| Presentation Mode         | Splits content by `---` into slides with keyboard navigation                         |
+| Theme Toggle              | Switch between light and dark preview independently from VS Code theme               |
+| Export to HTML            | Standalone HTML file with diagrams and math fully rendered                           |
+| Export to PDF             | PDF export using Chrome/Chromium                                                     |
+| Image Support             | Local, workspace-relative, absolute paths, and Excalidraw diagrams                   |
+| Smart Typography          | Smart quotes, em-dashes, and other typographic enhancements                          |
+
 ### Syntax Highlighting
 
 Code blocks are highlighted with the GitHub Dark theme and automatic language detection powered by highlight.js. A one-click copy button appears on every code block.
@@ -71,13 +87,28 @@ Toggle checkboxes directly in the preview — changes sync back to your source f
 
 Editor and preview scroll positions stay in sync. Scroll in either pane and the other follows.
 
+### Table of Contents Sidebar
+
+Toggle a collapsible sidebar listing all headings in the document. Click any entry to smooth-scroll to that section. The active heading is highlighted as you scroll through the content.
+
+### Word Count & Reading Stats
+
+A bottom bar displays word count, character count, and estimated reading time (based on 200 wpm). Toggle it on or off from the toolbar.
+
+### Presentation Mode
+
+Turn any markdown document into a slide presentation. Content is split by `---` (horizontal rules) into individual slides. Navigate with arrow keys or Space, and press Escape to exit. A slide counter is shown at the bottom-right corner.
+
 ### Preview Toolbar
 
 A floating toolbar in the top-right corner of the preview provides quick access to:
 
+- **TOC toggle** — show or hide the Table of Contents sidebar
+- **Stats toggle** — show or hide the word count and reading stats bar
 - **Theme toggle** — switch between light and dark preview independently from your VS Code theme
 - **Export to HTML** — generate a standalone HTML file with all diagrams and math fully rendered
 - **Export to PDF** — export to PDF using Chrome/Chromium (must be installed on your system)
+- **Presentation mode** — enter slide presentation mode
 - **About** — view extension version and links
 
 ### Image Support
@@ -122,6 +153,46 @@ Open the Command Palette (`Cmd+Shift+P` / `Ctrl+Shift+P`) and search for:
 Contributions are welcome! See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 
 For development setup, see [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md).
+
+## Changelog
+
+### 0.7.0
+
+- Add Table of Contents sidebar with heading navigation and active section highlighting
+- Add word count, character count, and reading time stats bar
+- Add presentation / slide mode with keyboard navigation
+- Three new toolbar buttons: TOC toggle, Stats toggle, Presentation mode
+- Toolbar separator between feature toggles and export actions
+
+### 0.6.1
+
+- Default preview theme is now light, independent of VS Code theme
+
+### 0.6.0
+
+- Add About button to preview toolbar
+
+### 0.5.0
+
+- Add floating toolbar with theme toggle, Export PDF, and Export HTML
+
+### 0.4.0
+
+- Fix local image rendering in webview preview
+
+### 0.3.0
+
+- Add export to HTML and PDF
+
+### 0.2.0
+
+- Add right-click context menu
+
+### 0.1.0
+
+- Initial release
+
+See [changelog.md](changelog.md) for full details.
 
 ## License
 

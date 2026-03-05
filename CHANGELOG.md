@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.7.0
+
+- Add Table of Contents (TOC) sidebar — collapsible left panel listing all headings, click to scroll, highlights active section as you scroll
+- Add Word Count & Reading Stats bar — fixed bottom bar showing word count, character count, and estimated reading time (200 wpm)
+- Add Presentation / Slide Mode — splits content by `---` separators into slides with keyboard navigation (arrows, Space, Escape), slide counter, and smooth transitions
+- Three new toolbar buttons: TOC toggle (list icon), Stats toggle (bar-chart icon), Presentation mode (play icon)
+- Toolbar now groups buttons with a visual separator between feature toggles and export actions
+
 ## 0.6.1
 
 - Default preview theme is now light, independent of VS Code theme
