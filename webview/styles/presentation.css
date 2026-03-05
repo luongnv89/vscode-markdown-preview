@@ -1,0 +1,105 @@
+/* Presentation / Slide Mode */
+.presentation-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: var(--bg-primary);
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: presentation-fade-in 0.3s ease;
+}
+
+@keyframes presentation-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.presentation-slide {
+  max-width: 900px;
+  width: 90%;
+  max-height: 80vh;
+  overflow-y: auto;
+  padding: 40px;
+  font-size: 1.2em;
+  line-height: 1.6;
+  color: var(--fg-primary);
+  animation: slide-fade-in 0.25s ease;
+}
+
+@keyframes slide-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.presentation-slide h1 {
+  font-size: 2em;
+  margin-bottom: 0.5em;
+}
+.presentation-slide h2 {
+  font-size: 1.6em;
+  margin-bottom: 0.4em;
+}
+.presentation-slide h3 {
+  font-size: 1.3em;
+}
+
+.presentation-counter {
+  position: fixed;
+  bottom: 20px;
+  right: 24px;
+  font-size: 14px;
+  color: var(--fg-muted);
+  z-index: 2001;
+  user-select: none;
+}
+
+.presentation-exit {
+  position: fixed;
+  top: 16px;
+  right: 20px;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 6px;
+  background: var(--hover-bg);
+  color: var(--fg-muted);
+  cursor: pointer;
+  font-size: 18px;
+  z-index: 2001;
+  transition:
+    color 0.15s ease,
+    background 0.15s ease;
+}
+
+.presentation-exit:hover {
+  color: var(--fg-primary);
+  background: var(--border-color);
+}
+
+.presentation-nav-hint {
+  position: fixed;
+  bottom: 20px;
+  left: 24px;
+  font-size: 11px;
+  color: var(--fg-muted);
+  opacity: 0.6;
+  z-index: 2001;
+  user-select: none;
+}

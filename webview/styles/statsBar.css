@@ -1,0 +1,47 @@
+/* Word Count & Reading Stats Bar */
+.stats-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  background: var(--bg-primary);
+  border-top: 1px solid var(--border-color);
+  font-size: 11px;
+  color: var(--fg-muted);
+  z-index: 900;
+  opacity: 0.85;
+  transition: opacity 0.2s ease;
+}
+
+.stats-bar:hover {
+  opacity: 1;
+}
+
+.stats-bar.stats-hidden {
+  display: none;
+}
+
+.stats-bar-item {
+  white-space: nowrap;
+}
+
+.stats-bar-separator {
+  color: var(--border-color);
+}
+
+/* Active toolbar button */
+.toolbar-button.stats-toggle-active {
+  color: var(--accent-color);
+}
+
+/* Hide in print */
+@media print {
+  .stats-bar {
+    display: none !important;
+  }
+}

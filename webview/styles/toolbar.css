@@ -83,6 +83,14 @@ body.preview-theme-dark {
   --button-hover-bg: #2ea043;
 }
 
+/* Toolbar Separator */
+.toolbar-separator {
+  width: 1px;
+  height: 18px;
+  background: var(--border-color);
+  margin: 5px 2px;
+}
+
 /* About Popup */
 .about-popup {
   position: absolute;

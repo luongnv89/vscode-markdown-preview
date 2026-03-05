@@ -1,5 +1,7 @@
 import { refreshCopyButtons } from './copyButton';
 import { refreshBlockHighlighter } from './blockHighlighter';
+import { refreshToc } from './toc';
+import { refreshStats } from './statsBar';
 
 let mermaidInitialized = false;
 let updateInProgress = false;
@@ -37,6 +39,10 @@ export async function updateContent(html: string): Promise<void> {
 
     // Refresh block highlighter
     refreshBlockHighlighter();
+
+    // Refresh TOC and stats
+    refreshToc();
+    refreshStats();
 
     // Restore scroll position
     window.scrollTo(0, scrollTop);

@@ -4,6 +4,9 @@ import './styles/code.css';
 import './styles/mermaid.css';
 import './styles/highlight.css';
 import './styles/toolbar.css';
+import './styles/toc.css';
+import './styles/statsBar.css';
+import './styles/presentation.css';
 
 import { initScrollSync, scrollToLine } from './scrollSync';
 import { initBlockHighlighter } from './blockHighlighter';
@@ -12,6 +15,9 @@ import { initCheckboxHandler } from './checkboxHandler';
 import { initNavigationHandler } from './navigationHandler';
 import { updateContent, watchThemeChanges } from './renderer';
 import { initToolbar } from './toolbar';
+import { initToc } from './toc';
+import { initStatsBar } from './statsBar';
+import { initPresentation } from './presentation';
 
 const vscode = acquireVsCodeApi();
 
@@ -22,6 +28,9 @@ initCopyButtons();
 initCheckboxHandler(vscode);
 initNavigationHandler(vscode);
 initToolbar(vscode);
+initToc();
+initStatsBar();
+initPresentation();
 watchThemeChanges();
 
 // Listen for messages from extension
