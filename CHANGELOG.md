@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.8.0
+
+- Add YAML frontmatter support — parse frontmatter between `---` delimiters and display as a styled, collapsible metadata card at the top of the preview
+- Frontmatter card renders key-value pairs in a clean table with clickable URLs, inline badge/image rendering, and array values as tags
+- All frontmatter values are HTML-escaped for safety
+- Scroll sync preserved via automatic `data-line` offset adjustment for stripped frontmatter lines
+- New `showFrontmatter` setting (`card` | `none`) to control frontmatter display (default: `card`)
+- Add `yaml` package dependency for frontmatter parsing
+
 ## 0.7.0
 
 - Add Table of Contents (TOC) sidebar — collapsible left panel listing all headings, click to scroll, highlights active section as you scroll
