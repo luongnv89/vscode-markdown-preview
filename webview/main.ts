@@ -7,6 +7,7 @@ import './styles/toolbar.css';
 import './styles/toc.css';
 import './styles/statsBar.css';
 import './styles/presentation.css';
+import './styles/frontmatter.css';
 
 import { initScrollSync, scrollToLine } from './scrollSync';
 import { initBlockHighlighter } from './blockHighlighter';

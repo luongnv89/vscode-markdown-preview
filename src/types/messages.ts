@@ -71,4 +71,5 @@ export interface PreviewConfig {
   enableCheckboxes: boolean;
   lineBreaks: boolean;
   typographer: boolean;
+  showFrontmatter: 'card' | 'none';
 }

@@ -1,3 +1,14 @@
+---
+title: Markdown Preview Pro - Test Document
+author: luongnv89
+version: 0.8.0
+date: 2026-03-09
+license: MIT
+tags: [markdown, preview, vscode, extension]
+repository: https://github.com/luongnv89/vscode-markdown-preview
+badge: https://img.shields.io/badge/marketplace-v0.8.0-blue.svg
+---
+
 # Markdown Preview Pro - Test Document
 
 This is a sample document to test the **Markdown Preview Pro** extension.

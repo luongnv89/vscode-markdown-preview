@@ -3,6 +3,7 @@ import hljs from 'highlight.js';
 import * as vscode from 'vscode';
 import { PreviewConfig } from './types/messages';
 import { resolveImageUri } from './utils/uri';
+import { parseFrontmatter, renderFrontmatterHtml } from './utils/frontmatter';
 
 export interface RenderResult {
   html: string;
@@ -293,7 +294,30 @@ export class MarkdownEngine {
   }
 
   public render(content: string): RenderResult {
-    let html = this.md.render(content);
+    let body = content;
+    let frontmatterHtml = '';
+    let linesConsumed = 0;
+
+    if (this.config.showFrontmatter === 'card') {
+      const result = parseFrontmatter(content);
+      body = result.body;
+      linesConsumed = result.linesConsumed;
+      if (result.frontmatter) {
+        frontmatterHtml = renderFrontmatterHtml(result.frontmatter);
+      }
+    }
+
+    let html = this.md.render(body);
+
+    // Adjust data-line attributes to account for stripped frontmatter lines
+    if (linesConsumed > 0) {
+      html = html.replace(/data-line="(\d+)"/g, (_, line) => {
+        return `data-line="${parseInt(line) + linesConsumed}"`;
+      });
+    }
+
+    // Prepend frontmatter card
+    html = frontmatterHtml + html;
 
     // Post-process: resolve image src attributes in raw HTML blocks/inlines
     // that bypass the markdown-it image renderer rule (e.g. <img src="...">).

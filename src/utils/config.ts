@@ -10,5 +10,6 @@ export function getPreviewConfig(): PreviewConfig {
     enableCheckboxes: config.get('enableCheckboxes', true),
     lineBreaks: config.get('lineBreaks', false),
     typographer: config.get('typographer', true),
+    showFrontmatter: config.get<'card' | 'none'>('showFrontmatter', 'card'),
   };
 }

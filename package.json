@@ -2,7 +2,7 @@
   "name": "markdown-preview-pro",
   "displayName": "Markdown Preview Pro",
   "description": "Clean, minimal markdown preview with syntax highlighting, mermaid diagrams, math rendering, and interactive features",
-  "version": "0.7.0",
+  "version": "0.8.0",
   "publisher": "luongnv89",
   "license": "MIT",
   "repository": {
@@ -147,6 +147,19 @@
           "type": "boolean",
           "default": false,
           "description": "Convert newlines in paragraphs to <br> tags"
+        },
+        "markdownPreviewPro.showFrontmatter": {
+          "type": "string",
+          "default": "card",
+          "enum": [
+            "card",
+            "none"
+          ],
+          "enumDescriptions": [
+            "Display YAML frontmatter as a styled metadata card",
+            "Hide frontmatter from the preview"
+          ],
+          "description": "How to display YAML frontmatter in the preview"
         }
       }
     }
@@ -185,6 +198,7 @@
     "markdown-it": "^14.0.0",
     "markdown-it-task-lists": "^2.1.1",
     "mermaid": "^10.6.1",
-    "puppeteer-core": "^24.37.3"
+    "puppeteer-core": "^24.37.3",
+    "yaml": "^2.8.2"
   }
 }
