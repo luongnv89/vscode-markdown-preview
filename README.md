@@ -42,6 +42,7 @@ code --install-extension luongnv89.markdown-preview-pro
 | Theme Toggle              | Switch between light and dark preview independently from VS Code theme               |
 | Export to HTML            | Standalone HTML file with diagrams and math fully rendered                           |
 | Export to PDF             | PDF export using Chrome/Chromium                                                     |
+| YAML Frontmatter          | Parse and display frontmatter as a styled, collapsible metadata card                 |
 | Image Support             | Local, workspace-relative, absolute paths, and Excalidraw diagrams                   |
 | Smart Typography          | Smart quotes, em-dashes, and other typographic enhancements                          |
 
@@ -111,6 +112,21 @@ A floating toolbar in the top-right corner of the preview provides quick access 
 - **Presentation mode** — enter slide presentation mode
 - **About** — view extension version and links
 
+### YAML Frontmatter
+
+YAML frontmatter between `---` delimiters is parsed and displayed as a collapsible metadata card at the top of the preview. Key-value pairs are shown in a clean table with clickable URLs, inline badge/image rendering, and array values as tags.
+
+```markdown
+---
+title: My Document
+author: Jane Doe
+tags: [markdown, preview]
+repository: https://github.com/example/repo
+---
+```
+
+Set `showFrontmatter` to `"none"` to hide the card.
+
 ### Image Support
 
 Local images, workspace-relative paths, absolute paths, and Excalidraw (`.excalidraw.svg`) diagrams are all supported.
@@ -123,14 +139,15 @@ Optional typographic enhancements: smart quotes, em-dashes, and other replacemen
 
 All settings are under `markdownPreviewPro.*` in VS Code Settings:
 
-| Setting            | Default | Description                          |
-| ------------------ | ------- | ------------------------------------ |
-| `scrollSync`       | `true`  | Bidirectional scroll synchronization |
-| `enableMermaid`    | `true`  | Mermaid diagram rendering            |
-| `enableKatex`      | `true`  | KaTeX math rendering                 |
-| `enableCheckboxes` | `true`  | Interactive task list checkboxes     |
-| `typographer`      | `true`  | Smart quotes and typography          |
-| `lineBreaks`       | `false` | Convert newlines to `<br>` tags      |
+| Setting            | Default | Description                           |
+| ------------------ | ------- | ------------------------------------- |
+| `scrollSync`       | `true`  | Bidirectional scroll synchronization  |
+| `enableMermaid`    | `true`  | Mermaid diagram rendering             |
+| `enableKatex`      | `true`  | KaTeX math rendering                  |
+| `enableCheckboxes` | `true`  | Interactive task list checkboxes      |
+| `typographer`      | `true`  | Smart quotes and typography           |
+| `lineBreaks`       | `false` | Convert newlines to `<br>` tags       |
+| `showFrontmatter`  | `card`  | Frontmatter display: `card` or `none` |
 
 ## Commands
 
@@ -155,6 +172,13 @@ Contributions are welcome! See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines
 For development setup, see [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md).
 
 ## Changelog
+
+### 0.8.0
+
+- Add YAML frontmatter support with styled, collapsible metadata card
+- Frontmatter renders key-value table with clickable links, inline badges, and array tags
+- New `showFrontmatter` setting (`card` | `none`) to control display
+- Scroll sync preserved via automatic line offset adjustment
 
 ### 0.7.0
 
