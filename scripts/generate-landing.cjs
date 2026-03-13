@@ -164,27 +164,27 @@ async function embedFonts(css, fontsDir) {
 
 function replaceThemeVariables(css) {
   const defaults = {
-    '--vscode-editor-background': '#111111',
-    '--vscode-editor-foreground': '#e6edf3',
-    '--vscode-descriptionForeground': '#9aa4b2',
-    '--vscode-editorWidget-border': 'rgba(127, 127, 127, 0.2)',
-    '--vscode-editorCursor-foreground': '#7cc7ff',
-    '--vscode-textCodeBlock-background': 'rgba(127, 127, 127, 0.1)',
-    '--vscode-textLink-foreground': '#58a6ff',
-    '--vscode-textLink-activeForeground': '#79c0ff',
-    '--vscode-editor-selectionBackground': 'rgba(88, 166, 255, 0.22)',
-    '--vscode-list-hoverBackground': 'rgba(127, 127, 127, 0.08)',
-    '--vscode-panel-background': '#161b22',
-    '--vscode-input-background': 'rgba(127, 127, 127, 0.08)',
-    '--vscode-button-background': '#238636',
+    '--vscode-editor-background': '#ffffff',
+    '--vscode-editor-foreground': '#1f2328',
+    '--vscode-descriptionForeground': '#656d76',
+    '--vscode-editorWidget-border': '#d0d7de',
+    '--vscode-editorCursor-foreground': '#0969da',
+    '--vscode-textCodeBlock-background': '#f6f8fa',
+    '--vscode-textLink-foreground': '#0969da',
+    '--vscode-textLink-activeForeground': '#0550ae',
+    '--vscode-editor-selectionBackground': 'rgba(9, 105, 218, 0.2)',
+    '--vscode-list-hoverBackground': 'rgba(208, 215, 222, 0.32)',
+    '--vscode-panel-background': '#f6f8fa',
+    '--vscode-input-background': '#f6f8fa',
+    '--vscode-button-background': '#0969da',
     '--vscode-button-foreground': '#ffffff',
-    '--vscode-button-hoverBackground': '#2ea043',
+    '--vscode-button-hoverBackground': '#0550ae',
     '--vscode-scrollbarSlider-background': 'rgba(127, 127, 127, 0.3)',
     '--vscode-scrollbarSlider-hoverBackground': 'rgba(127, 127, 127, 0.5)',
     '--vscode-scrollbarSlider-activeBackground': 'rgba(127, 127, 127, 0.7)',
-    '--vscode-errorForeground': '#f85149',
-    '--vscode-inputValidation-errorBackground': 'rgba(248, 81, 73, 0.1)',
-    '--vscode-inputValidation-errorBorder': '#f85149',
+    '--vscode-errorForeground': '#cf222e',
+    '--vscode-inputValidation-errorBackground': 'rgba(207, 34, 46, 0.1)',
+    '--vscode-inputValidation-errorBorder': '#cf222e',
     '--vscode-editor-font-family': "'SF Mono', 'Fira Code', Menlo, Monaco, Consolas, monospace",
   };
 
@@ -366,9 +366,7 @@ async function getCombinedCss() {
 /* Landing page framing */
 body {
   padding: 32px 24px 72px;
-  background:
-    radial-gradient(circle at top, rgba(88, 166, 255, 0.12), transparent 28%),
-    var(--vscode-editor-background);
+  background: var(--bg-primary);
 }
 #preview-content {
   max-width: 960px;
@@ -383,25 +381,25 @@ body {
 }
 #preview-content > p:nth-of-type(1) {
   font-size: 1.1rem;
-  color: var(--vscode-descriptionForeground);
+  color: var(--fg-muted);
 }
 #preview-content > p:nth-of-type(2) a {
   display: inline-block;
   margin-right: 12px;
   margin-bottom: 8px;
   padding: 10px 14px;
-  border: 1px solid var(--vscode-editorWidget-border);
+  border: 1px solid var(--border-color);
   border-radius: 10px;
-  background: var(--vscode-input-background);
+  background: var(--input-bg);
   text-decoration: none;
 }
 #preview-content > p:nth-of-type(2) a:first-child {
-  background: var(--vscode-button-background);
-  color: var(--vscode-button-foreground);
-  border-color: var(--vscode-button-background);
+  background: var(--button-bg);
+  color: var(--button-fg);
+  border-color: var(--button-bg);
 }
 img.preview-image {
-  box-shadow: 0 18px 48px rgba(0,0,0,0.28);
+  box-shadow: 0 18px 48px rgba(0,0,0,0.12);
 }
 `;
   return css;
@@ -418,7 +416,127 @@ async function buildHtml(markdownHtml, title, documentPath) {
 
   const renderScript = `
 <script>
+const COPY_ICON = '<svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="5" y="5" width="8" height="8" rx="1" stroke="currentColor" stroke-width="1.2"/><path d="M3 11V3C3 2.44772 3.44772 2 4 2H10" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>';
+const CHECK_ICON = '<svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M3 8.5L6.5 12L13 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+const SUN_ICON = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>';
+const MOON_ICON = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>';
+const THEME_STORAGE_KEY = 'markdown-preview-pro-landing-theme';
+
+function wrapCodeBlocks() {
+  const codeBlocks = document.querySelectorAll('pre.hljs:not(.mermaid), pre.code-block:not(.mermaid)');
+  codeBlocks.forEach((pre) => {
+    if (pre.parentElement && pre.parentElement.classList.contains('code-block-wrapper')) return;
+    const wrapper = document.createElement('div');
+    wrapper.className = 'code-block-wrapper';
+
+    const lang = pre.getAttribute('data-lang') || '';
+    const header = document.createElement('div');
+    header.className = 'code-block-header';
+
+    if (lang) {
+      const langLabel = document.createElement('span');
+      langLabel.className = 'code-block-lang';
+      langLabel.textContent = lang;
+      header.appendChild(langLabel);
+    }
+
+    const copyBtn = document.createElement('button');
+    copyBtn.className = 'copy-button';
+    copyBtn.innerHTML = COPY_ICON;
+    copyBtn.title = 'Copy code';
+    copyBtn.addEventListener('click', async () => {
+      const code = pre.querySelector('code')?.textContent || pre.textContent || '';
+      try {
+        await navigator.clipboard.writeText(code);
+      } catch {
+        const textarea = document.createElement('textarea');
+        textarea.value = code;
+        textarea.style.position = 'fixed';
+        textarea.style.opacity = '0';
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textarea);
+      }
+      copyBtn.innerHTML = CHECK_ICON;
+      copyBtn.classList.add('copied');
+      setTimeout(() => {
+        copyBtn.innerHTML = COPY_ICON;
+        copyBtn.classList.remove('copied');
+      }, 2000);
+    });
+
+    header.appendChild(copyBtn);
+    pre.parentNode.insertBefore(wrapper, pre);
+    wrapper.appendChild(header);
+    wrapper.appendChild(pre);
+  });
+}
+
+function getStoredTheme() {
+  try {
+    return localStorage.getItem(THEME_STORAGE_KEY) === 'dark' ? 'dark' : 'light';
+  } catch {
+    return 'light';
+  }
+}
+
+function setTheme(theme, button) {
+  document.body.classList.remove('preview-theme-light', 'preview-theme-dark');
+  document.body.classList.add(theme === 'dark' ? 'preview-theme-dark' : 'preview-theme-light');
+  if (button) {
+    button.innerHTML = theme === 'dark' ? SUN_ICON : MOON_ICON;
+    button.title = theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme';
+    button.setAttribute('aria-label', button.title);
+  }
+  try {
+    localStorage.setItem(THEME_STORAGE_KEY, theme);
+  } catch {}
+}
+
+function ensureThemeToolbar(initialTheme) {
+  const toolbar = document.createElement('div');
+  toolbar.className = 'preview-toolbar';
+  const button = document.createElement('button');
+  button.className = 'toolbar-button';
+  button.type = 'button';
+  toolbar.appendChild(button);
+  document.body.appendChild(toolbar);
+  setTheme(initialTheme, button);
+  button.addEventListener('click', async () => {
+    const nextTheme = document.body.classList.contains('preview-theme-dark') ? 'light' : 'dark';
+    setTheme(nextTheme, button);
+    await renderMermaid(nextTheme);
+  });
+}
+
+async function renderMermaid(theme) {
+  if (typeof mermaid === 'undefined') return;
+  mermaid.initialize({ startOnLoad: false, theme: theme === 'dark' ? 'dark' : 'default', securityLevel: 'loose' });
+  var blocks = document.querySelectorAll('.mermaid-block');
+  for (var i = 0; i < blocks.length; i++) {
+    var block = blocks[i];
+    var pre = block.querySelector('pre.mermaid');
+    var code = block.getAttribute('data-mermaid-source') || (pre ? pre.textContent || '' : '');
+    if (!code) continue;
+    block.setAttribute('data-mermaid-source', code);
+    var id = 'mermaid-export-' + theme + '-' + i;
+    try {
+      var result = await mermaid.render(id, code);
+      block.innerHTML = result.svg;
+      block.setAttribute('data-processed', 'true');
+      block.classList.add('mermaid-rendered');
+    } catch (err) {
+      block.innerHTML = '<div class="mermaid-error">Diagram error: ' + err.message + '</div>';
+      block.setAttribute('data-processed', 'true');
+    }
+  }
+}
+
 (async function() {
+  const initialTheme = getStoredTheme();
+  setTheme(initialTheme);
+  ensureThemeToolbar(initialTheme);
   if (typeof katex !== 'undefined') {
     document.querySelectorAll('.katex-inline[data-math]').forEach(function(el) {
       try { katex.render(el.getAttribute('data-math'), el, { throwOnError: false, displayMode: false }); } catch (e) {}
@@ -427,26 +545,8 @@ async function buildHtml(markdownHtml, title, documentPath) {
       try { katex.render(el.getAttribute('data-math'), el, { throwOnError: false, displayMode: true }); } catch (e) {}
     });
   }
-  if (typeof mermaid !== 'undefined') {
-    mermaid.initialize({ startOnLoad: false, theme: 'default', securityLevel: 'loose' });
-    var blocks = document.querySelectorAll('.mermaid-block[data-processed="false"]');
-    for (var i = 0; i < blocks.length; i++) {
-      var block = blocks[i];
-      var pre = block.querySelector('pre.mermaid');
-      if (!pre) continue;
-      var code = pre.textContent || '';
-      var id = 'mermaid-export-' + i;
-      try {
-        var result = await mermaid.render(id, code);
-        block.innerHTML = result.svg;
-        block.setAttribute('data-processed', 'true');
-        block.classList.add('mermaid-rendered');
-      } catch (err) {
-        block.innerHTML = '<div class="mermaid-error">Diagram error: ' + err.message + '</div>';
-        block.setAttribute('data-processed', 'true');
-      }
-    }
-  }
+  wrapCodeBlocks();
+  await renderMermaid(initialTheme);
 })();
 </script>`;
 
@@ -461,7 +561,7 @@ async function buildHtml(markdownHtml, title, documentPath) {
   <script>${katexJs}</script>
   <script>${mermaidJs}</script>
 </head>
-<body>
+<body class="preview-theme-light">
   <div id="preview-content">
 ${htmlWithEmbeddedImages}
   </div>
