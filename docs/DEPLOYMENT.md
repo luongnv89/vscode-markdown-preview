@@ -68,6 +68,30 @@ npm version major
    curl -sSL https://raw.githubusercontent.com/luongnv89/vscode-markdown-preview/main/install.sh | bash
    ```
 
+## GitHub Pages Landing Page
+
+This repo also ships a single-file landing page generated from Markdown using the extension's own markdown rendering/export stack.
+
+### Source and build
+
+- Source markdown: `docs/landing.md`
+- Generated HTML: `docs/index.html`
+- Generator: `scripts/generate-landing.cjs`
+
+Build it locally with:
+
+```bash
+npm ci
+npm run package
+npm run build:landing
+```
+
+### CI/CD behavior
+
+- `CI` installs dependencies, checks formatting/lint/types, builds the extension, rebuilds the landing page, and fails if `docs/index.html` is out of sync with the source markdown or rendering stack.
+- `Deploy landing page` publishes the generated standalone page to **GitHub Pages** on every push to `main`.
+- The Pages workflow deploys a root artifact containing the self-contained `index.html` only.
+
 ## Files Included in Package
 
 The `.vscodeignore` file controls what gets included in the `.vsix`. Only these are packaged:

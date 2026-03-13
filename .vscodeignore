@@ -15,3 +15,5 @@ webpack.config.js
 install.sh
 test-sample.md
 package-lock.json
+docs/**
+scripts/**
