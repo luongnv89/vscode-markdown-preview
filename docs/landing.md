@@ -18,7 +18,7 @@ highlights:
 
 # Markdown Preview Pro
 
-A clean, minimal markdown preview for Visual Studio Code — built for people who want markdown to look good, stay readable, and support real authoring features like diagrams, math, task lists, and standalone export.
+A clean, minimal markdown preview for Visual Studio Code — built for developers who spend real time in their editor and care about how code blocks, diagrams, math, tables, and long technical docs actually render.
 
 > **Note:** This page is the exact output of generating a single Markdown file into a single standalone HTML file using this extension's own rendering/export pipeline.
 
@@ -26,58 +26,17 @@ A clean, minimal markdown preview for Visual Studio Code — built for people wh
 
 ![Markdown Preview Pro screenshot](../media/screenshot.png)
 
-## Why this extension exists
+## See the output first
 
-VS Code already has a markdown preview, but sometimes you want something sharper:
+If your main question is **"what does this look like inside a developer workflow?"**, this is the part that matters first:
 
-- cleaner rendering
-- better syntax highlighting
-- Mermaid diagram support
-- KaTeX math rendering
-- interactive task lists
-- export to standalone HTML and PDF
-- a preview designed to feel lightweight instead of cluttered
+- syntax-highlighted code blocks
+- Mermaid diagrams
+- KaTeX math
+- task lists
+- tables, quotes, frontmatter, and normal markdown structure
 
-**Markdown Preview Pro** is built around that idea.
-
-## Core features
-
-| Feature                | What it does                                                            |
-| ---------------------- | ----------------------------------------------------------------------- |
-| Syntax highlighting    | Renders fenced code blocks with highlighted syntax and readable styling |
-| Mermaid diagrams       | Supports flowcharts, sequence diagrams, and other Mermaid blocks        |
-| KaTeX math             | Renders inline and block math formulas                                  |
-| Interactive task lists | Lets task lists behave like real checkboxes inside preview              |
-| Export to HTML         | Generates a standalone HTML document                                    |
-| Export to PDF          | Exports using Chrome / Chromium                                         |
-| Frontmatter card       | Parses YAML frontmatter into a styled metadata card                     |
-| Image support          | Handles local images and common markdown image flows                    |
-
-## Installation
-
-### From VS Code Marketplace
-
-Search for **Markdown Preview Pro** in the Extensions view and click **Install**.
-
-### From CLI
-
-```bash
-code --install-extension luongnv89.markdown-preview-pro
-```
-
-### Requirements
-
-- VS Code `>= 1.85.0`
-- Chrome or Chromium only if you want PDF export
-
-## Commands
-
-| Command                                      | Description                      |
-| -------------------------------------------- | -------------------------------- |
-| `Markdown Preview Pro: Open Preview`         | Open preview in the current pane |
-| `Markdown Preview Pro: Open Preview to Side` | Open preview beside the editor   |
-| `Markdown Preview Pro: Export to HTML`       | Export a standalone HTML file    |
-| `Markdown Preview Pro: Export to PDF`        | Export to PDF                    |
+That is why the rendering showcase comes before installation.
 
 ## Rendering showcase
 
@@ -212,6 +171,42 @@ $$
 \int_0^\infty e^{-x^2} dx = \frac{\sqrt{\pi}}{2}
 $$
 
+## Why this extension exists
+
+VS Code already has a markdown preview, but developers often want something sharper:
+
+- cleaner rendering
+- better syntax highlighting
+- Mermaid diagram support
+- KaTeX math rendering
+- interactive task lists
+- export to standalone HTML and PDF
+- a preview designed to feel lightweight instead of cluttered
+
+**Markdown Preview Pro** is built around that idea.
+
+## Core features
+
+| Feature                | What it does                                                            |
+| ---------------------- | ----------------------------------------------------------------------- |
+| Syntax highlighting    | Renders fenced code blocks with highlighted syntax and readable styling |
+| Mermaid diagrams       | Supports flowcharts, sequence diagrams, and other Mermaid blocks        |
+| KaTeX math             | Renders inline and block math formulas                                  |
+| Interactive task lists | Lets task lists behave like real checkboxes inside preview              |
+| Export to HTML         | Generates a standalone HTML document                                    |
+| Export to PDF          | Exports using Chrome / Chromium                                         |
+| Frontmatter card       | Parses YAML frontmatter into a styled metadata card                     |
+| Image support          | Handles local images and common markdown image flows                    |
+
+## Commands
+
+| Command                                      | Description                      |
+| -------------------------------------------- | -------------------------------- |
+| `Markdown Preview Pro: Open Preview`         | Open preview in the current pane |
+| `Markdown Preview Pro: Open Preview to Side` | Open preview beside the editor   |
+| `Markdown Preview Pro: Export to HTML`       | Export a standalone HTML file    |
+| `Markdown Preview Pro: Export to PDF`        | Export to PDF                    |
+
 ## Configuration snapshot
 
 | Setting                               | Default | Description                            |
@@ -223,6 +218,23 @@ $$
 | `markdownPreviewPro.typographer`      | `true`  | Enable smart typography                |
 | `markdownPreviewPro.lineBreaks`       | `false` | Convert new lines to `<br>`            |
 | `markdownPreviewPro.showFrontmatter`  | `card`  | Show YAML frontmatter as a styled card |
+
+## Installation
+
+### From VS Code Marketplace
+
+Search for **Markdown Preview Pro** in the Extensions view and click **Install**.
+
+### From CLI
+
+```bash
+code --install-extension luongnv89.markdown-preview-pro
+```
+
+### Requirements
+
+- VS Code `>= 1.85.0`
+- Chrome or Chromium only if you want PDF export
 
 ## Open source
 
