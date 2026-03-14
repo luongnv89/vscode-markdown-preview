@@ -42,6 +42,66 @@ That is why the rendering showcase comes before installation.
 
 This section intentionally demonstrates the different markdown elements and rich content types the extension renders.
 
+### TypeScript code block
+
+```ts
+interface PreviewConfig {
+  scrollSync: boolean;
+  enableMermaid: boolean;
+  enableKatex: boolean;
+  enableCheckboxes: boolean;
+}
+
+const config: PreviewConfig = {
+  scrollSync: true,
+  enableMermaid: true,
+  enableKatex: true,
+  enableCheckboxes: true,
+};
+
+console.log('Preview ready', config);
+```
+
+### Python code block
+
+```python
+def render_markdown(name: str, features: list[str]) -> str:
+    joined = ", ".join(features)
+    return f"{name} supports: {joined}"
+
+print(render_markdown("Markdown Preview Pro", ["Mermaid", "KaTeX", "HTML export"]))
+```
+
+### JSON code block
+
+```json
+{
+  "name": "markdown-preview-pro",
+  "publisher": "luongnv89",
+  "features": ["preview", "mermaid", "math", "export"]
+}
+```
+
+### Mermaid diagram
+
+```mermaid
+graph TD
+  A[Markdown source] --> B[Markdown engine]
+  B --> C[Preview HTML]
+  C --> D[Live webview]
+  D --> E[Export to HTML/PDF]
+```
+
+### KaTeX math
+
+Inline math looks like this: $E = mc^2$
+
+Block math:
+
+$$
+\int_0^\infty e^{-x^2} dx = \frac{\sqrt{\pi}}{2}
+$$
+
 ### Text styles
 
 This is regular text with **bold**, _italic_, **_bold italic_**, ~~strikethrough~~, and `inline code`.
@@ -110,66 +170,6 @@ This content is inside a native HTML disclosure block, rendered as part of the m
 - and other inline markdown content
 
 </details>
-
-### TypeScript code block
-
-```ts
-interface PreviewConfig {
-  scrollSync: boolean;
-  enableMermaid: boolean;
-  enableKatex: boolean;
-  enableCheckboxes: boolean;
-}
-
-const config: PreviewConfig = {
-  scrollSync: true,
-  enableMermaid: true,
-  enableKatex: true,
-  enableCheckboxes: true,
-};
-
-console.log('Preview ready', config);
-```
-
-### Python code block
-
-```python
-def render_markdown(name: str, features: list[str]) -> str:
-    joined = ", ".join(features)
-    return f"{name} supports: {joined}"
-
-print(render_markdown("Markdown Preview Pro", ["Mermaid", "KaTeX", "HTML export"]))
-```
-
-### JSON code block
-
-```json
-{
-  "name": "markdown-preview-pro",
-  "publisher": "luongnv89",
-  "features": ["preview", "mermaid", "math", "export"]
-}
-```
-
-### Mermaid diagram
-
-```mermaid
-graph TD
-  A[Markdown source] --> B[Markdown engine]
-  B --> C[Preview HTML]
-  C --> D[Live webview]
-  D --> E[Export to HTML/PDF]
-```
-
-### KaTeX math
-
-Inline math looks like this: $E = mc^2$
-
-Block math:
-
-$$
-\int_0^\infty e^{-x^2} dx = \frac{\sqrt{\pi}}{2}
-$$
 
 ## Why this extension exists
 
