@@ -20,6 +20,8 @@ highlights:
 
 A clean, minimal markdown preview for Visual Studio Code — built for people who want markdown to look good, stay readable, and support real authoring features like diagrams, math, task lists, and standalone export.
 
+> **Note:** This page is the exact output of generating a single Markdown file into a single standalone HTML file using this extension's own rendering/export pipeline.
+
 [Install from Marketplace](https://marketplace.visualstudio.com/items?itemName=luongnv89.markdown-preview-pro) · [View on GitHub](https://github.com/luongnv89/vscode-markdown-preview) · [Read the User Guide](https://github.com/luongnv89/vscode-markdown-preview/blob/main/docs/USER_GUIDE.md)
 
 ![Markdown Preview Pro screenshot](../media/screenshot.png)
