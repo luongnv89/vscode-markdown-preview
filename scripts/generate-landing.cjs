@@ -475,9 +475,11 @@ function wrapCodeBlocks() {
 
 function getStoredTheme() {
   try {
-    return localStorage.getItem(THEME_STORAGE_KEY) === 'dark' ? 'dark' : 'light';
+    const stored = localStorage.getItem(THEME_STORAGE_KEY);
+    if (stored === 'light' || stored === 'dark') return stored;
+    return 'dark';
   } catch {
-    return 'light';
+    return 'dark';
   }
 }
 
@@ -561,7 +563,7 @@ async function renderMermaid(theme) {
   <script>${katexJs}</script>
   <script>${mermaidJs}</script>
 </head>
-<body class="preview-theme-light">
+<body class="preview-theme-dark">
   <div id="preview-content">
 ${htmlWithEmbeddedImages}
   </div>
