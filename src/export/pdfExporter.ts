@@ -14,8 +14,8 @@ const DEFAULT_PDF_OPTIONS: PdfOptions = {
   printBackground: true,
 };
 
-const PAGE_LOAD_TIMEOUT = 30000;
-const RENDER_COMPLETION_TIMEOUT = 15000;
+const PAGE_LOAD_TIMEOUT = 60000;
+const RENDER_COMPLETION_TIMEOUT = 30000;
 const FINAL_RENDER_DELAY = 500;
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -32,7 +32,7 @@ async function launchBrowser(): Promise<any> {
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function loadAndRender(page: any, html: string): Promise<void> {
-  await page.setContent(html, { waitUntil: 'networkidle0', timeout: PAGE_LOAD_TIMEOUT });
+  await page.setContent(html, { waitUntil: 'domcontentloaded', timeout: PAGE_LOAD_TIMEOUT });
 
   // Wait for Mermaid/KaTeX rendering to complete
   await page

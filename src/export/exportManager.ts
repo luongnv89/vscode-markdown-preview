@@ -54,14 +54,14 @@ export class ExportManager {
 
     const outputPath = this.getOutputPath(document.uri, format);
 
-    await vscode.window.withProgress(
-      {
-        location: vscode.ProgressLocation.Notification,
-        title: `Exporting to ${format.toUpperCase()}`,
-        cancellable: false,
-      },
-      async (progress) => {
-        try {
+    try {
+      await vscode.window.withProgress(
+        {
+          location: vscode.ProgressLocation.Notification,
+          title: `Exporting to ${format.toUpperCase()}`,
+          cancellable: false,
+        },
+        async (progress) => {
           progress.report({ message: 'Rendering markdown...' });
           const config = getPreviewConfig();
           this.engine.updateConfig(config);
@@ -78,20 +78,21 @@ export class ExportManager {
 
           progress.report({ message: `Generating ${format.toUpperCase()}...` });
           await exportFn(browserHtml, outputPath);
-
-          const openAction = 'Open File';
-          const choice = await vscode.window.showInformationMessage(
-            `${format.toUpperCase()} exported to ${path.basename(outputPath)}`,
-            openAction
-          );
-          if (choice === openAction) {
-            vscode.env.openExternal(vscode.Uri.file(outputPath));
-          }
-        } catch (error) {
-          this.handleExportError(error, format.toUpperCase());
         }
-      }
+      );
+    } catch (error) {
+      this.handleExportError(error, format.toUpperCase());
+      return;
+    }
+
+    const openAction = 'Open File';
+    const choice = await vscode.window.showInformationMessage(
+      `${format.toUpperCase()} exported to ${path.basename(outputPath)}`,
+      openAction
     );
+    if (choice === openAction) {
+      vscode.env.openExternal(vscode.Uri.file(outputPath));
+    }
   }
 
   private async getDocument(uri?: vscode.Uri): Promise<vscode.TextDocument | undefined> {

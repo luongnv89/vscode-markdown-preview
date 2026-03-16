@@ -1,18 +1,19 @@
-## What's Changed in v0.8.0
+## What's Changed in v0.8.1
+
+### Bug Fixes
+
+- Fix export timeout for documents with Mermaid diagrams — switch from `networkidle0` to `domcontentloaded` strategy for headless browser content loading
+- Fix progress notification staying visible after export completes — move success message outside `withProgress` callback
+- Increase page load timeout from 30s to 60s and render completion timeout from 15s to 30s to handle complex documents
 
 ### Features
 
-- Add YAML frontmatter support — frontmatter between `---` delimiters is now parsed and displayed as a styled, collapsible metadata card at the top of the preview
-- Frontmatter card renders key-value pairs in a clean table with clickable URLs, inline badge/image rendering, and array values as tags
-- All frontmatter values are HTML-escaped for safety
-- Scroll sync preserved with automatic line offset adjustment for stripped frontmatter
-- New setting `markdownPreviewPro.showFrontmatter` (`"card"` | `"none"`) to control frontmatter display (default: `"card"`)
+- Add landing page with dark/light mode toggle and GitHub Pages deployment
+- Landing page showcases code rendering, Mermaid diagrams, and KaTeX math
 
-### Previous Changes (v0.7.0)
+### Documentation
 
-- Add Table of Contents (TOC) sidebar with active section highlighting
-- Add Word Count & Reading Stats bar
-- Add Presentation / Slide Mode with keyboard navigation
-- Toolbar button grouping with visual separators
+- Restructure landing page with developer-first layout
+- Add deployment docs for GitHub Pages
 
-**Full Changelog**: https://github.com/luongnv89/vscode-markdown-preview/compare/v0.7.0...v0.8.0
+**Full Changelog**: https://github.com/luongnv89/vscode-markdown-preview/compare/v0.8.0...v0.8.1

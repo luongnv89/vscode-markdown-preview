@@ -173,6 +173,13 @@ For development setup, see [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md).
 
 ## Changelog
 
+### 0.8.1
+
+- Fix export timeout for documents with Mermaid diagrams
+- Fix progress notification staying visible after export completes
+- Increase export timeouts for complex documents
+- Add landing page with dark/light mode toggle
+
 ### 0.8.0
 
 - Add YAML frontmatter support with styled, collapsible metadata card
