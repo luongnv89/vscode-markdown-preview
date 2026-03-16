@@ -1,0 +1,38 @@
+# Markdown Preview Pro
+
+> A clean, minimal markdown preview extension for Visual Studio Code with syntax highlighting, Mermaid diagrams, KaTeX math rendering, HTML/PDF export, and interactive features.
+
+## Key Links
+
+- Landing Page: https://luongnv.com/vscode-markdown-preview/
+- VS Code Marketplace: https://marketplace.visualstudio.com/items?itemName=luongnv89.markdown-preview-pro
+- GitHub Repository: https://github.com/luongnv89/vscode-markdown-preview
+- User Guide: https://github.com/luongnv89/vscode-markdown-preview/blob/main/docs/USER_GUIDE.md
+
+## Features
+
+- Syntax-highlighted code blocks with copy button
+- Mermaid diagram rendering (flowcharts, sequence diagrams, etc.)
+- KaTeX math rendering (inline and block)
+- Interactive task list checkboxes
+- YAML frontmatter displayed as styled metadata card
+- Export to standalone HTML
+- Export to PDF (requires Chrome/Chromium)
+- Bidirectional scroll sync between editor and preview
+- Table of Contents sidebar
+- Word count and reading stats
+- Presentation/slide mode
+- Dark and light theme toggle
+
+## Installation
+
+Install from VS Code Marketplace by searching "Markdown Preview Pro" or run:
+```
+code --install-extension luongnv89.markdown-preview-pro
+```
+
+Requires VS Code >= 1.85.0. PDF export requires Chrome or Chromium.
+
+## License
+
+MIT — by luongnv89

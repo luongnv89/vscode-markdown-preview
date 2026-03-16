@@ -405,7 +405,17 @@ img.preview-image {
   return css;
 }
 
-async function buildHtml(markdownHtml, title, documentPath) {
+async function getFaviconDataUri() {
+  const iconPath = path.join(repoRoot, 'media', 'icon.png');
+  try {
+    const data = await fs.readFile(iconPath);
+    return `data:image/png;base64,${data.toString('base64')}`;
+  } catch {
+    return '';
+  }
+}
+
+async function buildHtml(markdownHtml, title, documentPath, frontmatter) {
   const css = await getCombinedCss();
   const vendorDir = path.join(repoRoot, 'dist', 'webview', 'vendor');
   const katexJs = await fs.readFile(path.join(vendorDir, 'katex.min.js'), 'utf8').catch(() => '');
@@ -413,6 +423,73 @@ async function buildHtml(markdownHtml, title, documentPath) {
     .readFile(path.join(vendorDir, 'mermaid.min.js'), 'utf8')
     .catch(() => '');
   const htmlWithEmbeddedImages = await embedImages(markdownHtml, documentPath);
+  const faviconUri = await getFaviconDataUri();
+
+  const siteUrl = 'https://luongnv.com/vscode-markdown-preview/';
+  const description = (frontmatter && frontmatter.subtitle) ||
+    'Clean, minimal markdown preview for VS Code with syntax highlighting, Mermaid diagrams, KaTeX math, HTML/PDF export, and interactive features.';
+  const version = (frontmatter && frontmatter.version) || '';
+  const repoUrl = (frontmatter && frontmatter.repository) || 'https://github.com/luongnv89/vscode-markdown-preview';
+  const marketplaceUrl = (frontmatter && frontmatter.marketplace) || '';
+  const screenshotUri = await (async () => {
+    try {
+      const data = await fs.readFile(path.join(repoRoot, 'media', 'screenshot.png'));
+      return `data:image/png;base64,${data.toString('base64')}`;
+    } catch {
+      return `${repoUrl}/raw/main/media/screenshot.png`;
+    }
+  })();
+
+  const seoMeta = `
+  <meta name="description" content="${escapeHtml(description)}">
+  <meta name="author" content="luongnv89">
+  <meta name="theme-color" content="#0969da" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#1e1e1e" media="(prefers-color-scheme: dark)">
+  <link rel="canonical" href="${escapeHtml(siteUrl)}">
+  ${faviconUri ? `<link rel="icon" type="image/png" href="${faviconUri}">` : ''}
+
+  <!-- OpenGraph -->
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="${escapeHtml(title)}">
+  <meta property="og:description" content="${escapeHtml(description)}">
+  <meta property="og:url" content="${escapeHtml(siteUrl)}">
+  <meta property="og:image" content="${escapeHtml(repoUrl)}/raw/main/media/screenshot.png">
+  <meta property="og:image:alt" content="Markdown Preview Pro — VS Code extension preview">
+  <meta property="og:site_name" content="Markdown Preview Pro">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="${escapeHtml(title)}">
+  <meta name="twitter:description" content="${escapeHtml(description)}">
+  <meta name="twitter:image" content="${escapeHtml(repoUrl)}/raw/main/media/screenshot.png">
+
+  <!-- JSON-LD Structured Data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "${escapeHtml(title)}",
+    "description": "${escapeHtml(description)}",
+    "applicationCategory": "DeveloperApplication",
+    "operatingSystem": "Windows, macOS, Linux",
+    "softwareVersion": "${escapeHtml(version)}",
+    "author": {
+      "@type": "Person",
+      "name": "luongnv89",
+      "url": "https://github.com/luongnv89"
+    },
+    "url": "${escapeHtml(siteUrl)}",
+    "downloadUrl": "${escapeHtml(marketplaceUrl)}",
+    "codeRepository": "${escapeHtml(repoUrl)}",
+    "license": "https://opensource.org/licenses/MIT",
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "USD"
+    },
+    "image": "${escapeHtml(repoUrl)}/raw/main/media/screenshot.png"
+  }
+  </script>`;
 
   const renderScript = `
 <script>
@@ -557,8 +634,8 @@ async function renderMermaid(theme) {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="${escapeHtml(title)}">
   <title>${escapeHtml(title)}</title>
+${seoMeta}
   <style>${css}</style>
   <script>${katexJs}</script>
   <script>${mermaidJs}</script>
@@ -580,7 +657,7 @@ async function main() {
   const renderedBody = md.render(body);
   const html = `${frontmatter ? renderFrontmatterHtml(frontmatter) : ''}\n${renderedBody}`;
   const title = (frontmatter && frontmatter.title) || pkg.displayName || pkg.name;
-  let standalone = await buildHtml(html, title, landingPath);
+  let standalone = await buildHtml(html, title, landingPath, frontmatter);
   // Normalize whitespace to pass pre-commit hooks (trailing whitespace, final newline)
   standalone = standalone.replace(/[^\S\n]+$/gm, '').replace(/\n*$/, '\n');
   await fs.writeFile(outputPath, standalone, 'utf8');
