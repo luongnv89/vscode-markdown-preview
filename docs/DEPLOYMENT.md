@@ -70,6 +70,8 @@ npm version major
 
 ## GitHub Pages Landing Page
 
+Live at: **https://luongnv.com/vscode-markdown-preview/**
+
 This repo also ships a single-file landing page generated from Markdown using the extension's own markdown rendering/export stack.
 
 ### Source and build
