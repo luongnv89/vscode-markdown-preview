@@ -580,7 +580,9 @@ async function main() {
   const renderedBody = md.render(body);
   const html = `${frontmatter ? renderFrontmatterHtml(frontmatter) : ''}\n${renderedBody}`;
   const title = (frontmatter && frontmatter.title) || pkg.displayName || pkg.name;
-  const standalone = await buildHtml(html, title, landingPath);
+  let standalone = await buildHtml(html, title, landingPath);
+  // Normalize whitespace to pass pre-commit hooks (trailing whitespace, final newline)
+  standalone = standalone.replace(/[^\S\n]+$/gm, '').replace(/\n*$/, '\n');
   await fs.writeFile(outputPath, standalone, 'utf8');
   console.log(
     'Generated docs/index.html from docs/landing.md using Markdown Preview Pro rendering stack'
