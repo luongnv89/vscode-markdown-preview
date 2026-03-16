@@ -426,10 +426,13 @@ async function buildHtml(markdownHtml, title, documentPath, frontmatter) {
   const faviconUri = await getFaviconDataUri();
 
   const siteUrl = 'https://luongnv.com/vscode-markdown-preview/';
-  const description = (frontmatter && frontmatter.subtitle) ||
+  const description =
+    (frontmatter && frontmatter.subtitle) ||
     'Clean, minimal markdown preview for VS Code with syntax highlighting, Mermaid diagrams, KaTeX math, HTML/PDF export, and interactive features.';
   const version = (frontmatter && frontmatter.version) || '';
-  const repoUrl = (frontmatter && frontmatter.repository) || 'https://github.com/luongnv89/vscode-markdown-preview';
+  const repoUrl =
+    (frontmatter && frontmatter.repository) ||
+    'https://github.com/luongnv89/vscode-markdown-preview';
   const marketplaceUrl = (frontmatter && frontmatter.marketplace) || '';
   const screenshotUri = await (async () => {
     try {
