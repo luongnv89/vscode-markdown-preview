@@ -175,6 +175,12 @@ For development setup, see [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md).
 
 ## Changelog
 
+### 0.8.2
+
+- Add favicon, OpenGraph, Twitter Card, and JSON-LD to landing page
+- Add `robots.txt`, `sitemap.xml`, and `llms.txt` for SEO/AI crawlers
+- Add landing page link to README
+
 ### 0.8.1
 
 - Fix export timeout for documents with Mermaid diagrams

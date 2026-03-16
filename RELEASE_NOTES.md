@@ -1,19 +1,21 @@
-## What's Changed in v0.8.1
-
-### Bug Fixes
-
-- Fix export timeout for documents with Mermaid diagrams — switch from `networkidle0` to `domcontentloaded` strategy for headless browser content loading
-- Fix progress notification staying visible after export completes — move success message outside `withProgress` callback
-- Increase page load timeout from 30s to 60s and render completion timeout from 15s to 30s to handle complex documents
+## What's Changed in v0.8.2
 
 ### Features
 
-- Add landing page with dark/light mode toggle and GitHub Pages deployment
-- Landing page showcases code rendering, Mermaid diagrams, and KaTeX math
+- Add favicon to landing page (embedded as base64 from `media/icon.png`)
+- Add OpenGraph and Twitter Card meta tags for social sharing
+- Add JSON-LD `SoftwareApplication` structured data
+- Add canonical URL, theme-color, and descriptive meta description
+- Add landing page link to README and `homepage` field to `package.json`
 
-### Documentation
+### SEO & AI Crawlers
 
-- Restructure landing page with developer-first layout
-- Add deployment docs for GitHub Pages
+- Create `robots.txt` allowing all crawlers including AI bots (GPTBot, ClaudeBot, PerplexityBot, etc.)
+- Create `sitemap.xml` with landing page URL
+- Create `llms.txt` with AI-readable project summary
 
-**Full Changelog**: https://github.com/luongnv89/vscode-markdown-preview/compare/v0.8.0...v0.8.1
+### Bug Fixes
+
+- Fix landing page generator whitespace normalization so CI diff check passes
+
+**Full Changelog**: https://github.com/luongnv89/vscode-markdown-preview/compare/v0.8.1...v0.8.2
