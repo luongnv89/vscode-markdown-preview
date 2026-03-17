@@ -1,5 +1,28 @@
 # Changelog
 
+## 0.9.0
+
+- Add Excalidraw diagram preview support — render `excalidraw` code blocks as interactive SVG diagrams in the preview panel
+- New `@excalidraw/utils` vendor library for client-side Excalidraw-to-SVG conversion
+- New `enableExcalidraw` configuration option (default: `true`) to toggle Excalidraw rendering
+- Excalidraw diagrams automatically adapt to dark/light theme with re-rendering on theme change
+- Full export support — Excalidraw diagrams render in HTML and PDF exports
+
+## 0.8.2
+
+- Add favicon, OpenGraph, Twitter Card, and JSON-LD structured data to landing page
+- Add `robots.txt`, `sitemap.xml`, and `llms.txt` for SEO and AI crawler support
+- Add canonical URL, theme-color meta tags, and meta description
+- Add landing page link to README and `homepage` field to `package.json`
+- Fix landing page generator whitespace normalization for CI compatibility
+
+## 0.8.1
+
+- Fix export timeout for documents with Mermaid diagrams — switch from `networkidle0` to `domcontentloaded` strategy for headless browser rendering
+- Fix progress notification staying visible after export completes — move success message outside progress callback
+- Increase page load timeout from 30s to 60s and render completion timeout from 15s to 30s for complex documents
+- Add landing page with dark/light mode toggle and GitHub Pages deployment
+
 ## 0.8.0
 
 - Add YAML frontmatter support — parse frontmatter between `---` delimiters and display as a styled, collapsible metadata card at the top of the preview

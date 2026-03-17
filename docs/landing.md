@@ -6,7 +6,7 @@ license: MIT
 repository: https://github.com/luongnv89/vscode-markdown-preview
 marketplace: https://marketplace.visualstudio.com/items?itemName=luongnv89.markdown-preview-pro
 docs: https://github.com/luongnv89/vscode-markdown-preview/blob/main/docs/USER_GUIDE.md
-version: 0.8.2
+version: 0.9.0
 highlights:
   - Syntax highlighting
   - Mermaid diagrams

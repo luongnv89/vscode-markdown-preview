@@ -20,8 +20,11 @@ export class StandaloneHtmlBuilder {
     const katexJsPath = path.join(vendorDir, 'katex.min.js');
     const mermaidJsPath = path.join(vendorDir, 'mermaid.min.js');
 
+    const excalidrawJsPath = path.join(vendorDir, 'excalidraw-utils.min.js');
+
     let katexJs = '';
     let mermaidJs = '';
+    let excalidrawJs = '';
     try {
       katexJs = await fs.readFile(katexJsPath, 'utf-8');
     } catch {
@@ -31,6 +34,11 @@ export class StandaloneHtmlBuilder {
       mermaidJs = await fs.readFile(mermaidJsPath, 'utf-8');
     } catch {
       // Mermaid not available
+    }
+    try {
+      excalidrawJs = await fs.readFile(excalidrawJsPath, 'utf-8');
+    } catch {
+      // Excalidraw not available
     }
 
     // Script that renders Mermaid and KaTeX client-side, then signals completion
@@ -73,6 +81,38 @@ export class StandaloneHtmlBuilder {
     }
   }
 
+  // Render Excalidraw
+  if (typeof ExcalidrawUtils !== 'undefined' && ExcalidrawUtils.exportToSvg) {
+    var eBlocks = document.querySelectorAll('.excalidraw-block[data-processed="false"]');
+    for (var j = 0; j < eBlocks.length; j++) {
+      var eBlock = eBlocks[j];
+      var ePre = eBlock.querySelector('pre.excalidraw-source');
+      if (!ePre) continue;
+      var eJson = ePre.textContent || '';
+      try {
+        var eData = JSON.parse(eJson);
+        if (!eData.elements || !Array.isArray(eData.elements)) {
+          throw new Error('Invalid Excalidraw data');
+        }
+        var eSvg = await ExcalidrawUtils.exportToSvg({
+          elements: eData.elements,
+          appState: Object.assign({
+            exportWithDarkMode: false,
+            viewBackgroundColor: '#ffffff'
+          }, eData.appState || {}),
+          files: eData.files || {}
+        });
+        eBlock.innerHTML = '';
+        eBlock.appendChild(eSvg);
+        eBlock.setAttribute('data-processed', 'true');
+        eBlock.classList.add('excalidraw-rendered');
+      } catch(err) {
+        eBlock.innerHTML = '<div class="excalidraw-error">Diagram error: ' + err.message + '</div>';
+        eBlock.setAttribute('data-processed', 'true');
+      }
+    }
+  }
+
   // Signal completion
   window.__exportRenderComplete = true;
 })();
@@ -89,6 +129,7 @@ ${css}
   </style>
   <script>${katexJs}</script>
   <script>${mermaidJs}</script>
+  <script>${excalidrawJs}</script>
 </head>
 <body>
   <div id="preview-content">
@@ -121,7 +162,14 @@ ${htmlWithEmbeddedImages}
     } catch {
       // Fall back to reading source CSS files
       const stylesDir = path.join(this.extensionUri.fsPath, 'webview', 'styles');
-      for (const file of ['main.css', 'markdown.css', 'code.css', 'mermaid.css', 'highlight.css']) {
+      for (const file of [
+        'main.css',
+        'markdown.css',
+        'code.css',
+        'mermaid.css',
+        'excalidraw.css',
+        'highlight.css',
+      ]) {
         try {
           const css = await fs.readFile(path.join(stylesDir, file), 'utf-8');
           parts.push(`/* ${file} */\n${css}`);

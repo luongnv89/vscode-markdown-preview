@@ -34,6 +34,9 @@ export async function updateContent(html: string): Promise<void> {
     // Render mermaid diagrams
     await renderMermaid();
 
+    // Render excalidraw diagrams
+    await renderExcalidraw();
+
     // Render KaTeX math
     renderKatex();
 
@@ -110,6 +113,61 @@ async function renderMermaid(): Promise<void> {
   }
 }
 
+async function renderExcalidraw(): Promise<void> {
+  const blocks = document.querySelectorAll('.excalidraw-block[data-processed="false"]');
+  if (blocks.length === 0) {
+    return;
+  }
+
+  const ExcalidrawUtils = (window as any).ExcalidrawUtils;
+  if (!ExcalidrawUtils || !ExcalidrawUtils.exportToSvg) {
+    console.warn('ExcalidrawUtils library not available on window');
+    return;
+  }
+
+  const isDark =
+    document.body.classList.contains('preview-theme-dark') ||
+    (!document.body.classList.contains('preview-theme-light') &&
+      (document.body.classList.contains('vscode-dark') ||
+        document.body.classList.contains('vscode-high-contrast')));
+
+  for (let i = 0; i < blocks.length; i++) {
+    const block = blocks[i];
+    const pre = block.querySelector('pre.excalidraw-source');
+    if (!pre) {
+      continue;
+    }
+
+    const jsonStr = pre.textContent || '';
+
+    try {
+      const data = JSON.parse(jsonStr);
+
+      if (!data.elements || !Array.isArray(data.elements)) {
+        throw new Error('Invalid Excalidraw data: missing elements array');
+      }
+
+      const svg = await ExcalidrawUtils.exportToSvg({
+        elements: data.elements,
+        appState: {
+          ...(data.appState || {}),
+          exportWithDarkMode: isDark,
+          viewBackgroundColor: isDark ? '#1e1e1e' : '#ffffff',
+        },
+        files: data.files || {},
+      });
+
+      block.innerHTML = '';
+      block.appendChild(svg);
+      block.setAttribute('data-processed', 'true');
+      (block as HTMLElement).classList.add('excalidraw-rendered');
+    } catch (err) {
+      block.innerHTML = `<div class="excalidraw-error">Excalidraw diagram error: ${escapeHtml((err as Error).message)}</div>`;
+      block.setAttribute('data-processed', 'true');
+    }
+  }
+}
+
 function renderKatex(): void {
   const katex = (window as any).katex;
   if (!katex) {
@@ -169,6 +227,13 @@ export function watchThemeChanges(): void {
           block.setAttribute('data-processed', 'false');
         });
         renderMermaid();
+
+        // Re-render excalidraw diagrams
+        const excalidrawBlocks = document.querySelectorAll('.excalidraw-block');
+        excalidrawBlocks.forEach((block) => {
+          block.setAttribute('data-processed', 'false');
+        });
+        renderExcalidraw();
       }
     }
   });

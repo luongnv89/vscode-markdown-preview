@@ -91,6 +91,7 @@ const webviewConfig = {
         { from: 'node_modules/katex/dist/katex.min.js', to: 'vendor/' },
         { from: 'node_modules/katex/dist/fonts', to: 'vendor/fonts' },
         { from: 'node_modules/mermaid/dist/mermaid.min.js', to: 'vendor/' },
+        { from: 'node_modules/@excalidraw/utils/dist/excalidraw-utils.min.js', to: 'vendor/' },
         { from: 'node_modules/highlight.js/styles/github-dark.min.css', to: 'vendor/' },
       ],
     }),

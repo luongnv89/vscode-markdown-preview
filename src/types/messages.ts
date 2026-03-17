@@ -69,6 +69,7 @@ export interface PreviewConfig {
   enableMermaid: boolean;
   enableKatex: boolean;
   enableCheckboxes: boolean;
+  enableExcalidraw: boolean;
   lineBreaks: boolean;
   typographer: boolean;
   showFrontmatter: 'card' | 'none';

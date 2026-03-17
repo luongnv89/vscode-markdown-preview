@@ -175,6 +175,13 @@ For development setup, see [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md).
 
 ## Changelog
 
+### 0.9.0
+
+- Add Excalidraw diagram preview support — render `excalidraw` code blocks as SVG diagrams
+- New `enableExcalidraw` config option to toggle rendering
+- Dark/light theme support with automatic re-rendering
+- Full HTML/PDF export support for Excalidraw diagrams
+
 ### 0.8.2
 
 - Add favicon, OpenGraph, Twitter Card, and JSON-LD to landing page

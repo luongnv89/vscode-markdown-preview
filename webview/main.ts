@@ -2,6 +2,7 @@ import './styles/main.css';
 import './styles/markdown.css';
 import './styles/code.css';
 import './styles/mermaid.css';
+import './styles/excalidraw.css';
 import './styles/highlight.css';
 import './styles/toolbar.css';
 import './styles/toc.css';

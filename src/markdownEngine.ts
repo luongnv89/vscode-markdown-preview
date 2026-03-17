@@ -27,7 +27,7 @@ export class MarkdownEngine {
       typographer: config.typographer,
       breaks: config.lineBreaks,
       highlight: (str: string, lang: string): string => {
-        if (lang && lang !== 'mermaid' && hljs.getLanguage(lang)) {
+        if (lang && lang !== 'mermaid' && lang !== 'excalidraw' && hljs.getLanguage(lang)) {
           try {
             const result = hljs.highlight(str, { language: lang, ignoreIllegals: true });
             return `<pre class="hljs code-block" data-lang="${lang}"><code>${result.value}</code></pre>`;
@@ -37,6 +37,9 @@ export class MarkdownEngine {
         }
         if (lang === 'mermaid') {
           return `<div class="mermaid-block" data-processed="false"><pre class="mermaid">${md.utils.escapeHtml(str)}</pre></div>`;
+        }
+        if (lang === 'excalidraw') {
+          return `<div class="excalidraw-block" data-processed="false"><pre class="excalidraw-source">${md.utils.escapeHtml(str)}</pre></div>`;
         }
         // Auto-detect
         const escaped = md.utils.escapeHtml(str);

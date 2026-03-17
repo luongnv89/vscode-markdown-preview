@@ -1,12 +1,12 @@
 ---
 title: Markdown Preview Pro - Test Document
 author: luongnv89
-version: 0.8.2
+version: 0.9.0
 date: 2026-03-09
 license: MIT
 tags: [markdown, preview, vscode, extension]
 repository: https://github.com/luongnv89/vscode-markdown-preview
-badge: https://img.shields.io/badge/marketplace-v0.8.2-blue.svg
+badge: https://img.shields.io/badge/marketplace-v0.9.0-blue.svg
 ---
 
 # Markdown Preview Pro - Test Document
@@ -133,6 +133,168 @@ sequenceDiagram
     W->>W: Update DOM
     W->>W: Render Mermaid
     W->>W: Render KaTeX
+```
+
+### Excalidraw Diagrams
+
+```excalidraw
+{
+  "type": "excalidraw",
+  "version": 2,
+  "source": "https://excalidraw.com",
+  "elements": [
+    {
+      "id": "rect1",
+      "type": "rectangle",
+      "x": 100,
+      "y": 100,
+      "width": 200,
+      "height": 100,
+      "angle": 0,
+      "strokeColor": "#1e1e1e",
+      "backgroundColor": "#a5d8ff",
+      "fillStyle": "solid",
+      "strokeWidth": 2,
+      "strokeStyle": "solid",
+      "roughness": 1,
+      "opacity": 100,
+      "groupIds": [],
+      "frameId": null,
+      "roundness": { "type": 3 },
+      "isDeleted": false,
+      "boundElements": [{ "id": "text1", "type": "text" }],
+      "updated": 1,
+      "link": null,
+      "locked": false,
+      "seed": 1
+    },
+    {
+      "id": "text1",
+      "type": "text",
+      "x": 140,
+      "y": 130,
+      "width": 120,
+      "height": 25,
+      "angle": 0,
+      "strokeColor": "#1e1e1e",
+      "backgroundColor": "transparent",
+      "fillStyle": "solid",
+      "strokeWidth": 2,
+      "strokeStyle": "solid",
+      "roughness": 1,
+      "opacity": 100,
+      "groupIds": [],
+      "frameId": null,
+      "roundness": null,
+      "isDeleted": false,
+      "boundElements": null,
+      "updated": 1,
+      "link": null,
+      "locked": false,
+      "text": "Hello World",
+      "fontSize": 20,
+      "fontFamily": 1,
+      "textAlign": "center",
+      "verticalAlign": "middle",
+      "containerId": "rect1",
+      "originalText": "Hello World",
+      "lineHeight": 1.25,
+      "seed": 2
+    },
+    {
+      "id": "rect2",
+      "type": "rectangle",
+      "x": 400,
+      "y": 100,
+      "width": 200,
+      "height": 100,
+      "angle": 0,
+      "strokeColor": "#1e1e1e",
+      "backgroundColor": "#b2f2bb",
+      "fillStyle": "solid",
+      "strokeWidth": 2,
+      "strokeStyle": "solid",
+      "roughness": 1,
+      "opacity": 100,
+      "groupIds": [],
+      "frameId": null,
+      "roundness": { "type": 3 },
+      "isDeleted": false,
+      "boundElements": [{ "id": "text2", "type": "text" }],
+      "updated": 1,
+      "link": null,
+      "locked": false,
+      "seed": 3
+    },
+    {
+      "id": "text2",
+      "type": "text",
+      "x": 430,
+      "y": 130,
+      "width": 140,
+      "height": 25,
+      "angle": 0,
+      "strokeColor": "#1e1e1e",
+      "backgroundColor": "transparent",
+      "fillStyle": "solid",
+      "strokeWidth": 2,
+      "strokeStyle": "solid",
+      "roughness": 1,
+      "opacity": 100,
+      "groupIds": [],
+      "frameId": null,
+      "roundness": null,
+      "isDeleted": false,
+      "boundElements": null,
+      "updated": 1,
+      "link": null,
+      "locked": false,
+      "text": "Excalidraw!",
+      "fontSize": 20,
+      "fontFamily": 1,
+      "textAlign": "center",
+      "verticalAlign": "middle",
+      "containerId": "rect2",
+      "originalText": "Excalidraw!",
+      "lineHeight": 1.25,
+      "seed": 4
+    },
+    {
+      "id": "arrow1",
+      "type": "arrow",
+      "x": 305,
+      "y": 150,
+      "width": 90,
+      "height": 0,
+      "angle": 0,
+      "strokeColor": "#1e1e1e",
+      "backgroundColor": "transparent",
+      "fillStyle": "solid",
+      "strokeWidth": 2,
+      "strokeStyle": "solid",
+      "roughness": 1,
+      "opacity": 100,
+      "groupIds": [],
+      "frameId": null,
+      "roundness": { "type": 2 },
+      "isDeleted": false,
+      "boundElements": null,
+      "updated": 1,
+      "link": null,
+      "locked": false,
+      "points": [[0, 0], [90, 0]],
+      "startBinding": { "elementId": "rect1", "focus": 0, "gap": 5 },
+      "endBinding": { "elementId": "rect2", "focus": 0, "gap": 5 },
+      "startArrowhead": null,
+      "endArrowhead": "arrow",
+      "seed": 5
+    }
+  ],
+  "appState": {
+    "viewBackgroundColor": "#ffffff"
+  },
+  "files": {}
+}
 ```
 
 ### Horizontal Rule

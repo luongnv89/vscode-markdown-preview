@@ -1,0 +1,56 @@
+/* Markdown Preview Pro - Excalidraw diagram styles */
+
+.excalidraw-block {
+  margin: 1.5em 0;
+  padding: 1em;
+  text-align: center;
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+  background-color: var(--panel-bg);
+  overflow-x: auto;
+}
+
+.excalidraw-rendered {
+  border-color: transparent;
+  background-color: transparent;
+}
+
+.excalidraw-rendered svg {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Error state */
+.excalidraw-error {
+  color: var(--vscode-errorForeground, #f44747);
+  font-family: var(--vscode-editor-font-family, monospace);
+  font-size: 0.85em;
+  padding: 1em;
+  background-color: var(--vscode-inputValidation-errorBackground, rgba(255, 0, 0, 0.1));
+  border: 1px solid var(--vscode-inputValidation-errorBorder, #f44747);
+  border-radius: 6px;
+  text-align: left;
+  white-space: pre-wrap;
+}
+
+/* Loading animation for excalidraw */
+.excalidraw-block[data-processed='false'] pre.excalidraw-source {
+  color: var(--fg-muted);
+  font-family: var(--vscode-editor-font-family, monospace);
+  font-size: 0.85em;
+  text-align: left;
+  white-space: pre-wrap;
+  max-height: 200px;
+  overflow: hidden;
+  animation: excalidraw-pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes excalidraw-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}

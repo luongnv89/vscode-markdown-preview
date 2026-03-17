@@ -340,6 +340,9 @@ export class PreviewManager {
     const katexScript = webview.asWebviewUri(vscode.Uri.joinPath(vendorUri, 'katex.min.js'));
     const hljsStyle = webview.asWebviewUri(vscode.Uri.joinPath(vendorUri, 'github-dark.min.css'));
     const mermaidScript = webview.asWebviewUri(vscode.Uri.joinPath(vendorUri, 'mermaid.min.js'));
+    const excalidrawScript = webview.asWebviewUri(
+      vscode.Uri.joinPath(vendorUri, 'excalidraw-utils.min.js')
+    );
 
     return `<!DOCTYPE html>
 <html lang="en">
@@ -364,6 +367,7 @@ export class PreviewManager {
   <div id="preview-content"></div>
   <script nonce="${nonce}" src="${katexScript}"></script>
   <script nonce="${nonce}" src="${mermaidScript}"></script>
+  <script nonce="${nonce}" src="${excalidrawScript}"></script>
   <script nonce="${nonce}" src="${mainScript}"></script>
 </body>
 </html>`;
