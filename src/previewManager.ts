@@ -287,11 +287,11 @@ export class PreviewManager {
       }
 
       case 'exportToPdf':
-        vscode.commands.executeCommand('markdownPreviewPro.exportToPdf');
+        vscode.commands.executeCommand('markdownPreviewPro.exportToPdf', this.activeDocument?.uri);
         break;
 
       case 'exportToHtml':
-        vscode.commands.executeCommand('markdownPreviewPro.exportToHtml');
+        vscode.commands.executeCommand('markdownPreviewPro.exportToHtml', this.activeDocument?.uri);
         break;
     }
   }
