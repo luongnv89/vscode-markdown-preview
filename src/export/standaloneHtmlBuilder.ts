@@ -145,7 +145,7 @@ ${htmlWithEmbeddedImages}
 
     // Read vendor CSS
     const vendorDir = path.join(this.extensionUri.fsPath, 'dist', 'webview', 'vendor');
-    for (const file of ['katex.min.css', 'github-dark.min.css']) {
+    for (const file of ['katex.min.css']) {
       try {
         const css = await fs.readFile(path.join(vendorDir, file), 'utf-8');
         parts.push(`/* ${file} */\n${css}`);

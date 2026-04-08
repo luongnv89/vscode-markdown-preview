@@ -93,7 +93,6 @@ const webviewConfig = {
         { from: 'node_modules/mermaid/dist/mermaid.min.js', to: 'vendor/' },
         { from: 'node_modules/@excalidraw/utils/dist/excalidraw-utils.min.js', to: 'vendor/' },
         { from: 'node_modules/highlight.js/styles/github-dark.min.css', to: 'vendor/' },
-        { from: 'node_modules/highlight.js/styles/github.min.css', to: 'vendor/' },
       ],
     }),
   ],
