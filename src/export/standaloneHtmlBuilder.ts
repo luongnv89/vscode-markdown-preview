@@ -131,7 +131,7 @@ ${css}
   <script>${mermaidJs}</script>
   <script>${excalidrawJs}</script>
 </head>
-<body>
+<body class="vscode-light">
   <div id="preview-content">
 ${htmlWithEmbeddedImages}
   </div>
@@ -213,29 +213,31 @@ ${htmlWithEmbeddedImages}
   }
 
   private replaceThemeVariables(css: string): string {
-    // Provide default values for VS Code theme variables in standalone context
+    // Provide light-theme defaults for VS Code variables — exports use light mode
+    // for better print contrast. Body class "vscode-light" activates the matching
+    // hljs token-color rules in code.css.
     const defaults: Record<string, string> = {
-      '--vscode-editor-background': '#1e1e1e',
-      '--vscode-editor-foreground': '#d4d4d4',
-      '--vscode-descriptionForeground': '#858585',
-      '--vscode-editorWidget-border': 'rgba(127, 127, 127, 0.2)',
-      '--vscode-editorCursor-foreground': '#528bff',
-      '--vscode-textCodeBlock-background': 'rgba(127, 127, 127, 0.1)',
-      '--vscode-textLink-foreground': '#3794ff',
-      '--vscode-textLink-activeForeground': '#3794ff',
-      '--vscode-editor-selectionBackground': 'rgba(38, 79, 120, 0.5)',
-      '--vscode-list-hoverBackground': 'rgba(127, 127, 127, 0.1)',
-      '--vscode-panel-background': '#1e1e1e',
-      '--vscode-input-background': 'rgba(127, 127, 127, 0.1)',
-      '--vscode-button-background': '#0e639c',
+      '--vscode-editor-background': '#ffffff',
+      '--vscode-editor-foreground': '#24292e',
+      '--vscode-descriptionForeground': '#656d76',
+      '--vscode-editorWidget-border': '#d0d7de',
+      '--vscode-editorCursor-foreground': '#0969da',
+      '--vscode-textCodeBlock-background': '#f6f8fa',
+      '--vscode-textLink-foreground': '#0969da',
+      '--vscode-textLink-activeForeground': '#0969da',
+      '--vscode-editor-selectionBackground': 'rgba(9, 105, 218, 0.2)',
+      '--vscode-list-hoverBackground': 'rgba(208, 215, 222, 0.32)',
+      '--vscode-panel-background': '#f6f8fa',
+      '--vscode-input-background': '#ffffff',
+      '--vscode-button-background': '#0969da',
       '--vscode-button-foreground': '#ffffff',
-      '--vscode-button-hoverBackground': '#1177bb',
+      '--vscode-button-hoverBackground': '#0550ae',
       '--vscode-scrollbarSlider-background': 'rgba(127, 127, 127, 0.3)',
       '--vscode-scrollbarSlider-hoverBackground': 'rgba(127, 127, 127, 0.5)',
       '--vscode-scrollbarSlider-activeBackground': 'rgba(127, 127, 127, 0.7)',
-      '--vscode-errorForeground': '#f44747',
-      '--vscode-inputValidation-errorBackground': 'rgba(255, 0, 0, 0.1)',
-      '--vscode-inputValidation-errorBorder': '#f44747',
+      '--vscode-errorForeground': '#cf222e',
+      '--vscode-inputValidation-errorBackground': 'rgba(207, 34, 46, 0.1)',
+      '--vscode-inputValidation-errorBorder': '#cf222e',
       '--vscode-editor-font-family': "'SF Mono', 'Fira Code', Menlo, Monaco, Consolas, monospace",
     };
 
