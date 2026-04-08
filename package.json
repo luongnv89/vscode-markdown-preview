@@ -187,7 +187,7 @@
     "@types/markdown-it": "^14.1.2",
     "@types/node": "^20.11.0",
     "@types/vscode": "^1.85.0",
-    "copy-webpack-plugin": "^13.0.1",
+    "copy-webpack-plugin": "^14.0.0",
     "css-loader": "^6.9.0",
     "eslint": "^10.0.0",
     "eslint-config-prettier": "^10.1.8",
@@ -200,14 +200,17 @@
     "webpack": "^5.89.0",
     "webpack-cli": "^5.1.4"
   },
+  "overrides": {
+    "yauzl": "^3.3.0"
+  },
   "dependencies": {
     "@excalidraw/utils": "^0.1.2",
     "highlight.js": "^11.9.0",
     "katex": "^0.16.9",
     "markdown-it": "^14.0.0",
     "markdown-it-task-lists": "^2.1.1",
-    "mermaid": "^10.6.1",
-    "puppeteer-core": "^24.37.3",
-    "yaml": "^2.8.2"
+    "mermaid": "^11.14.0",
+    "puppeteer-core": "^24.40.0",
+    "yaml": "^2.8.3"
   }
 }
