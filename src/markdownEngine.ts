@@ -36,10 +36,12 @@ export class MarkdownEngine {
           }
         }
         if (lang === 'mermaid') {
-          return `<div class="mermaid-block" data-processed="false"><pre class="mermaid">${md.utils.escapeHtml(str)}</pre></div>`;
+          const escaped = md.utils.escapeHtml(str);
+          return `<div class="mermaid-block" data-processed="false" data-source="${escaped}"><pre class="mermaid">${escaped}</pre></div>`;
         }
         if (lang === 'excalidraw') {
-          return `<div class="excalidraw-block" data-processed="false"><pre class="excalidraw-source">${md.utils.escapeHtml(str)}</pre></div>`;
+          const escaped = md.utils.escapeHtml(str);
+          return `<div class="excalidraw-block" data-processed="false" data-source="${escaped}"><pre class="excalidraw-source">${escaped}</pre></div>`;
         }
         // Auto-detect
         const escaped = md.utils.escapeHtml(str);
