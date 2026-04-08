@@ -57,6 +57,12 @@ import { toggleStats, setStatsToggleButton } from './statsBar';
 import { enterPresentation } from './presentation';
 
 function detectInitialTheme(): 'light' | 'dark' {
+  if (
+    document.body.classList.contains('vscode-dark') ||
+    document.body.classList.contains('vscode-high-contrast')
+  ) {
+    return 'dark';
+  }
   return 'light';
 }
 
@@ -75,8 +81,10 @@ export function initToolbar(vscode: VsCodeApi): void {
 
   let currentTheme = detectInitialTheme();
 
-  // Apply light theme by default
-  document.body.classList.add('preview-theme-light');
+  // Apply initial theme based on VS Code theme
+  document.body.classList.add(
+    currentTheme === 'dark' ? 'preview-theme-dark' : 'preview-theme-light'
+  );
 
   const themeButton = createButton(
     currentTheme === 'dark' ? sunIcon : moonIcon,

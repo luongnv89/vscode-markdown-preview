@@ -338,7 +338,6 @@ export class PreviewManager {
     );
     const katexStyle = webview.asWebviewUri(vscode.Uri.joinPath(vendorUri, 'katex.min.css'));
     const katexScript = webview.asWebviewUri(vscode.Uri.joinPath(vendorUri, 'katex.min.js'));
-    const hljsStyle = webview.asWebviewUri(vscode.Uri.joinPath(vendorUri, 'github-dark.min.css'));
     const mermaidScript = webview.asWebviewUri(vscode.Uri.joinPath(vendorUri, 'mermaid.min.js'));
     const excalidrawScript = webview.asWebviewUri(
       vscode.Uri.joinPath(vendorUri, 'excalidraw-utils.min.js')
@@ -359,7 +358,6 @@ export class PreviewManager {
       worker-src 'none';
       frame-src 'none';">
   <link rel="stylesheet" href="${katexStyle}">
-  <link rel="stylesheet" href="${hljsStyle}">
   <link rel="stylesheet" href="${mainStyle}">
   <title>Markdown Preview Pro</title>
 </head>

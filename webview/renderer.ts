@@ -94,11 +94,10 @@ async function renderMermaid(): Promise<void> {
   for (let i = 0; i < mermaidBlocks.length; i++) {
     const block = mermaidBlocks[i];
     const pre = block.querySelector('pre.mermaid');
-    if (!pre) {
+    const code = pre ? pre.textContent || '' : (block as HTMLElement).dataset.source || '';
+    if (!code) {
       continue;
     }
-
-    const code = pre.textContent || '';
     const id = `mermaid-${Date.now()}-${i}`;
 
     try {
@@ -134,11 +133,10 @@ async function renderExcalidraw(): Promise<void> {
   for (let i = 0; i < blocks.length; i++) {
     const block = blocks[i];
     const pre = block.querySelector('pre.excalidraw-source');
-    if (!pre) {
+    const jsonStr = pre ? pre.textContent || '' : (block as HTMLElement).dataset.source || '';
+    if (!jsonStr) {
       continue;
     }
-
-    const jsonStr = pre.textContent || '';
 
     try {
       const data = JSON.parse(jsonStr);
@@ -209,33 +207,37 @@ function escapeHtml(text: string): string {
   return div.innerHTML;
 }
 
-// Watch for theme changes to reinitialize mermaid
+// Watch for theme changes to reinitialize mermaid and excalidraw
 export function watchThemeChanges(): void {
   if (themeObserver) {
     themeObserver.disconnect();
   }
 
-  themeObserver = new MutationObserver((mutations) => {
-    for (const mutation of mutations) {
-      if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
-        // Theme changed, reinitialize mermaid
-        mermaidInitialized = false;
+  let themeChangeTimer: ReturnType<typeof setTimeout> | null = null;
 
-        // Re-render mermaid diagrams
-        const mermaidBlocks = document.querySelectorAll('.mermaid-block');
-        mermaidBlocks.forEach((block) => {
-          block.setAttribute('data-processed', 'false');
-        });
-        renderMermaid();
-
-        // Re-render excalidraw diagrams
-        const excalidrawBlocks = document.querySelectorAll('.excalidraw-block');
-        excalidrawBlocks.forEach((block) => {
-          block.setAttribute('data-processed', 'false');
-        });
-        renderExcalidraw();
-      }
+  themeObserver = new MutationObserver(() => {
+    // Debounce: the toolbar does remove+add in two mutations; wait for both to settle
+    if (themeChangeTimer) {
+      clearTimeout(themeChangeTimer);
     }
+    themeChangeTimer = setTimeout(() => {
+      themeChangeTimer = null;
+      mermaidInitialized = false;
+
+      // Re-render mermaid diagrams
+      const mermaidBlocks = document.querySelectorAll('.mermaid-block');
+      mermaidBlocks.forEach((block) => {
+        block.setAttribute('data-processed', 'false');
+      });
+      renderMermaid();
+
+      // Re-render excalidraw diagrams
+      const excalidrawBlocks = document.querySelectorAll('.excalidraw-block');
+      excalidrawBlocks.forEach((block) => {
+        block.setAttribute('data-processed', 'false');
+      });
+      renderExcalidraw();
+    }, 50);
   });
 
   themeObserver.observe(document.body, {
