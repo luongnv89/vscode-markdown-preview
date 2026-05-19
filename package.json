@@ -2,7 +2,7 @@
   "name": "markdown-preview-pro",
   "displayName": "Markdown Preview Pro",
   "description": "Clean, minimal markdown preview with syntax highlighting, mermaid diagrams, math rendering, and interactive features",
-  "version": "0.9.3",
+  "version": "0.9.4",
   "publisher": "luongnv89",
   "license": "MIT",
   "homepage": "https://luongnv.com/vscode-markdown-preview/",

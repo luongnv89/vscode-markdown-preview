@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.9.4
+
+- Fix PDF export title and header visibility — change from light gray to bold black text
+- Improve heading contrast in PDF exports with @media print styles
+- Achieve WCAG AAA contrast compliance (21:1 ratio) for PDF export titles and headers
+
 ## 0.9.0
 
 - Add Excalidraw diagram preview support — render `excalidraw` code blocks as interactive SVG diagrams in the preview panel
