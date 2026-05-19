@@ -214,28 +214,29 @@ ${htmlWithEmbeddedImages}
 
   private replaceThemeVariables(css: string): string {
     // Provide default values for VS Code theme variables in standalone context
+    // For PDF/print exports, we use black text for better readability and contrast
     const defaults: Record<string, string> = {
-      '--vscode-editor-background': '#1e1e1e',
-      '--vscode-editor-foreground': '#d4d4d4',
-      '--vscode-descriptionForeground': '#858585',
-      '--vscode-editorWidget-border': 'rgba(127, 127, 127, 0.2)',
-      '--vscode-editorCursor-foreground': '#528bff',
-      '--vscode-textCodeBlock-background': 'rgba(127, 127, 127, 0.1)',
-      '--vscode-textLink-foreground': '#3794ff',
-      '--vscode-textLink-activeForeground': '#3794ff',
-      '--vscode-editor-selectionBackground': 'rgba(38, 79, 120, 0.5)',
-      '--vscode-list-hoverBackground': 'rgba(127, 127, 127, 0.1)',
-      '--vscode-panel-background': '#1e1e1e',
-      '--vscode-input-background': 'rgba(127, 127, 127, 0.1)',
-      '--vscode-button-background': '#0e639c',
+      '--vscode-editor-background': '#ffffff',
+      '--vscode-editor-foreground': '#000000',
+      '--vscode-descriptionForeground': '#333333',
+      '--vscode-editorWidget-border': 'rgba(0, 0, 0, 0.2)',
+      '--vscode-editorCursor-foreground': '#0066cc',
+      '--vscode-textCodeBlock-background': '#f5f5f5',
+      '--vscode-textLink-foreground': '#0000cc',
+      '--vscode-textLink-activeForeground': '#0000cc',
+      '--vscode-editor-selectionBackground': 'rgba(200, 220, 255, 0.5)',
+      '--vscode-list-hoverBackground': 'rgba(0, 0, 0, 0.05)',
+      '--vscode-panel-background': '#ffffff',
+      '--vscode-input-background': 'rgba(0, 0, 0, 0.05)',
+      '--vscode-button-background': '#0066cc',
       '--vscode-button-foreground': '#ffffff',
-      '--vscode-button-hoverBackground': '#1177bb',
-      '--vscode-scrollbarSlider-background': 'rgba(127, 127, 127, 0.3)',
-      '--vscode-scrollbarSlider-hoverBackground': 'rgba(127, 127, 127, 0.5)',
-      '--vscode-scrollbarSlider-activeBackground': 'rgba(127, 127, 127, 0.7)',
-      '--vscode-errorForeground': '#f44747',
+      '--vscode-button-hoverBackground': '#0052a3',
+      '--vscode-scrollbarSlider-background': 'rgba(0, 0, 0, 0.3)',
+      '--vscode-scrollbarSlider-hoverBackground': 'rgba(0, 0, 0, 0.5)',
+      '--vscode-scrollbarSlider-activeBackground': 'rgba(0, 0, 0, 0.7)',
+      '--vscode-errorForeground': '#cc0000',
       '--vscode-inputValidation-errorBackground': 'rgba(255, 0, 0, 0.1)',
-      '--vscode-inputValidation-errorBorder': '#f44747',
+      '--vscode-inputValidation-errorBorder': '#cc0000',
       '--vscode-editor-font-family': "'SF Mono', 'Fira Code', Menlo, Monaco, Consolas, monospace",
     };
 
@@ -244,7 +245,7 @@ ${htmlWithEmbeddedImages}
       .map(([key, value]) => `  ${key}: ${value};`)
       .join('\n');
 
-    return `/* Standalone theme defaults */\n:root {\n${rootBlock}\n}\n\n${css}`;
+    return `/* Print/PDF export theme defaults - optimized for readability */\n:root {\n${rootBlock}\n}\n\n${css}`;
   }
 
   private async embedImages(html: string, documentUri: vscode.Uri): Promise<string> {

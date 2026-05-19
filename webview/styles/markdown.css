@@ -307,3 +307,76 @@ details[open] summary {
   border-bottom: 1px solid var(--border-color);
   padding-bottom: 0.5em;
 }
+
+/* Print and PDF export styles - improved accessibility and readability */
+@media print {
+  /* Headings - bold and black for better contrast in printed/PDF exports */
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    color: #000000;
+    font-weight: 700;
+  }
+
+  /* Title styling for print - enhanced visibility */
+  h1 {
+    font-weight: 700;
+    letter-spacing: 0.02em;
+  }
+
+  h2 {
+    font-weight: 700;
+  }
+
+  h3 {
+    font-weight: 700;
+  }
+
+  h4 {
+    font-weight: 700;
+  }
+
+  h5 {
+    font-weight: 700;
+  }
+
+  h6 {
+    font-weight: 700;
+  }
+
+  /* Improve body text contrast for print */
+  body {
+    color: #000000;
+  }
+
+  p {
+    color: #000000;
+  }
+
+  /* Blockquotes - ensure text is visible */
+  blockquote {
+    color: #333333;
+  }
+
+  /* Links - make them visibly different in print */
+  a {
+    color: #0000cc;
+    text-decoration: underline;
+  }
+
+  /* Table text should be black for print */
+  th,
+  td {
+    color: #000000;
+  }
+
+  /* Code blocks - ensure visibility */
+  code {
+    color: #000000;
+    background-color: #f5f5f5;
+    border: 1px solid #cccccc;
+  }
+}
