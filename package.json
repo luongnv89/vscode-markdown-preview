@@ -29,11 +29,24 @@
   "icon": "media/icon.png",
   "activationEvents": [
     "onLanguage:markdown",
+    "onCustomEditor:markdownPreviewPro.editor",
     "onCommand:markdownPreviewPro.exportToHtml",
     "onCommand:markdownPreviewPro.exportToPdf"
   ],
   "main": "./dist/extension.js",
   "contributes": {
+    "customEditors": [
+      {
+        "viewType": "markdownPreviewPro.editor",
+        "displayName": "Markdown Preview Pro",
+        "selector": [
+          {
+            "filenamePattern": "*.md"
+          }
+        ],
+        "priority": "option"
+      }
+    ],
     "commands": [
       {
         "command": "markdownPreviewPro.showPreview",

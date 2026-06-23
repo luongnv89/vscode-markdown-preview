@@ -29,6 +29,25 @@ code --install-extension luongnv89.markdown-preview-pro
    - Click the preview icon in the editor title bar
    - Right-click a markdown file and select **Open Preview to Side**
 
+### Use the preview as the default editor (optional)
+
+Markdown Preview Pro registers a custom editor, so you can have `.md` files open
+straight into the rendered preview instead of the text editor.
+
+- **Per file:** right-click a `.md` file → **Open With…** → **Markdown Preview Pro**.
+- **For all markdown files:** right-click a `.md` file → **Open With…** →
+  **Configure default editor for '\*.md'…** → **Markdown Preview Pro**, or add this
+  to your `settings.json`:
+
+  ```json
+  "workbench.editorAssociations": {
+    "*.md": "markdownPreviewPro.editor"
+  }
+  ```
+
+To edit a file that opens in the preview, use **Open With… → Text Editor** (or open
+the source to the side). Remove the association to restore the default behavior.
+
 ## Features
 
 | Feature                   | Description                                                                          |
