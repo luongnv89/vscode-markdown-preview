@@ -146,13 +146,15 @@ async function renderExcalidraw(): Promise<void> {
       }
 
       const svg = await ExcalidrawUtils.exportToSvg({
-        elements: data.elements,
-        appState: {
-          ...(data.appState || {}),
-          exportWithDarkMode: isDark,
-          viewBackgroundColor: isDark ? '#1e1e1e' : '#ffffff',
+        data: {
+          elements: data.elements,
+          appState: {
+            ...(data.appState || {}),
+            exportWithDarkMode: isDark,
+            viewBackgroundColor: isDark ? '#1e1e1e' : '#ffffff',
+          },
+          files: data.files || null,
         },
-        files: data.files || {},
       });
 
       block.innerHTML = '';
