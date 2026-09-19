@@ -121,9 +121,14 @@ docs: update configuration table in README
 # Run tests
 npm test
 
+# Run tests with coverage reporting
+npm run coverage
+
 # Lint code
 npm run lint
 ```
+
+`npm test` first builds the extension and compiles `src/test/` (the `pretest` hook), then runs the real command `node ./out/test/runTest.js`. That launcher uses `@vscode/test-electron` to boot an Extension Development Host and run the Mocha suite in `src/test/suite/`. `npm run coverage` runs the same suite under `c8` and prints the line-coverage percentage (see `.c8rc.json` for scope). The first run downloads VS Code into `.vscode-test/` (~300 MB), so it can take a few minutes; later runs reuse the cache.
 
 ## Reporting Issues
 
