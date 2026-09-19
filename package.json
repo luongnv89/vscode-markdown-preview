@@ -183,7 +183,9 @@
     "format:check": "prettier --check .",
     "compile:test": "tsc -p tsconfig.test.json",
     "pretest": "npm run compile && npm run compile:test",
-    "test": "node ./out/test/runTest.js"
+    "test": "node ./out/test/runTest.js",
+    "precoverage": "npm run compile && npm run compile:test",
+    "coverage": "c8 node ./out/test/runTest.js"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
@@ -192,6 +194,7 @@
     "@types/node": "^20.11.0",
     "@types/vscode": "^1.85.0",
     "@vscode/test-electron": "^3.1.0",
+    "c8": "^12.0.0",
     "copy-webpack-plugin": "^14.0.0",
     "css-loader": "^6.9.0",
     "eslint": "^10.0.0",
