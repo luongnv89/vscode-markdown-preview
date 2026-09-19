@@ -1,12 +1,20 @@
 # Development Guide
 
+## Environment
+
+- **Node.js**: use **Node 20** (the version CI pins in `.github/workflows/ci.yml` and `.github/workflows/pages.yml`) or any newer LTS. The maintainer develops on Node v26.7.0, so newer majors work too.
+- The repo has **no `engines.node`**, **no `.nvmrc`** and **no `.env.example`** — there is nothing to pin or copy; install Node yourself and clone.
+- **npm** ships with Node; no global packages are required.
+
 ## Setup
 
 ```bash
 git clone https://github.com/luongnv89/vscode-markdown-preview.git
 cd vscode-markdown-preview
-npm install
+npm ci
 ```
+
+`npm ci` performs a clean, reproducible install from `package-lock.json` — the same step CI runs. Use `npm install` only when you are intentionally changing dependencies.
 
 ## Development Workflow
 
@@ -37,13 +45,32 @@ This creates an optimized build with hidden source maps in `dist/`.
 
 ## Key Scripts
 
-| Script    | Command           | Description            |
-| --------- | ----------------- | ---------------------- |
-| `compile` | `npm run compile` | One-time Webpack build |
-| `watch`   | `npm run watch`   | Webpack watch mode     |
-| `package` | `npm run package` | Production build       |
-| `lint`    | `npm run lint`    | ESLint check           |
-| `test`    | `npm test`        | Run test suite         |
+| Script          | Command                 | Description                                                                                                    |
+| --------------- | ----------------------- | -------------------------------------------------------------------------------------------------------------- |
+| `compile`       | `npm run compile`       | One-time Webpack development build into `dist/`                                                                |
+| `watch`         | `npm run watch`         | Webpack watch mode — rebuilds `dist/` on file changes                                                          |
+| `package`       | `npm run package`       | Production build (`webpack --mode production --devtool hidden-source-map`) into `dist/`                        |
+| `lint`          | `npm run lint`          | ESLint check over `src/` and `webview/`                                                                        |
+| `format:check`  | `npm run format:check`  | Prettier check over the whole repo (same gate CI runs)                                                         |
+| `build:landing` | `npm run build:landing` | Regenerates the landing page — **rewrites the tracked file `docs/index.html`**, so it dirties the working tree |
+| `test`          | `npm test`              | **Currently broken** — see below                                                                               |
+
+### Type checking
+
+CI runs two TypeScript checks; run both before pushing:
+
+```bash
+npx tsc --noEmit -p tsconfig.json          # extension host (src/)
+npx tsc --noEmit -p tsconfig.webview.json  # webview (webview/)
+```
+
+### `npm test` is currently broken
+
+`npm test` resolves to `node ./dist/test/runTest.js`, but `dist/test/` has never been built, so the command fails today with `MODULE_NOT_FOUND`. Do not rely on it — validation is the lint, format and typecheck commands above.
+
+### `npm run build:landing` modifies `docs/index.html`
+
+`build:landing` runs `scripts/generate-landing.cjs`, which renders `docs/landing.md` and **overwrites the tracked file `docs/index.html`**. Running it locally leaves a modified `docs/index.html` in your working tree — commit the regenerated file deliberately, or `git checkout -- docs/index.html` to discard it.
 
 ## Debugging Tips
 
