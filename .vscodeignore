@@ -12,6 +12,8 @@ tsconfig.webview.json
 tsconfig.test.json
 dist/test/**
 out/**
+coverage/**
+.c8rc.json
 webpack.config.js
 **/*.ts
 **/*.map
