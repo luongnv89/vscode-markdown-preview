@@ -209,9 +209,6 @@
     "webpack": "^5.89.0",
     "webpack-cli": "^5.1.4"
   },
-  "overrides": {
-    "yauzl": "^3.3.0"
-  },
   "dependencies": {
     "@excalidraw/utils": "^0.1.2",
     "highlight.js": "^11.9.0",
