@@ -3,7 +3,7 @@
 ## Environment
 
 - **Node.js**: use **Node 20** (the version CI pins in `.github/workflows/ci.yml` and `.github/workflows/pages.yml`) or any newer LTS. The maintainer develops on Node v26.7.0, so newer majors work too.
-- The repo has **no `engines.node`**, **no `.nvmrc`** and **no `.env.example`** — there is nothing to pin or copy; install Node yourself and clone.
+- The runtime is declared as `engines.node` (`>=20.0.0`) in `package.json` and pinned by `.nvmrc` (`20`, the CI version) — `nvm use` picks it up automatically. There is still **no `.env.example`** — nothing to copy; clone and install.
 - **npm** ships with Node; no global packages are required.
 
 ## Setup
