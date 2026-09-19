@@ -6,6 +6,7 @@ webview/**
 test/**
 node_modules/**
 .gitignore
+.nvmrc
 tsconfig.json
 tsconfig.webview.json
 webpack.config.js
