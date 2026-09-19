@@ -45,15 +45,15 @@ This creates an optimized build with hidden source maps in `dist/`.
 
 ## Key Scripts
 
-| Script          | Command                 | Description                                                                                                    |
-| --------------- | ----------------------- | -------------------------------------------------------------------------------------------------------------- |
-| `compile`       | `npm run compile`       | One-time Webpack development build into `dist/`                                                                |
-| `watch`         | `npm run watch`         | Webpack watch mode — rebuilds `dist/` on file changes                                                          |
-| `package`       | `npm run package`       | Production build (`webpack --mode production --devtool hidden-source-map`) into `dist/`                        |
-| `lint`          | `npm run lint`          | ESLint check over `src/` and `webview/`                                                                        |
-| `format:check`  | `npm run format:check`  | Prettier check over the whole repo (same gate CI runs)                                                         |
-| `build:landing` | `npm run build:landing` | Regenerates the landing page — **rewrites the tracked file `docs/index.html`**, so it dirties the working tree |
-| `test`          | `npm test`              | **Currently broken** — see below                                                                               |
+| Script          | Command                 | Description                                                                                                            |
+| --------------- | ----------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| `compile`       | `npm run compile`       | One-time Webpack development build into `dist/`                                                                        |
+| `watch`         | `npm run watch`         | Webpack watch mode — rebuilds `dist/` on file changes                                                                  |
+| `package`       | `npm run package`       | Production build (`webpack --mode production --devtool hidden-source-map`) into `dist/`                                |
+| `lint`          | `npm run lint`          | ESLint check over `src/` and `webview/`                                                                                |
+| `format:check`  | `npm run format:check`  | Prettier check over the whole repo (same gate CI runs)                                                                 |
+| `build:landing` | `npm run build:landing` | Regenerates the landing page at `docs/index.html` — a generated, gitignored file, so it never dirties the working tree |
+| `test`          | `npm test`              | **Currently broken** — see below                                                                                       |
 
 ### Type checking
 
@@ -68,9 +68,9 @@ npx tsc --noEmit -p tsconfig.webview.json  # webview (webview/)
 
 `npm test` resolves to `node ./dist/test/runTest.js`, but `dist/test/` has never been built, so the command fails today with `MODULE_NOT_FOUND`. Do not rely on it — validation is the lint, format and typecheck commands above.
 
-### `npm run build:landing` modifies `docs/index.html`
+### `npm run build:landing` writes `docs/index.html`
 
-`build:landing` runs `scripts/generate-landing.cjs`, which renders `docs/landing.md` and **overwrites the tracked file `docs/index.html`**. Running it locally leaves a modified `docs/index.html` in your working tree — commit the regenerated file deliberately, or `git checkout -- docs/index.html` to discard it.
+`build:landing` runs `scripts/generate-landing.cjs`, which renders `docs/landing.md` into the generated file `docs/index.html`. The file is **gitignored** — a fresh checkout does not contain it, and CI never compares it against the commit. The Pages workflow regenerates it on every deploy, so running the command locally is always safe and its output is never committed.
 
 ## Debugging Tips
 

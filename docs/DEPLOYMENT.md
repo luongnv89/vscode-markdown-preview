@@ -77,7 +77,7 @@ This repo also ships a single-file landing page generated from Markdown using th
 ### Source and build
 
 - Source markdown: `docs/landing.md`
-- Generated HTML: `docs/index.html`
+- Generated HTML: `docs/index.html` (gitignored — built on demand, never committed)
 - Generator: `scripts/generate-landing.cjs`
 
 Build it locally with:
@@ -90,8 +90,8 @@ npm run build:landing
 
 ### CI/CD behavior
 
-- `CI` installs dependencies, checks formatting/lint/types, builds the extension, rebuilds the landing page, and fails if `docs/index.html` is out of sync with the source markdown or rendering stack.
-- `Deploy landing page` publishes the generated standalone page to **GitHub Pages** on every push to `main`.
+- `CI` installs dependencies, checks formatting/lint/types, builds the extension, and smoke-builds the landing page to prove the generator still runs. `docs/index.html` is not tracked, so no step compares it against the commit.
+- `Deploy landing page` regenerates `docs/index.html` in the workflow and publishes the standalone page to **GitHub Pages** on every push to `main`.
 - The Pages workflow deploys a root artifact containing the self-contained `index.html` only.
 
 ## Files Included in Package
