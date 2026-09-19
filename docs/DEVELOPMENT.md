@@ -53,7 +53,7 @@ This creates an optimized build with hidden source maps in `dist/`.
 | `lint`          | `npm run lint`          | ESLint check over `src/` and `webview/`                                                                                |
 | `format:check`  | `npm run format:check`  | Prettier check over the whole repo (same gate CI runs)                                                                 |
 | `build:landing` | `npm run build:landing` | Regenerates the landing page at `docs/index.html` — a generated, gitignored file, so it never dirties the working tree |
-| `test`          | `npm test`              | Builds the extension + `src/test/` into `dist/`, then runs the Mocha suite inside an Extension Development Host        |
+| `test`          | `npm test`              | Builds the extension + `src/test/` into `out/`, then runs the Mocha suite inside an Extension Development Host         |
 
 ### Type checking
 
@@ -66,7 +66,7 @@ npx tsc --noEmit -p tsconfig.webview.json  # webview (webview/)
 
 ### `npm test`
 
-`npm test` runs the `pretest` hook first (`npm run compile && npm run compile:test`), which builds the extension with Webpack and compiles `src/test/` with `tsconfig.test.json` into `dist/test/`. `dist/test/runTest.js` then uses `@vscode/test-electron` to download VS Code into `.vscode-test/` (gitignored), launches an Extension Development Host, and runs the Mocha suite in `src/test/suite/` (TDD `suite`/`test` style). The first run downloads VS Code (~300 MB); later runs reuse the cached copy. Recorded baseline: **3/3 passing**.
+`npm test` runs the `pretest` hook first (`npm run compile && npm run compile:test`), which builds the extension with Webpack and compiles `src/test/` with `tsconfig.test.json` into `out/test/` (source modules the tests import are loose-compiled alongside it under `out/`). `out/test/runTest.js` then uses `@vscode/test-electron` to download VS Code into `.vscode-test/` (gitignored), launches an Extension Development Host, and runs the Mocha suite in `src/test/suite/` (TDD `suite`/`test` style). The first run downloads VS Code (~300 MB); later runs reuse the cached copy. Recorded baseline: **35/35 passing**.
 
 ### `npm run build:landing` writes `docs/index.html`
 
