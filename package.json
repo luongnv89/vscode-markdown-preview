@@ -11,7 +11,8 @@
     "url": "https://github.com/luongnv89/vscode-markdown-preview"
   },
   "engines": {
-    "vscode": "^1.85.0"
+    "vscode": "^1.85.0",
+    "node": ">=20.0.0"
   },
   "categories": [
     "Programming Languages",
