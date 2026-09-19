@@ -11,6 +11,7 @@ tsconfig.json
 tsconfig.webview.json
 tsconfig.test.json
 dist/test/**
+out/**
 webpack.config.js
 **/*.ts
 **/*.map

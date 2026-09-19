@@ -183,7 +183,7 @@
     "format:check": "prettier --check .",
     "compile:test": "tsc -p tsconfig.test.json",
     "pretest": "npm run compile && npm run compile:test",
-    "test": "node ./dist/test/runTest.js"
+    "test": "node ./out/test/runTest.js"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
