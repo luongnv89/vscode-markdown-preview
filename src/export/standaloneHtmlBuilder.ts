@@ -95,12 +95,14 @@ export class StandaloneHtmlBuilder {
           throw new Error('Invalid Excalidraw data');
         }
         var eSvg = await ExcalidrawUtils.exportToSvg({
-          elements: eData.elements,
-          appState: Object.assign({
-            exportWithDarkMode: false,
-            viewBackgroundColor: '#ffffff'
-          }, eData.appState || {}),
-          files: eData.files || {}
+          data: {
+            elements: eData.elements,
+            appState: Object.assign({
+              exportWithDarkMode: false,
+              viewBackgroundColor: '#ffffff'
+            }, eData.appState || {}),
+            files: eData.files || null
+          }
         });
         eBlock.innerHTML = '';
         eBlock.appendChild(eSvg);

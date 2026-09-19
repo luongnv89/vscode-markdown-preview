@@ -52,10 +52,15 @@ const extensionConfig = {
 const webviewConfig = {
   target: 'web',
   mode: 'none',
-  entry: './webview/main.ts',
+  entry: {
+    main: './webview/main.ts',
+    // @excalidraw/utils is ESM-only since 0.1.4 — bundle it here instead of
+    // copying a prebuilt UMD file (no longer shipped upstream).
+    'vendor/excalidraw-utils.min': './webview/excalidrawUtils.ts',
+  },
   output: {
     path: path.resolve(__dirname, 'dist', 'webview'),
-    filename: 'main.js',
+    filename: '[name].js',
   },
   resolve: {
     extensions: ['.ts', '.js'],
@@ -91,7 +96,6 @@ const webviewConfig = {
         { from: 'node_modules/katex/dist/katex.min.js', to: 'vendor/' },
         { from: 'node_modules/katex/dist/fonts', to: 'vendor/fonts' },
         { from: 'node_modules/mermaid/dist/mermaid.min.js', to: 'vendor/' },
-        { from: 'node_modules/@excalidraw/utils/dist/excalidraw-utils.min.js', to: 'vendor/' },
         { from: 'node_modules/highlight.js/styles/github-dark.min.css', to: 'vendor/' },
       ],
     }),
