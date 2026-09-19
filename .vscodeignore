@@ -9,6 +9,8 @@ node_modules/**
 .nvmrc
 tsconfig.json
 tsconfig.webview.json
+tsconfig.test.json
+dist/test/**
 webpack.config.js
 **/*.ts
 **/*.map
