@@ -45,9 +45,6 @@ jobs:
       - name: Build landing page
         run: npm run build:landing
 
-      - name: Ensure generated landing page is committed
-        run: git diff --exit-code -- docs/index.html
-
       - name: Package extension
         run: npx @vscode/vsce package --no-dependencies
 

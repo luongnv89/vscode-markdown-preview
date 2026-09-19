@@ -30,7 +30,7 @@
 
 ## Constraints
 
-- `npm run build:landing` **rewrites the tracked file `docs/index.html`** — running it dirties the tree; commit the regeneration deliberately or `git checkout -- docs/index.html` to discard.
+- `npm run build:landing` **writes the generated file `docs/index.html`** — it is gitignored (the Pages workflow regenerates it), so running it never dirties the tree and its output is never committed.
 - A new host↔webview message needs its type added to **both** `src/types/messages.ts` and `webview/types/`, plus a handler in each process.
 - Work on a branch and open a PR — no direct commits to `main`.
 
