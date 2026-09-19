@@ -39,6 +39,14 @@ jobs:
       - name: Type check (webview)
         run: npx tsc --noEmit -p tsconfig.webview.json
 
+      # npm test / coverage launch a real VS Code (Electron) instance via
+      # @vscode/test-electron — xvfb provides the headless display on Linux.
+      - name: Run tests
+        run: xvfb-run -a npm test
+
+      - name: Run coverage
+        run: xvfb-run -a npm run coverage
+
       - name: Build extension
         run: npm run package
 
