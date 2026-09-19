@@ -143,11 +143,12 @@ graph TD
     WEB[webview/main.ts] -->|Webpack| DIST2[dist/webview/main.js<br/>Browser bundle]
     CSS[webview/styles/*.css] -->|MiniCssExtract| DIST3[dist/webview/main.css]
     VENDOR[node_modules] -->|CopyWebpackPlugin| DIST4[dist/webview/vendor/<br/>katex, mermaid, hljs]
+    EXC[webview/excalidrawUtils.ts] -->|Webpack| DIST5[dist/webview/vendor/<br/>excalidraw-utils.min.js]
 ```
 
 1. **Extension** (`src/extension.ts` → `dist/extension.js`) - CommonJS for Node.js
 2. **Webview** (`webview/main.ts` → `dist/webview/main.js`) - Browser bundle with CSS
-3. **Vendor files** - KaTeX, Mermaid, and highlight.js are copied to `dist/webview/vendor/`
+3. **Vendor files** - KaTeX, Mermaid, and highlight.js are copied to `dist/webview/vendor/`; `@excalidraw/utils` (ESM-only since 0.1.4) is bundled there by webpack from a thin wrapper that exposes `window.ExcalidrawUtils`
 
 CSS files are extracted via `mini-css-extract-plugin` into `dist/webview/main.css`.
 
