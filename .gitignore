@@ -39,3 +39,6 @@ yarn-error.log*
 
 # Test output files
 test-sample.*
+
+# Generated landing page (rebuilt by `npm run build:landing`; Pages workflow regenerates it)
+docs/index.html
