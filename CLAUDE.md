@@ -17,7 +17,7 @@
 - Typecheck — run **both**, CI does:
   - `npx tsc --noEmit -p tsconfig.json` (extension host, `src/`)
   - `npx tsc --noEmit -p tsconfig.webview.json` (webview, `webview/`)
-- `npm test` is **non-functional** until Task 0.3 lands: it resolves to `dist/test/runTest.js`, which has never been built, and fails with `MODULE_NOT_FOUND`. Validate with lint + format:check + both typechecks instead.
+- Test: `npm test` — the `pretest` hook builds the extension (`webpack`) and compiles `src/test/` to `dist/test/` via `tsconfig.test.json`, then `dist/test/runTest.js` launches an Extension Development Host through `@vscode/test-electron` and runs the Mocha suite in `src/test/suite/`. Baseline pass rate: **3/3** — this is the recorded baseline every subsequent task asserts against.
 - Debug: `F5` in VS Code launches the Extension Development Host (`.vscode/launch.json`).
 
 ## Layout
