@@ -73,4 +73,5 @@ export interface PreviewConfig {
   lineBreaks: boolean;
   typographer: boolean;
   showFrontmatter: 'card' | 'none';
+  allowRemoteImages: boolean;
 }

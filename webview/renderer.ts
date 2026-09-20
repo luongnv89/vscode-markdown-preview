@@ -84,7 +84,9 @@ async function renderMermaid(): Promise<void> {
     mermaid.initialize({
       startOnLoad: false,
       theme: isDark ? 'dark' : 'default',
-      securityLevel: 'loose',
+      // 'strict': labels are sanitized and `click` JS directives are never
+      // bound — diagram text comes straight from the untrusted document.
+      securityLevel: 'strict',
       fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif',
     });
 

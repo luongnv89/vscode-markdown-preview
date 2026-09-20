@@ -92,7 +92,7 @@ export class StandaloneHtmlBuilder {
 
   // Render Mermaid
   if (typeof mermaid !== 'undefined') {
-    mermaid.initialize({ startOnLoad: false, theme: 'default', securityLevel: 'loose' });
+    mermaid.initialize({ startOnLoad: false, theme: 'default', securityLevel: 'strict' });
     var blocks = document.querySelectorAll('.mermaid-block[data-processed="false"]');
     for (var i = 0; i < blocks.length; i++) {
       var block = blocks[i];
