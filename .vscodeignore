@@ -17,6 +17,8 @@ out/**
 coverage/**
 .c8rc.json
 webpack.config.js
+docs/index.html
+docs/assets/
 **/*.ts
 **/*.map
 .oxlintrc.json

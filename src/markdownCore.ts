@@ -424,3 +424,8 @@ function rewriteRawHtmlImages(html: string, resolveImageSrc: (src: string) => st
 export { parseFrontmatter, renderFrontmatterHtml } from './utils/frontmatter';
 export type { FrontmatterResult } from './utils/frontmatter';
 export { escapeHtml } from './utils/htmlEscape';
+// The content probe the preview (#72) and export (#74) gates share — the
+// landing generator uses it to link only the vendor runtimes the rendered
+// page actually references (#78).
+export { detectVendorNeeds } from './utils/vendorNeeds';
+export type { VendorNeeds, VendorFeatureFlags } from './utils/vendorNeeds';

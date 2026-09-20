@@ -43,5 +43,6 @@ test-sample.*
 # Coverage reports
 coverage/
 
-# Generated landing page (rebuilt by `npm run build:landing`; Pages workflow regenerates it)
+# Generated landing page + linked assets (rebuilt by `npm run build:landing`; Pages workflow regenerates them)
 docs/index.html
+docs/assets/
