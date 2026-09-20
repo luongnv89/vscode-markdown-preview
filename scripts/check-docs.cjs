@@ -8,10 +8,16 @@
  * 2. `RELEASE_NOTES.md`, when present, has a heading naming the version in
  *    `package.json`. An absent file passes: release notes are generated from
  *    the changelog at release time instead of being kept by hand.
+ * 3. Every file tracked under `src/` and `webview/` is named inside a table
+ *    row of its own file-inventory table in `docs/ARCHITECTURE.md` — the
+ *    extension-host table for `src/`, the webview table for `webview/` —
+ *    so the architecture doc can never silently drift behind the tree (issue
+ *    #79).
  */
 
 const fs = require('fs');
 const path = require('path');
+const { execSync } = require('child_process');
 
 const root = path.join(__dirname, '..');
 const read = (rel) => fs.readFileSync(path.join(root, rel), 'utf8');
@@ -66,6 +72,37 @@ if (fs.existsSync(notesPath)) {
     failures.push('RELEASE_NOTES.md has no heading');
   } else if (!heading.includes(version)) {
     failures.push(`RELEASE_NOTES.md heading does not name version ${version}: "${heading.trim()}"`);
+  }
+}
+
+// --- 3. Every src/ and webview/ file appears in docs/ARCHITECTURE.md ------
+
+const archDoc = read('docs/ARCHITECTURE.md');
+const archLines = archDoc.split('\n');
+const hostHeading = archLines.findIndex((line) => /^##\s+Extension Host/.test(line));
+const webviewHeading = archLines.findIndex((line) => /^##\s+Webview/.test(line));
+const nextHeading = archLines.findIndex((line, i) => i > webviewHeading && /^##\s/.test(line));
+const hostSection =
+  hostHeading === -1
+    ? []
+    : archLines.slice(hostHeading, webviewHeading === -1 ? archLines.length : webviewHeading);
+const webviewSection =
+  webviewHeading === -1
+    ? []
+    : archLines.slice(webviewHeading, nextHeading === -1 ? archLines.length : nextHeading);
+
+const trackedFiles = execSync("git ls-files 'src/*' 'webview/*'", {
+  cwd: root,
+  encoding: 'utf8',
+})
+  .split('\n')
+  .filter(Boolean);
+
+for (const file of trackedFiles) {
+  const section = file.startsWith('src/') ? hostSection : webviewSection;
+  const inTable = section.some((line) => line.includes('|') && line.includes(file));
+  if (!inTable) {
+    failures.push(`docs/ARCHITECTURE.md file tables omit ${file}`);
   }
 }
 
