@@ -1,4 +1,5 @@
 import YAML from 'yaml';
+import { escapeHtml } from './htmlEscape';
 
 export interface FrontmatterResult {
   frontmatter: Record<string, unknown> | null;
@@ -7,14 +8,6 @@ export interface FrontmatterResult {
 }
 
 const FRONTMATTER_RE = /^---\n([\s\S]*?)\n---\n?/;
-
-function escapeHtml(str: string): string {
-  return str
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;');
-}
 
 function isUrl(value: string): boolean {
   return /^https?:\/\//.test(value);

@@ -3,6 +3,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { buildWebviewHtml, escapeHtmlAttr } from '../../utils/webviewHtml';
+import { escapeHtml } from '../../utils/htmlEscape';
 import { findChromePath, ChromeNotFoundError } from '../../export/browserFinder';
 import { launchBrowser } from '../../export/pdfExporter';
 
@@ -10,6 +11,9 @@ import { launchBrowser } from '../../export/pdfExporter';
 // - #26: Mermaid securityLevel 'strict' + no 'unsafe-eval' in the preview CSP.
 // - #29: <body data-*> metadata escaped on write, About popup built with
 //   textContent, and img-src restricted unless the documented opt-in is on.
+// - #55: one shared escapeHtml implementation — pinned here so the collapsed
+//   copies (frontmatter, standaloneHtmlBuilder, renderer, generate-landing)
+//   cannot silently grow back.
 
 const repoRoot = path.resolve(__dirname, '..', '..', '..');
 
@@ -88,6 +92,58 @@ suite('preview webview security (#26, #29)', () => {
       assert.ok(!escaped.includes('>'));
       assert.strictEqual(escaped, '&quot;&gt;&lt;img src=x onerror=alert(1)&gt;');
       assert.strictEqual(escapeHtmlAttr("a&b'c"), 'a&amp;b&#39;c');
+    });
+
+    test('shared escapeHtml escapes the double-quote the DOM variant missed (#55)', () => {
+      // The collapsed webview/renderer.ts implementation did not escape `"` —
+      // the surviving implementation must, since callers interpolate into
+      // double-quoted attributes (`<img src="...">`, `href="..."`).
+      assert.strictEqual(escapeHtml('"'), '&quot;');
+      assert.strictEqual(escapeHtml('<a href="x&y">'), '&lt;a href=&quot;x&amp;y&quot;&gt;');
+      assert.strictEqual(escapeHtml("it's"), "it's");
+    });
+
+    test('the compiled shared engine hands the same escapeHtml to the landing generator (#55)', () => {
+      // scripts/generate-landing.cjs destructures escapeHtml from
+      // dist/markdownCore.js — assert the bundled copy is the same
+      // implementation, not a fourth variant.
+      const sharedCore = require(path.join(repoRoot, 'dist', 'markdownCore.js')) as {
+        escapeHtml: (s: string) => string;
+      };
+      assert.strictEqual(typeof sharedCore.escapeHtml, 'function');
+      assert.strictEqual(sharedCore.escapeHtml('"'), '&quot;');
+      for (const sample of ['plain', '<a&"b">', '"><img src=x>', "it's"]) {
+        assert.strictEqual(sharedCore.escapeHtml(sample), escapeHtml(sample));
+      }
+    });
+
+    test('exactly one escapeHtml declaration remains across src/, webview/ and scripts/ (#55)', () => {
+      // Mirrors the issue's acceptance grep: declaration keywords only, so
+      // `export const escapeHtmlAttr` does not count as a second impl.
+      const declPattern = /(?:function|private|protected|public)\s+escapeHtml/g;
+      const roots = ['src', 'webview', 'scripts'];
+      const matches: string[] = [];
+      const walk = (dir: string): void => {
+        for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+          const full = path.join(dir, entry.name);
+          if (entry.isDirectory()) {
+            walk(full);
+          } else {
+            const found = fs.readFileSync(full, 'utf8').match(declPattern);
+            if (found) {
+              found.forEach(() => matches.push(full));
+            }
+          }
+        }
+      };
+      for (const root of roots) {
+        walk(path.join(repoRoot, root));
+      }
+      assert.deepStrictEqual(
+        matches,
+        [path.join(repoRoot, 'src', 'utils', 'htmlEscape.ts')],
+        'escapeHtml must be declared exactly once, in src/utils/htmlEscape.ts'
+      );
     });
 
     test('a metadata value containing an img-onerror payload is rendered inert (#29)', () => {

@@ -2,6 +2,7 @@ import * as vscode from 'vscode';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 import { sanitizeExportHtml } from './htmlSanitizer';
+import { escapeHtml } from '../utils/htmlEscape';
 import { getNonce, isPathInsideAny } from '../utils/uri';
 import { PreviewConfig } from '../types/messages';
 
@@ -185,7 +186,7 @@ export class StandaloneHtmlBuilder {
   <meta charset="UTF-8">
   <meta http-equiv="Content-Security-Policy" content="${contentSecurityPolicy}">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>${this.escapeHtml(title)}</title>
+  <title>${escapeHtml(title)}</title>
   <style>
 ${css}
   </style>
@@ -421,13 +422,5 @@ ${sanitizedHtml}
       ico: 'image/x-icon',
     };
     return mimeTypes[ext] || 'application/octet-stream';
-  }
-
-  private escapeHtml(text: string): string {
-    return text
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;');
   }
 }
