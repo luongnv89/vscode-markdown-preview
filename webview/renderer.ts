@@ -3,6 +3,8 @@ import { isDarkTheme } from './theme';
 import { refreshBlockHighlighter } from './blockHighlighter';
 import { refreshToc } from './toc';
 import { refreshStats } from './statsBar';
+import { refreshScrollAnchors } from './scrollSync';
+import { applyBlockPatch, topLevelNodes, BlockPatch } from './domDiff';
 import type { PreviewConfig } from './types/messages';
 
 // Debounce for the theme observer: the toolbar's class swap arrives as two
@@ -24,11 +26,17 @@ let currentConfig: Pick<PreviewConfig, 'enableMermaid' | 'enableExcalidraw'> = {
 // The last HTML applied — retained so a configChanged can re-render under the
 // new flags without waiting for the host's own re-render.
 let lastHtml: string | null = null;
+// Set by applyConfig: a feature-flag toggle re-renders the same source under
+// new rules, so the next applied render bypasses the incremental patch and
+// rebuilds wholesale — the same behavior the pre-#77 innerHTML path had.
+let pendingFullRebuild = false;
 
 // ---- Diagram render cache (issue #75) ----
-// container.innerHTML re-creates every diagram block on each update and the
-// host re-flags each as data-processed="false", so without a cache every
-// mermaid/excalidraw source re-renders on every keystroke. Entries are keyed
+// Incoming HTML re-flags each diagram block as data-processed="false", and
+// before #77 a full innerHTML rebuild re-created every block on each update.
+// The incremental patch now keeps unchanged blocks outright, so the cache
+// covers the remaining cases: a block whose source was edited back to a
+// previously seen value, and first-time inserts. Entries are keyed
 // by a hash of the diagram source — never by block index, which shifts as the
 // document is edited — and the stored source is compared on lookup so a hash
 // collision can never inject the wrong SVG. The whole cache clears on theme
@@ -107,6 +115,7 @@ export function applyConfig(config: PreviewConfig): void {
     config.enableExcalidraw !== currentConfig.enableExcalidraw;
   currentConfig = config;
   if (diagramFlagToggled && lastHtml !== null) {
+    pendingFullRebuild = true;
     void updateContent(lastHtml);
   }
 }
@@ -133,8 +142,15 @@ export async function updateContent(html: string): Promise<void> {
         // Save scroll position
         const scrollTop = window.scrollY;
 
-        container.innerHTML = current;
-        await postProcessRenderedContent();
+        // Patch the DOM instead of rebuilding it (issue #77): only the
+        // blocks whose rendered source changed are replaced — kept blocks
+        // retain their nodes, observers, and rendered output. An identical
+        // render short-circuits post-processing entirely.
+        const patch = applyBlockPatch(container, current, pendingFullRebuild);
+        pendingFullRebuild = false;
+        if (patch.changed) {
+          await postProcessRenderedContent(container, patch);
+        }
 
         // Restore scroll position
         window.scrollTo(0, scrollTop);
@@ -148,10 +164,17 @@ export async function updateContent(html: string): Promise<void> {
   }
 }
 
-// Post-process the freshly injected HTML: copy buttons, then each diagram /
-// math engine gated on its feature flag, then the chrome refreshes.
-async function postProcessRenderedContent(): Promise<void> {
-  addCopyButtons();
+// Post-process the freshly patched DOM: copy buttons first (wrapping a
+// <pre> changes which top-level node the highlighter observes), then each
+// diagram / math engine gated on its feature flag, then the chrome
+// refreshes. Diagram renderers still query document-wide — the
+// data-processed="false" flag on inserted blocks scopes them naturally —
+// while everything else works on the patch's added/removed lists only.
+async function postProcessRenderedContent(
+  container: HTMLElement,
+  patch: BlockPatch
+): Promise<void> {
+  addCopyButtons(patch.added);
 
   // Render mermaid diagrams (skipped entirely when the feature is off)
   if (currentConfig.enableMermaid) {
@@ -163,15 +186,18 @@ async function postProcessRenderedContent(): Promise<void> {
     await renderExcalidraw();
   }
 
-  // Render KaTeX math
-  renderKatex();
+  // Render KaTeX math inside the inserted subtrees only — kept blocks
+  // already hold their rendered output.
+  renderKatex(patch.added);
 
-  // Refresh block highlighter
-  refreshBlockHighlighter();
+  // Refresh block highlighter over the changed top-level nodes
+  refreshBlockHighlighter(patch.removed, topLevelNodes(container, patch.added));
 
-  // Refresh TOC and stats
+  // Refresh TOC and stats — each skips internally when its inputs are
+  // unchanged — and re-cache the code-line elements for scroll sync.
   refreshToc();
   refreshStats();
+  refreshScrollAnchors(container);
 }
 
 // One-time mermaid.initialize with the pinned pre-v12 look — re-runs after a
@@ -370,15 +396,25 @@ async function renderExcalidraw(): Promise<void> {
   }
 }
 
-function renderKatex(): void {
+// Invoke `cb` on every element matching `selector` inside the inserted
+// roots — including a root itself when it matches (a top-level .katex-block).
+function forEachInRoots(roots: Element[], selector: string, cb: (el: Element) => void): void {
+  for (const root of roots) {
+    if (root.matches(selector)) {
+      cb(root);
+    }
+    root.querySelectorAll(selector).forEach(cb);
+  }
+}
+
+function renderKatex(roots: Element[]): void {
   const katex = window.katex;
-  if (!katex) {
+  if (!katex || roots.length === 0) {
     return;
   }
 
   // Render inline math
-  const inlineMath = document.querySelectorAll('.katex-inline[data-math]');
-  inlineMath.forEach((el) => {
+  forEachInRoots(roots, '.katex-inline[data-math]', (el) => {
     const math = el.getAttribute('data-math');
     if (!math) {
       return;
@@ -391,8 +427,7 @@ function renderKatex(): void {
   });
 
   // Render block math
-  const blockMath = document.querySelectorAll('.katex-block[data-math]');
-  blockMath.forEach((el) => {
+  forEachInRoots(roots, '.katex-block[data-math]', (el) => {
     const math = el.getAttribute('data-math');
     if (!math) {
       return;

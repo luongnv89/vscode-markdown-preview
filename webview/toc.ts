@@ -91,6 +91,8 @@ function createTocObserver(entries: TocEntry[]): IntersectionObserver {
   );
 }
 
+let lastHeadingSignature = '';
+
 export function refreshToc(): void {
   if (!tocList) return;
 
@@ -98,6 +100,19 @@ export function refreshToc(): void {
   if (!container) return;
 
   const headings = container.querySelectorAll<HTMLElement>('h1, h2, h3, h4, h5, h6');
+
+  // Rebuild only when the heading set itself changed — an unrelated edit
+  // must not tear down the observer and rebuild the <li> list (issue #77).
+  // data-line joins the signature so a heading whose source line moved (and
+  // therefore whose node was replaced) still refreshes the click targets.
+  const signature = Array.from(headings)
+    .map((h) => `${h.tagName}:${h.getAttribute('data-line') ?? ''}:${h.textContent}`)
+    .join('|');
+  if (signature === lastHeadingSignature) {
+    return;
+  }
+  lastHeadingSignature = signature;
+
   tocList.innerHTML = '';
 
   if (observer) {
