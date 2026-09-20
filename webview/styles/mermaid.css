@@ -33,6 +33,27 @@
   white-space: pre-wrap;
 }
 
+/* Readable error (issue #68): the lead line names the document line, the
+   raw parser output stays collapsed inside <details>. */
+.mermaid-error-lead {
+  white-space: normal;
+}
+
+.mermaid-error-details {
+  margin-top: 0.6em;
+  white-space: normal;
+}
+
+.mermaid-error-details summary {
+  cursor: pointer;
+}
+
+.mermaid-error-raw {
+  margin: 0.6em 0 0;
+  white-space: pre-wrap;
+  font-size: 0.9em;
+}
+
 /* Loading animation for mermaid */
 .mermaid-block[data-processed='false'] pre.mermaid {
   color: var(--fg-muted);

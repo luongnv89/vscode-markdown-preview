@@ -11,9 +11,17 @@
   overflow-y: auto;
   padding: 12px 0;
   transform: translateX(-100%);
-  transition: transform 0.25s ease;
   font-size: 13px;
   line-height: 1.4;
+}
+
+/* Slide-in and hover transitions only when the user has not asked for
+   reduced motion (issue #70) — with `prefers-reduced-motion` the drawer
+   snaps open instantly. */
+@media (prefers-reduced-motion: no-preference) {
+  .toc-sidebar {
+    transition: transform 0.25s ease;
+  }
 }
 
 .toc-sidebar.toc-visible {
@@ -50,10 +58,15 @@
   overflow: hidden;
   text-overflow: ellipsis;
   border-left: 2px solid transparent;
-  transition:
-    color 0.15s ease,
-    border-color 0.15s ease,
-    background 0.15s ease;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .toc-sidebar a {
+    transition:
+      color 0.15s ease,
+      border-color 0.15s ease,
+      background 0.15s ease;
+  }
 }
 
 .toc-sidebar a:hover {
@@ -94,7 +107,12 @@
 /* Shift content when TOC is visible */
 body.toc-open #preview-content {
   margin-left: 220px;
-  transition: margin-left 0.25s ease;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  body.toc-open #preview-content {
+    transition: margin-left 0.25s ease;
+  }
 }
 
 /* Active toolbar button */

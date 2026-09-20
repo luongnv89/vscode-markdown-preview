@@ -1,16 +1,25 @@
 let overlay: HTMLElement | null = null;
 let slides: HTMLElement[] = [];
 let currentSlide = 0;
+let hasSeparators = false;
+
+// Shown when the document has no <hr> slide breaks (issue #70): explains the
+// `---` convention instead of presenting one long scrolling slide silently.
+const NO_SEPARATOR_HINT = 'Tip: add --- on its own line to split the document into slides.';
+const EMPTY_DOCUMENT_HINT = 'This document is empty. ' + NO_SEPARATOR_HINT;
 
 // Split content by <hr> elements into slide groups (cloned, so the live
-// preview DOM is untouched).
-function collectSlides(container: HTMLElement): HTMLElement[] {
+// preview DOM is untouched). Tracks whether any separator was seen so the
+// caller can explain the `---` convention on single-slide documents.
+function collectSlides(container: HTMLElement): { groups: HTMLElement[]; sawHr: boolean } {
   const groups: HTMLElement[] = [];
   let currentGroup = document.createElement('div');
+  let sawHr = false;
 
   const children = Array.from(container.cloneNode(true).childNodes);
   for (const node of children) {
-    if (node instanceof HTMLHRElement) {
+    if (node.nodeType === 1 && (node as Element).tagName === 'HR') {
+      sawHr = true;
       if (currentGroup.childNodes.length > 0) {
         groups.push(currentGroup);
       }
@@ -22,7 +31,7 @@ function collectSlides(container: HTMLElement): HTMLElement[] {
   if (currentGroup.childNodes.length > 0) {
     groups.push(currentGroup);
   }
-  return groups;
+  return { groups, sawHr };
 }
 
 // The presentation chrome: exit button, slide container, counter, nav hint.
@@ -59,12 +68,23 @@ function buildOverlay(): HTMLElement {
   return overlayEl;
 }
 
+// An explanatory banner prepended to the slide area when the document has no
+// `---` separators — including the empty document, where the button used to
+// silently do nothing (issue #70).
+function buildSeparatorNotice(): HTMLElement {
+  const notice = document.createElement('div');
+  notice.className = 'presentation-notice';
+  notice.textContent = slides.length === 0 ? EMPTY_DOCUMENT_HINT : NO_SEPARATOR_HINT;
+  return notice;
+}
+
 export function enterPresentation(): void {
   const container = document.getElementById('preview-content');
   if (!container) return;
 
-  slides = collectSlides(container);
-  if (slides.length === 0) return;
+  const collected = collectSlides(container);
+  slides = collected.groups;
+  hasSeparators = collected.sawHr;
 
   currentSlide = 0;
   overlay = buildOverlay();
@@ -82,6 +102,17 @@ function exitPresentation(): void {
   document.removeEventListener('keydown', handlePresentationKey);
   slides = [];
   currentSlide = 0;
+  hasSeparators = false;
+}
+
+// The per-slide fade also honours prefers-reduced-motion (issue #70): the
+// matching CSS animation lives behind `no-preference`, so the inline style
+// must be skipped entirely when the user asked for reduced motion.
+function prefersReducedMotion(): boolean {
+  return (
+    typeof window.matchMedia === 'function' &&
+    window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  );
 }
 
 function renderSlide(): void {
@@ -89,14 +120,22 @@ function renderSlide(): void {
   const counter = document.getElementById('presentation-counter');
   if (!slideContainer || !counter) return;
 
-  // Force re-animation by replacing content
   slideContainer.innerHTML = '';
   const wrapper = document.createElement('div');
-  wrapper.style.animation = 'slide-fade-in 0.25s ease';
-  wrapper.appendChild(slides[currentSlide].cloneNode(true));
-  slideContainer.appendChild(wrapper);
+  if (!prefersReducedMotion()) {
+    wrapper.style.animation = 'slide-fade-in 0.25s ease';
+  }
 
-  counter.textContent = `${currentSlide + 1} / ${slides.length}`;
+  if (!hasSeparators) {
+    wrapper.appendChild(buildSeparatorNotice());
+  }
+  if (slides.length === 0) {
+    counter.textContent = '';
+  } else {
+    wrapper.appendChild(slides[currentSlide].cloneNode(true));
+    counter.textContent = `${currentSlide + 1} / ${slides.length}`;
+  }
+  slideContainer.appendChild(wrapper);
 }
 
 function handlePresentationKey(e: KeyboardEvent): void {

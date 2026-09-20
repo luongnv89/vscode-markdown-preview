@@ -10,7 +10,6 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  animation: presentation-fade-in 0.3s ease;
 }
 
 @keyframes presentation-fade-in {
@@ -31,7 +30,6 @@
   font-size: 1.2em;
   line-height: 1.6;
   color: var(--fg-primary);
-  animation: slide-fade-in 0.25s ease;
 }
 
 @keyframes slide-fade-in {
@@ -45,6 +43,25 @@
   }
 }
 
+/* Entrance animations run only when the user has not asked for reduced
+   motion (issue #70): with `prefers-reduced-motion` both overlays simply
+   appear, and the per-slide fade the JS sets inline is skipped too. */
+@media (prefers-reduced-motion: no-preference) {
+  .presentation-overlay {
+    animation: presentation-fade-in 0.3s ease;
+  }
+
+  .presentation-slide {
+    animation: slide-fade-in 0.25s ease;
+  }
+
+  .presentation-exit {
+    transition:
+      color 0.15s ease,
+      background 0.15s ease;
+  }
+}
+
 .presentation-slide h1 {
   font-size: 2em;
   margin-bottom: 0.5em;
@@ -55,6 +72,19 @@
 }
 .presentation-slide h3 {
   font-size: 1.3em;
+}
+
+/* Banner explaining the `---` slide convention (issue #70), prepended to the
+   slide area when the document contains no <hr> separators. */
+.presentation-notice {
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--fg-muted);
+  background: var(--hover-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  padding: 10px 14px;
+  margin-bottom: 24px;
 }
 
 .presentation-counter {
@@ -83,9 +113,6 @@
   cursor: pointer;
   font-size: 18px;
   z-index: 2001;
-  transition:
-    color 0.15s ease,
-    background 0.15s ease;
 }
 
 .presentation-exit:hover {
@@ -93,13 +120,32 @@
   background: var(--border-color);
 }
 
+/* Navigation hint (issue #70): readable size, full opacity at first, then
+   dims after a few seconds so it stops competing with the slide. Under
+   reduced motion it simply stays visible — no fade. */
 .presentation-nav-hint {
   position: fixed;
   bottom: 20px;
   left: 24px;
-  font-size: 11px;
+  font-size: 14px;
   color: var(--fg-muted);
-  opacity: 0.6;
+  opacity: 1;
   z-index: 2001;
   user-select: none;
+}
+
+@keyframes nav-hint-fade {
+  0%,
+  55% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0.6;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .presentation-nav-hint {
+    animation: nav-hint-fade 5s ease-in-out forwards;
+  }
 }

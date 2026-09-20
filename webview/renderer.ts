@@ -126,9 +126,41 @@ function ensureMermaidInitialized(mermaid: NonNullable<typeof window.mermaid>): 
   mermaidInitialized = true;
 }
 
+// Build a readable diagram error (issue #68): lead with the block type and
+// the document line the fence starts on — data-line is the 0-based source
+// map, so +1 names the editor line — and keep the raw parser output inside a
+// collapsed <details>. Everything is textContent-built: the parser message is
+// untrusted text and must never reach innerHTML (issue #55).
+function buildDiagramError(block: Element, engine: string, err: unknown): HTMLElement {
+  const errorDiv = document.createElement('div');
+  errorDiv.className = `${engine}-error`;
+
+  const lead = document.createElement('div');
+  lead.className = `${engine}-error-lead`;
+  const lineAttr = (block as HTMLElement).dataset.line;
+  const docLine = lineAttr ? Number(lineAttr) + 1 : NaN;
+  lead.textContent = Number.isFinite(docLine)
+    ? `The \`${engine}\` diagram at document line ${docLine} could not be rendered.`
+    : `This \`${engine}\` diagram could not be rendered.`;
+
+  const details = document.createElement('details');
+  details.className = `${engine}-error-details`;
+  const summary = document.createElement('summary');
+  summary.textContent = 'Diagram error details';
+  const raw = document.createElement('pre');
+  raw.className = `${engine}-error-raw`;
+  raw.textContent = err instanceof Error ? err.message : String(err);
+  details.appendChild(summary);
+  details.appendChild(raw);
+
+  errorDiv.appendChild(lead);
+  errorDiv.appendChild(details);
+  return errorDiv;
+}
+
 // Render one .mermaid-block: swap its <pre> for the rendered SVG, or show a
-// DOM-escaped error div (textContent, not innerHTML+escape: the error message
-// is untrusted text, so the DOM escapes it natively — issue #55).
+// readable error div (buildDiagramError keeps the raw parser output behind a
+// <details> and names the document line).
 async function renderMermaidBlock(
   mermaid: NonNullable<typeof window.mermaid>,
   block: Element,
@@ -147,10 +179,7 @@ async function renderMermaidBlock(
     block.setAttribute('data-processed', 'true');
     (block as HTMLElement).classList.add('mermaid-rendered');
   } catch (err) {
-    const errorDiv = document.createElement('div');
-    errorDiv.className = 'mermaid-error';
-    errorDiv.textContent = `Mermaid diagram error: ${(err as Error).message}`;
-    block.replaceChildren(errorDiv);
+    block.replaceChildren(buildDiagramError(block, 'mermaid', err));
     block.setAttribute('data-processed', 'true');
   }
 }
@@ -176,8 +205,7 @@ async function renderMermaid(): Promise<void> {
 }
 
 // Render one .excalidraw-block: parse its source JSON, export to SVG, or show
-// a DOM-escaped error div (same textContent-not-innerHTML reasoning as the
-// mermaid-error path).
+// the same readable error div the mermaid path uses (buildDiagramError).
 async function renderExcalidrawBlock(
   ExcalidrawUtils: NonNullable<typeof window.ExcalidrawUtils>,
   block: Element,
@@ -213,10 +241,7 @@ async function renderExcalidrawBlock(
     block.setAttribute('data-processed', 'true');
     (block as HTMLElement).classList.add('excalidraw-rendered');
   } catch (err) {
-    const errorDiv = document.createElement('div');
-    errorDiv.className = 'excalidraw-error';
-    errorDiv.textContent = `Excalidraw diagram error: ${(err as Error).message}`;
-    block.replaceChildren(errorDiv);
+    block.replaceChildren(buildDiagramError(block, 'excalidraw', err));
     block.setAttribute('data-processed', 'true');
   }
 }

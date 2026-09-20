@@ -113,6 +113,7 @@ function addLineNumbers(md: MarkdownItInstance): void {
   registerFrontmatterLineOffset(md);
   registerBlockTokenLineNumbers(md);
   registerListItemLineNumber(md);
+  registerFenceLineNumber(md);
 }
 
 // Shift token source maps by the number of frontmatter lines stripped
@@ -163,6 +164,30 @@ function registerBlockTokenLineNumbers(md: MarkdownItInstance): void {
       return defaultRender(tokens, idx, options, env, self);
     };
   }
+}
+
+// Stamp the fence's source line onto emitted diagram blocks. The `highlight`
+// callback that builds .mermaid-block/.excalidraw-block markup sees only the
+// code string — never the token map — so the line is injected into the emitted
+// wrapper here, where the fence token's map is still in scope. The webview
+// reads data-line to point diagram errors at the document line rather than a
+// line inside the diagram source (issue #68).
+function registerFenceLineNumber(md: MarkdownItInstance): void {
+  const defaultFenceRender: RendererRule =
+    md.renderer.rules['fence'] ||
+    ((tokens, idx, options, env, self) => self.renderToken(tokens, idx, options));
+
+  md.renderer.rules['fence'] = (tokens, idx, options, env, self) => {
+    const html = defaultFenceRender(tokens, idx, options, env, self);
+    const token = tokens[idx];
+    if (!token.map || token.map.length < 1) {
+      return html;
+    }
+    return html.replace(
+      /(<div class="(?:mermaid|excalidraw)-block")/,
+      `$1 data-line="${token.map[0]}"`
+    );
+  };
 }
 
 // Special handling for list items (for checkbox support)
