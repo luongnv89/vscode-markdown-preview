@@ -12,27 +12,25 @@ import './styles/frontmatter.css';
 
 import { initScrollSync, scrollToLine } from './scrollSync';
 import { initBlockHighlighter } from './blockHighlighter';
-import { initCopyButtons } from './copyButton';
+import { addCopyButtons } from './copyButton';
 import { initCheckboxHandler } from './checkboxHandler';
 import { initNavigationHandler } from './navigationHandler';
 import { updateContent, watchThemeChanges, applyConfig } from './renderer';
 import { initToolbar } from './toolbar';
 import { initToc } from './toc';
 import { initStatsBar } from './statsBar';
-import { initPresentation } from './presentation';
 
 const vscode = acquireVsCodeApi();
 
 // Initialize all modules
 initScrollSync(vscode);
 initBlockHighlighter();
-initCopyButtons();
+addCopyButtons();
 initCheckboxHandler(vscode);
 initNavigationHandler(vscode);
 initToolbar(vscode);
 initToc();
 initStatsBar();
-initPresentation();
 watchThemeChanges();
 
 // Listen for messages from extension

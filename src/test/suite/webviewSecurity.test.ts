@@ -107,10 +107,10 @@ suite('preview webview security (#26, #29)', () => {
     });
 
     test('About popup is built with textContent, not innerHTML (#29)', () => {
-      const src = readRepoFile('webview/toolbar.ts');
+      const src = readRepoFile('webview/aboutPopup.ts');
       assert.ok(
         !/aboutPopup\.innerHTML/.test(src),
-        'aboutPopup.innerHTML still present in webview/toolbar.ts'
+        'aboutPopup.innerHTML still present in webview/aboutPopup.ts'
       );
       // The About block must not assign innerHTML at all.
       const aboutBlock = src.slice(src.indexOf('aboutButton'), src.indexOf('Dismiss popup'));

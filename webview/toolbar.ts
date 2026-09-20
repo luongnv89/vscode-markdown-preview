@@ -1,91 +1,13 @@
-const sunIcon = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-  <circle cx="12" cy="12" r="5"/>
-  <line x1="12" y1="1" x2="12" y2="3"/>
-  <line x1="12" y1="21" x2="12" y2="23"/>
-  <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/>
-  <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
-  <line x1="1" y1="12" x2="3" y2="12"/>
-  <line x1="21" y1="12" x2="23" y2="12"/>
-  <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/>
-  <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
-</svg>`;
-
-const moonIcon = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-  <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
-</svg>`;
-
-const pdfIcon = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-  <polyline points="14 2 14 8 20 8"/>
-  <line x1="9" y1="15" x2="15" y2="15"/>
-  <line x1="9" y1="11" x2="15" y2="11"/>
-</svg>`;
-
-const htmlIcon = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-  <polyline points="16 18 22 12 16 6"/>
-  <polyline points="8 6 2 12 8 18"/>
-</svg>`;
-
-const infoIcon = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-  <circle cx="12" cy="12" r="10"/>
-  <line x1="12" y1="16" x2="12" y2="12"/>
-  <line x1="12" y1="8" x2="12.01" y2="8"/>
-</svg>`;
-
-const listIcon = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-  <line x1="8" y1="6" x2="21" y2="6"/>
-  <line x1="8" y1="12" x2="21" y2="12"/>
-  <line x1="8" y1="18" x2="21" y2="18"/>
-  <line x1="3" y1="6" x2="3.01" y2="6"/>
-  <line x1="3" y1="12" x2="3.01" y2="12"/>
-  <line x1="3" y1="18" x2="3.01" y2="18"/>
-</svg>`;
-
-const barChartIcon = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-  <line x1="18" y1="20" x2="18" y2="10"/>
-  <line x1="12" y1="20" x2="12" y2="4"/>
-  <line x1="6" y1="20" x2="6" y2="14"/>
-</svg>`;
-
-const playIcon = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-  <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
-  <polygon points="10 8 16 12 10 16 10 8"/>
-</svg>`;
-
 import { toggleToc, setTocToggleButton } from './toc';
 import { toggleStats, setStatsToggleButton } from './statsBar';
 import { enterPresentation } from './presentation';
+import { isDarkTheme } from './theme';
+import { createButton, createSeparator } from './domUtils';
+import { createAboutButton } from './aboutPopup';
+import { sunIcon, moonIcon, pdfIcon, htmlIcon, listIcon, barChartIcon, playIcon } from './icons';
 
-function detectInitialTheme(): 'light' | 'dark' {
-  if (
-    document.body.classList.contains('vscode-dark') ||
-    document.body.classList.contains('vscode-high-contrast')
-  ) {
-    return 'dark';
-  }
-  return 'light';
-}
-
-function createButton(icon: string, title: string, onClick: () => void): HTMLButtonElement {
-  const button = document.createElement('button');
-  button.className = 'toolbar-button';
-  button.innerHTML = icon;
-  button.title = title;
-  button.addEventListener('click', onClick);
-  return button;
-}
-
-export function initToolbar(vscode: VsCodeApi): void {
-  const toolbar = document.createElement('div');
-  toolbar.className = 'preview-toolbar';
-
-  let currentTheme = detectInitialTheme();
-
-  // Apply initial theme based on VS Code theme
-  document.body.classList.add(
-    currentTheme === 'dark' ? 'preview-theme-dark' : 'preview-theme-light'
-  );
-
+function createThemeButton(initialTheme: 'light' | 'dark'): HTMLButtonElement {
+  let currentTheme = initialTheme;
   const themeButton = createButton(
     currentTheme === 'dark' ? sunIcon : moonIcon,
     currentTheme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme',
@@ -105,91 +27,28 @@ export function initToolbar(vscode: VsCodeApi): void {
       }
     }
   );
+  return themeButton;
+}
 
+export function initToolbar(vscode: VsCodeApi): void {
+  const toolbar = document.createElement('div');
+  toolbar.className = 'preview-toolbar';
+
+  const currentTheme = isDarkTheme() ? 'dark' : 'light';
+
+  // Apply initial theme based on VS Code theme
+  document.body.classList.add(
+    currentTheme === 'dark' ? 'preview-theme-dark' : 'preview-theme-light'
+  );
+
+  const themeButton = createThemeButton(currentTheme);
   const pdfButton = createButton(pdfIcon, 'Export to PDF', () => {
     vscode.postMessage({ type: 'exportToPdf' });
   });
-
   const htmlButton = createButton(htmlIcon, 'Export to HTML', () => {
     vscode.postMessage({ type: 'exportToHtml' });
   });
-
-  // About popup
-  let aboutPopup: HTMLDivElement | null = null;
-
-  function dismissAbout() {
-    if (aboutPopup) {
-      aboutPopup.remove();
-      aboutPopup = null;
-    }
-  }
-
-  const aboutButton = createButton(infoIcon, 'About', () => {
-    if (aboutPopup) {
-      dismissAbout();
-      return;
-    }
-
-    const { version, commit, publisher, repo } = document.body.dataset;
-    const versionText = [version, commit].filter(Boolean).join(' (') + (commit ? ')' : '');
-
-    // Build with DOM APIs + textContent: the data-* values come from the host
-    // document and must never be parsed as markup (innerHTML would turn a
-    // crafted value into live HTML).
-    aboutPopup = document.createElement('div');
-    aboutPopup.className = 'about-popup';
-
-    const title = document.createElement('div');
-    title.className = 'about-title';
-    title.textContent = 'Markdown Preview Pro';
-    aboutPopup.appendChild(title);
-
-    const maintainerRow = document.createElement('div');
-    maintainerRow.className = 'about-row';
-    const maintainerLabel = document.createElement('span');
-    maintainerLabel.className = 'about-label';
-    maintainerLabel.textContent = 'Maintainer:';
-    maintainerRow.appendChild(maintainerLabel);
-    maintainerRow.appendChild(document.createTextNode(' ' + (publisher || 'unknown')));
-    aboutPopup.appendChild(maintainerRow);
-
-    const repoRow = document.createElement('div');
-    repoRow.className = 'about-row';
-    const repoLabel = document.createElement('span');
-    repoLabel.className = 'about-label';
-    repoLabel.textContent = 'Repository:';
-    repoRow.appendChild(repoLabel);
-    repoRow.appendChild(document.createTextNode(' '));
-    const repoLink = document.createElement('a');
-    // Only http(s) repo URLs become links — anything else degrades to '#'.
-    repoLink.href = repo && /^https?:\/\//.test(repo) ? repo : '#';
-    repoLink.textContent = repo ? repo.replace(/^https?:\/\//, '') : 'N/A';
-    repoRow.appendChild(repoLink);
-    aboutPopup.appendChild(repoRow);
-
-    const versionRow = document.createElement('div');
-    versionRow.className = 'about-row';
-    const versionLabel = document.createElement('span');
-    versionLabel.className = 'about-label';
-    versionLabel.textContent = 'Version:';
-    versionRow.appendChild(versionLabel);
-    versionRow.appendChild(document.createTextNode(' ' + (versionText || 'unknown')));
-    aboutPopup.appendChild(versionRow);
-
-    toolbar.appendChild(aboutPopup);
-  });
-
-  // Dismiss popup on click outside
-  document.addEventListener('click', (e) => {
-    if (
-      aboutPopup &&
-      !aboutPopup.contains(e.target as Node) &&
-      e.target !== aboutButton &&
-      !aboutButton.contains(e.target as Node)
-    ) {
-      dismissAbout();
-    }
-  });
+  const aboutButton = createAboutButton(toolbar);
 
   // TOC toggle button
   const tocButton = createButton(listIcon, 'Toggle Table of Contents', toggleToc);
@@ -202,13 +61,6 @@ export function initToolbar(vscode: VsCodeApi): void {
 
   // Presentation button
   const presentationButton = createButton(playIcon, 'Presentation mode', enterPresentation);
-
-  // Separator helper
-  function createSeparator(): HTMLElement {
-    const sep = document.createElement('div');
-    sep.className = 'toolbar-separator';
-    return sep;
-  }
 
   toolbar.appendChild(tocButton);
   toolbar.appendChild(statsButton);
