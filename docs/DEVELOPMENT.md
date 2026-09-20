@@ -71,7 +71,7 @@ npx tsc --noEmit -p tsconfig.webview.json  # webview (webview/)
 
 ### `npm run coverage`
 
-`npm run coverage` runs the identical build + Electron-hosted Mocha suite as `npm test` (the `precoverage` hook mirrors `pretest`), wrapped by `c8` so V8 coverage is collected from the extension host process. Scope is configured in `.c8rc.json`: `src/**` minus `src/test/**`, remapped to TypeScript sources via source maps, with reports written to `coverage/` (gitignored). The run prints a per-file table and a summary whose `Lines` row is the recorded coverage baseline: **9.75%**.
+`npm run coverage` runs the identical build + Electron-hosted Mocha suite as `npm test` (the `precoverage` hook mirrors `pretest`), wrapped by `c8` so V8 coverage is collected from the extension host process. Scope is configured in `.c8rc.json`: `src/**` minus `src/test/**`, remapped to TypeScript sources via source maps, with reports written to `coverage/` (gitignored). The run prints a per-file table and a summary whose `Lines` row is the recorded coverage figure: **87.06%** (raised from the 9.75% pre-improvement baseline). `.c8rc.json` also sets `check-coverage` with `lines: 87`, so the command exits non-zero — locally and in the CI `Run coverage` step — if line coverage regresses below the measured figure.
 
 ### `npm run build:landing` writes `docs/index.html`
 

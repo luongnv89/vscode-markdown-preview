@@ -5,5 +5,7 @@
   "excludeAfterRemap": true,
   "reporter": ["text", "text-summary"],
   "reports-directory": "coverage",
-  "temp-directory": "coverage/tmp"
+  "temp-directory": "coverage/tmp",
+  "check-coverage": true,
+  "lines": 87
 }
