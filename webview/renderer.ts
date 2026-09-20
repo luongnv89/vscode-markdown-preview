@@ -1,5 +1,5 @@
 import { addCopyButtons } from './copyButton';
-import { isDarkTheme } from './theme';
+import { isDarkTheme, themeFollowsHost } from './theme';
 import { refreshBlockHighlighter } from './blockHighlighter';
 import { refreshToc } from './toc';
 import { refreshStats } from './statsBar';
@@ -470,48 +470,55 @@ async function renderKatex(roots: Element[]): Promise<void> {
   });
 }
 
+function handleHostThemeClassChange(): void {
+  // Follow-host: drop a stale preview-theme-* pin when vscode-dark
+  // appears or disappears so GitHub Dark tokens and hljs stay live.
+  if (themeFollowsHost()) {
+    document.body.classList.remove('preview-theme-dark', 'preview-theme-light');
+  }
+  mermaidInitialized = false;
+  // Dark/light changes what every diagram renders to — cached output is
+  // only valid under the theme that produced it.
+  diagramCache.clear();
+
+  if (currentConfig.enableMermaid) {
+    document.querySelectorAll('.mermaid-block').forEach((block) => {
+      block.setAttribute('data-processed', 'false');
+    });
+    renderMermaid();
+  }
+
+  if (currentConfig.enableExcalidraw) {
+    document.querySelectorAll('.excalidraw-block').forEach((block) => {
+      block.setAttribute('data-processed', 'false');
+    });
+    renderExcalidraw();
+  }
+}
+
 // Watch for theme changes to reinitialize mermaid and excalidraw
-export function watchThemeChanges(): void {
+export function watchThemeChanges(): MutationObserver {
   if (themeObserver) {
     themeObserver.disconnect();
   }
 
   let themeChangeTimer: ReturnType<typeof setTimeout> | null = null;
 
-  themeObserver = new MutationObserver(() => {
+  const observer = new MutationObserver(() => {
     // Debounce: the toolbar does remove+add in two mutations; wait for both to settle
     if (themeChangeTimer) {
       clearTimeout(themeChangeTimer);
     }
     themeChangeTimer = setTimeout(() => {
       themeChangeTimer = null;
-      mermaidInitialized = false;
-      // Dark/light changes what every diagram renders to — cached output is
-      // only valid under the theme that produced it.
-      diagramCache.clear();
-
-      // Re-render mermaid diagrams
-      if (currentConfig.enableMermaid) {
-        const mermaidBlocks = document.querySelectorAll('.mermaid-block');
-        mermaidBlocks.forEach((block) => {
-          block.setAttribute('data-processed', 'false');
-        });
-        renderMermaid();
-      }
-
-      // Re-render excalidraw diagrams
-      if (currentConfig.enableExcalidraw) {
-        const excalidrawBlocks = document.querySelectorAll('.excalidraw-block');
-        excalidrawBlocks.forEach((block) => {
-          block.setAttribute('data-processed', 'false');
-        });
-        renderExcalidraw();
-      }
+      handleHostThemeClassChange();
     }, THEME_CHANGE_DEBOUNCE);
   });
+  themeObserver = observer;
 
-  themeObserver.observe(document.body, {
+  observer.observe(document.body, {
     attributes: true,
     attributeFilter: ['class'],
   });
+  return observer;
 }

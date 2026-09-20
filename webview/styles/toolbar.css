@@ -92,7 +92,9 @@
   flex: 0 0 auto;
 }
 
-/* Theme overrides - Light */
+/* Primer replacements apply only as an explicit toolbar-toggle overlay.
+   An unpinned body keeps :root --vscode-editor-* from main.css so host
+   themes (GitHub Dark included) stay live. */
 body.preview-theme-light {
   --bg-primary: #ffffff;
   --fg-primary: #1f2328;
@@ -111,7 +113,6 @@ body.preview-theme-light {
   --button-hover-bg: #0550ae;
 }
 
-/* Theme overrides - Dark */
 body.preview-theme-dark {
   --bg-primary: #0d1117;
   --fg-primary: #e6edf3;
