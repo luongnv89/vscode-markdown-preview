@@ -53,30 +53,7 @@ export function createMarkdownIt(
     linkify: true,
     typographer: config.typographer,
     breaks: config.lineBreaks,
-    highlight: (str: string, lang: string): string => {
-      if (lang && lang !== 'mermaid' && lang !== 'excalidraw' && hljs.getLanguage(lang)) {
-        try {
-          const result = hljs.highlight(str, { language: lang, ignoreIllegals: true });
-          return `<pre class="hljs code-block" data-lang="${lang}"><code>${result.value}</code></pre>`;
-        } catch {
-          // Fall through to default
-        }
-      }
-      // Diagram blocks are gated on the feature flags: with the flag off the
-      // fence falls through to the plain code block below, so the preview
-      // neither renders the diagram nor needs its vendor script.
-      if (lang === 'mermaid' && config.enableMermaid) {
-        const escaped = md.utils.escapeHtml(str);
-        return `<div class="mermaid-block" data-processed="false" data-source="${escaped}"><pre class="mermaid">${escaped}</pre></div>`;
-      }
-      if (lang === 'excalidraw' && config.enableExcalidraw) {
-        const escaped = md.utils.escapeHtml(str);
-        return `<div class="excalidraw-block" data-processed="false" data-source="${escaped}"><pre class="excalidraw-source">${escaped}</pre></div>`;
-      }
-      // Auto-detect
-      const escaped = md.utils.escapeHtml(str);
-      return `<pre class="hljs code-block"><code>${escaped}</code></pre>`;
-    },
+    highlight: (str: string, lang: string): string => highlightCodeBlock(md, config, str, lang),
   });
 
   addLineNumbers(md);
@@ -100,12 +77,50 @@ export function createMarkdownIt(
   return md;
 }
 
+// Fence highlight hook: hljs for known languages, diagram blocks gated on the
+// feature flags, escaped plain code block otherwise.
+function highlightCodeBlock(
+  md: MarkdownItInstance,
+  config: MarkdownCoreConfig,
+  str: string,
+  lang: string
+): string {
+  if (lang && lang !== 'mermaid' && lang !== 'excalidraw' && hljs.getLanguage(lang)) {
+    try {
+      const result = hljs.highlight(str, { language: lang, ignoreIllegals: true });
+      return `<pre class="hljs code-block" data-lang="${lang}"><code>${result.value}</code></pre>`;
+    } catch {
+      // Fall through to default
+    }
+  }
+  // Diagram blocks are gated on the feature flags: with the flag off the
+  // fence falls through to the plain code block below, so the preview
+  // neither renders the diagram nor needs its vendor script.
+  if (lang === 'mermaid' && config.enableMermaid) {
+    const escaped = md.utils.escapeHtml(str);
+    return `<div class="mermaid-block" data-processed="false" data-source="${escaped}"><pre class="mermaid">${escaped}</pre></div>`;
+  }
+  if (lang === 'excalidraw' && config.enableExcalidraw) {
+    const escaped = md.utils.escapeHtml(str);
+    return `<div class="excalidraw-block" data-processed="false" data-source="${escaped}"><pre class="excalidraw-source">${escaped}</pre></div>`;
+  }
+  // Auto-detect
+  const escaped = md.utils.escapeHtml(str);
+  return `<pre class="hljs code-block"><code>${escaped}</code></pre>`;
+}
+
 function addLineNumbers(md: MarkdownItInstance): void {
-  // Shift token source maps by the number of frontmatter lines stripped
-  // before rendering, so every data-line attribute below already carries the
-  // offset — no post-render rewrite of the emitted HTML is needed. Runs right
-  // after the block parser so the task-list and math rules (and every other
-  // map reader) see source-document line numbers.
+  registerFrontmatterLineOffset(md);
+  registerBlockTokenLineNumbers(md);
+  registerListItemLineNumber(md);
+}
+
+// Shift token source maps by the number of frontmatter lines stripped
+// before rendering, so every data-line attribute below already carries the
+// offset — no post-render rewrite of the emitted HTML is needed. Runs right
+// after the block parser so the task-list and math rules (and every other
+// map reader) see source-document line numbers.
+function registerFrontmatterLineOffset(md: MarkdownItInstance): void {
   md.core.ruler.after('block', 'frontmatter-line-offset', (state) => {
     // env is typed `unknown` under markdown-it 15's bundled declarations —
     // only a numeric lineOffset participates in the shift.
@@ -119,8 +134,10 @@ function addLineNumbers(md: MarkdownItInstance): void {
       }
     }
   });
+}
 
-  // Add data-line to block-level opening tokens
+// Add data-line to block-level opening tokens
+function registerBlockTokenLineNumbers(md: MarkdownItInstance): void {
   const blockTokens = [
     'paragraph_open',
     'heading_open',
@@ -146,8 +163,10 @@ function addLineNumbers(md: MarkdownItInstance): void {
       return defaultRender(tokens, idx, options, env, self);
     };
   }
+}
 
-  // Special handling for list items (for checkbox support)
+// Special handling for list items (for checkbox support)
+function registerListItemLineNumber(md: MarkdownItInstance): void {
   const defaultListItemRender: RendererRule =
     md.renderer.rules['list_item_open'] ||
     ((tokens, idx, options, env, self) => self.renderToken(tokens, idx, options));
@@ -339,12 +358,19 @@ function addImageSupport(
     return defaultImageRender(tokens, idx, options, env, self);
   };
 
-  // Raw-HTML image tags bypass the image rule above: they arrive as
-  // html_block/html_inline tokens emitted verbatim. Rewriting at this
-  // boundary sees document structure — code tokens (fence, code_block,
-  // code_inline) never reach these rules — and the tag pattern reads
-  // quoted attributes, so a '>' inside a value no longer truncates the
-  // match the way the old post-render regex did.
+  addRawHtmlImageRewrites(md, resolveImageSrc);
+}
+
+// Raw-HTML image tags bypass the image rule above: they arrive as
+// html_block/html_inline tokens emitted verbatim. Rewriting at this
+// boundary sees document structure — code tokens (fence, code_block,
+// code_inline) never reach these rules — and the tag pattern reads
+// quoted attributes, so a '>' inside a value no longer truncates the
+// match the way the old post-render regex did.
+function addRawHtmlImageRewrites(
+  md: MarkdownItInstance,
+  resolveImageSrc: (src: string) => string
+): void {
   for (const tokenType of ['html_block', 'html_inline']) {
     const defaultRender: RendererRule =
       md.renderer.rules[tokenType] ||
