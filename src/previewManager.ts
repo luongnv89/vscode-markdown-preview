@@ -4,7 +4,8 @@ import { ScrollSync } from './scrollSync';
 import { toggleCheckbox } from './checkboxHandler';
 import { getPreviewConfig } from './utils/config';
 import { computeLocalResourceRoots } from './utils/uri';
-import { buildWebviewHtml, PreviewAboutInfo } from './utils/webviewHtml';
+import { buildPreviewWebviewHtml } from './utils/previewHtmlGate';
+import { PreviewAboutInfo } from './utils/webviewHtml';
 import { collectAboutInfo } from './utils/aboutInfo';
 import { PreviewMessageContext, routeWebviewMessage } from './messageRouter';
 import { PreviewEventHost, setupPreviewEventListeners } from './previewEventBindings';
@@ -64,6 +65,13 @@ export class PreviewManager implements PreviewMessageContext, PreviewEventHost {
       viewColumn,
       {
         enableScripts: true,
+        // retainContextWhenHidden stays ON after the vendor gating of #72:
+        // a hidden panel used to hold ~4.9 MB of parsed vendor code plus all
+        // rendered SVG, but a plain document now keeps only main.js + main.css
+        // resident — ~102 KB — so the retained context is cheap and the
+        // instant-reveal UX it buys is worth keeping. A document that uses
+        // diagrams keeps the runtimes it actually needs, which is the
+        // payload the feature requires either way.
         retainContextWhenHidden: true,
         localResourceRoots: this.currentResourceRoots,
         enableFindWidget: true,
@@ -75,7 +83,7 @@ export class PreviewManager implements PreviewMessageContext, PreviewEventHost {
       dark: vscode.Uri.joinPath(this.extensionUri, 'media', 'icon.png'),
     };
 
-    this.panel.webview.html = this.getWebviewHtml(this.panel.webview);
+    this.panel.webview.html = this.getWebviewHtml(this.panel.webview, document);
     this.setupEventListeners(document);
     this.activeDocument = document;
 
@@ -149,19 +157,17 @@ export class PreviewManager implements PreviewMessageContext, PreviewEventHost {
     return fileName;
   }
 
-  public getWebviewHtml(webview: vscode.Webview): string {
-    // CSP and <body data-*> metadata live in buildWebviewHtml: nonce-only
-    // script-src (Mermaid 11.x renders without eval — verified in headless
-    // Chromium), img-src restricted to webview resources + data: unless the
-    // documented markdownPreviewPro.allowRemoteImages opt-in is enabled, and
-    // all four data-* values attribute-escaped on write.
-    return buildWebviewHtml(
+  public getWebviewHtml(webview: vscode.Webview, document?: vscode.TextDocument): string {
+    // The vendor payload is content-gated on the document's rendered markup
+    // (issue #72) inside buildPreviewWebviewHtml; CSP details live in
+    // buildWebviewHtml.
+    return buildPreviewWebviewHtml(
       webview,
       this.extensionUri,
       this.aboutInfo,
-      this.config.allowRemoteImages,
-      this.config.enableMermaid,
-      this.config.enableExcalidraw
+      this.config,
+      this.engine,
+      document
     );
   }
 

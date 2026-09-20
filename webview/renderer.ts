@@ -5,6 +5,7 @@ import { refreshToc } from './toc';
 import { refreshStats } from './statsBar';
 import { refreshScrollAnchors } from './scrollSync';
 import { applyBlockPatch, topLevelNodes, BlockPatch } from './domDiff';
+import { ensureVendor } from './vendorLoader';
 import type { PreviewConfig } from './types/messages';
 
 // Debounce for the theme observer: the toolbar's class swap arrives as two
@@ -188,7 +189,7 @@ async function postProcessRenderedContent(
 
   // Render KaTeX math inside the inserted subtrees only — kept blocks
   // already hold their rendered output.
-  renderKatex(patch.added);
+  await renderKatex(patch.added);
 
   // Refresh block highlighter over the changed top-level nodes
   refreshBlockHighlighter(patch.removed, topLevelNodes(container, patch.added));
@@ -301,8 +302,13 @@ async function renderMermaid(): Promise<void> {
     return;
   }
 
-  // Access mermaid from global scope (loaded via script tag)
-  const mermaid = window.mermaid;
+  // Mermaid comes from global scope — either shipped in the gated initial
+  // HTML or, for a document that grew its first diagram block on update,
+  // lazy-injected by the vendor loader (issue #72) without a webview reload.
+  let mermaid = window.mermaid;
+  if (!mermaid && (await ensureVendor('mermaid'))) {
+    mermaid = window.mermaid;
+  }
   if (!mermaid) {
     console.warn('Mermaid library not available on window');
     return;
@@ -383,7 +389,12 @@ async function renderExcalidraw(): Promise<void> {
     return;
   }
 
-  const ExcalidrawUtils = window.ExcalidrawUtils;
+  // Same lazy path as mermaid: the gated initial HTML may not have shipped
+  // excalidraw-utils when this block first appeared (issue #72).
+  let ExcalidrawUtils = window.ExcalidrawUtils;
+  if (!ExcalidrawUtils && (await ensureVendor('excalidraw'))) {
+    ExcalidrawUtils = window.ExcalidrawUtils;
+  }
   if (!ExcalidrawUtils || !ExcalidrawUtils.exportToSvg) {
     console.warn('ExcalidrawUtils library not available on window');
     return;
@@ -407,10 +418,29 @@ function forEachInRoots(roots: Element[], selector: string, cb: (el: Element) =>
   }
 }
 
-function renderKatex(roots: Element[]): void {
-  const katex = window.katex;
-  if (!katex || roots.length === 0) {
+const KATEX_MARKUP_SELECTOR = '.katex-inline[data-math], .katex-block[data-math]';
+
+async function renderKatex(roots: Element[]): Promise<void> {
+  if (roots.length === 0) {
     return;
+  }
+  let katex = window.katex;
+  if (!katex) {
+    // The gated initial HTML omits the KaTeX script for math-free documents;
+    // pay the lazy load only when the inserted roots actually carry math
+    // markup (issue #72), not on every update.
+    const hasMath = roots.some(
+      (root) => root.matches(KATEX_MARKUP_SELECTOR) || root.querySelector(KATEX_MARKUP_SELECTOR)
+    );
+    if (!hasMath) {
+      return;
+    }
+    if (await ensureVendor('katex')) {
+      katex = window.katex;
+    }
+    if (!katex) {
+      return;
+    }
   }
 
   // Render inline math
