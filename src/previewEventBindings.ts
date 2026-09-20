@@ -37,7 +37,15 @@ export function setupPreviewEventListeners(
   host: PreviewEventHost,
   disposables: vscode.Disposable[]
 ): void {
-  // Handle messages from webview
+  bindWebviewMessages(host, disposables);
+  bindDocumentChanges(host, disposables);
+  bindActiveEditorChanges(host, disposables);
+  bindEditorScrollSync(host, disposables);
+  bindConfigurationChanges(host, disposables);
+}
+
+// Handle messages from webview
+function bindWebviewMessages(host: PreviewEventHost, disposables: vscode.Disposable[]): void {
   if (host.panel) {
     disposables.push(
       host.panel.webview.onDidReceiveMessage((message: WebviewMessage) => {
@@ -45,8 +53,10 @@ export function setupPreviewEventListeners(
       })
     );
   }
+}
 
-  // Watch for text document changes
+// Watch for text document changes
+function bindDocumentChanges(host: PreviewEventHost, disposables: vscode.Disposable[]): void {
   disposables.push(
     vscode.workspace.onDidChangeTextDocument((event) => {
       const document = host.activeDocument;
@@ -61,8 +71,10 @@ export function setupPreviewEventListeners(
       }
     })
   );
+}
 
-  // Watch for active editor changes
+// Watch for active editor changes
+function bindActiveEditorChanges(host: PreviewEventHost, disposables: vscode.Disposable[]): void {
   disposables.push(
     vscode.window.onDidChangeActiveTextEditor((editor) => {
       if (editor && editor.document.languageId === 'markdown') {
@@ -81,8 +93,10 @@ export function setupPreviewEventListeners(
       }
     })
   );
+}
 
-  // Watch for editor scroll (editor -> preview sync)
+// Watch for editor scroll (editor -> preview sync)
+function bindEditorScrollSync(host: PreviewEventHost, disposables: vscode.Disposable[]): void {
   disposables.push(
     vscode.window.onDidChangeTextEditorVisibleRanges((event) => {
       const document = host.activeDocument;
@@ -102,8 +116,10 @@ export function setupPreviewEventListeners(
       }
     })
   );
+}
 
-  // Watch for configuration changes
+// Watch for configuration changes
+function bindConfigurationChanges(host: PreviewEventHost, disposables: vscode.Disposable[]): void {
   disposables.push(
     vscode.workspace.onDidChangeConfiguration((event) => {
       if (event.affectsConfiguration('markdownPreviewPro')) {
