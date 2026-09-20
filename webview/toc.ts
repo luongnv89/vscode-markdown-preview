@@ -24,22 +24,15 @@ export function toggleToc(): void {
   toggleButton?.classList.toggle('toc-toggle-active', isVisible);
 }
 
-export function refreshToc(): void {
-  if (!tocList) return;
+interface TocEntry {
+  el: HTMLElement;
+  link: HTMLAnchorElement;
+}
 
-  const container = document.getElementById('preview-content');
-  if (!container) return;
-
-  const headings = container.querySelectorAll<HTMLElement>('h1, h2, h3, h4, h5, h6');
-  tocList.innerHTML = '';
-
-  if (observer) {
-    observer.disconnect();
-  }
-
-  if (headings.length === 0) return;
-
-  const entries: { el: HTMLElement; link: HTMLAnchorElement }[] = [];
+// One <li><a class="toc-hN"> per heading, appended to tocList; ensures each
+// heading has an id so the link target exists.
+function buildTocEntries(headings: NodeListOf<HTMLElement>): TocEntry[] {
+  const entries: TocEntry[] = [];
 
   headings.forEach((heading, i) => {
     // Ensure heading has an id for linking
@@ -63,10 +56,15 @@ export function refreshToc(): void {
     entries.push({ el: heading, link: a });
   });
 
-  // Highlight active heading using IntersectionObserver
+  return entries;
+}
+
+// Highlight active heading using IntersectionObserver: the topmost visible
+// entry gets .toc-active, the rest are cleared.
+function createTocObserver(entries: TocEntry[]): IntersectionObserver {
   const activeSet = new Set<HTMLElement>();
 
-  observer = new IntersectionObserver(
+  return new IntersectionObserver(
     (observerEntries) => {
       for (const entry of observerEntries) {
         if (entry.isIntersecting) {
@@ -89,6 +87,24 @@ export function refreshToc(): void {
     },
     { rootMargin: '0px 0px -70% 0px', threshold: 0 }
   );
+}
 
+export function refreshToc(): void {
+  if (!tocList) return;
+
+  const container = document.getElementById('preview-content');
+  if (!container) return;
+
+  const headings = container.querySelectorAll<HTMLElement>('h1, h2, h3, h4, h5, h6');
+  tocList.innerHTML = '';
+
+  if (observer) {
+    observer.disconnect();
+  }
+
+  if (headings.length === 0) return;
+
+  const entries = buildTocEntries(headings);
+  observer = createTocObserver(entries);
   headings.forEach((h) => observer!.observe(h));
 }

@@ -60,29 +60,7 @@ export async function updateContent(html: string): Promise<void> {
     const scrollTop = window.scrollY;
 
     container.innerHTML = html;
-
-    // Post-process: add features
-    addCopyButtons();
-
-    // Render mermaid diagrams (skipped entirely when the feature is off)
-    if (currentConfig.enableMermaid) {
-      await renderMermaid();
-    }
-
-    // Render excalidraw diagrams (skipped entirely when the feature is off)
-    if (currentConfig.enableExcalidraw) {
-      await renderExcalidraw();
-    }
-
-    // Render KaTeX math
-    renderKatex();
-
-    // Refresh block highlighter
-    refreshBlockHighlighter();
-
-    // Refresh TOC and stats
-    refreshToc();
-    refreshStats();
+    await postProcessRenderedContent();
 
     // Restore scroll position
     window.scrollTo(0, scrollTop);
@@ -95,6 +73,85 @@ export async function updateContent(html: string): Promise<void> {
       pendingUpdate = null;
       await updateContent(next);
     }
+  }
+}
+
+// Post-process the freshly injected HTML: copy buttons, then each diagram /
+// math engine gated on its feature flag, then the chrome refreshes.
+async function postProcessRenderedContent(): Promise<void> {
+  addCopyButtons();
+
+  // Render mermaid diagrams (skipped entirely when the feature is off)
+  if (currentConfig.enableMermaid) {
+    await renderMermaid();
+  }
+
+  // Render excalidraw diagrams (skipped entirely when the feature is off)
+  if (currentConfig.enableExcalidraw) {
+    await renderExcalidraw();
+  }
+
+  // Render KaTeX math
+  renderKatex();
+
+  // Refresh block highlighter
+  refreshBlockHighlighter();
+
+  // Refresh TOC and stats
+  refreshToc();
+  refreshStats();
+}
+
+// One-time mermaid.initialize with the pinned pre-v12 look — re-runs after a
+// theme change flips mermaidInitialized back to false.
+function ensureMermaidInitialized(mermaid: NonNullable<typeof window.mermaid>): void {
+  if (mermaidInitialized) {
+    return;
+  }
+  const isDark = isDarkTheme();
+
+  mermaid.initialize({
+    startOnLoad: false,
+    theme: isDark ? 'dark' : 'default',
+    // 'strict': labels are sanitized and `click` JS directives are never
+    // bound — diagram text comes straight from the untrusted document.
+    securityLevel: 'strict',
+    // Mermaid 12 changed its defaults to the ELK layout engine and the
+    // `neo` look — pin dagre + classic to keep the pre-v12 rendering.
+    layout: 'dagre',
+    look: 'classic',
+    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif',
+  });
+
+  mermaidInitialized = true;
+}
+
+// Render one .mermaid-block: swap its <pre> for the rendered SVG, or show a
+// DOM-escaped error div (textContent, not innerHTML+escape: the error message
+// is untrusted text, so the DOM escapes it natively — issue #55).
+async function renderMermaidBlock(
+  mermaid: NonNullable<typeof window.mermaid>,
+  block: Element,
+  index: number
+): Promise<void> {
+  const pre = block.querySelector('pre.mermaid');
+  const code = pre ? pre.textContent || '' : (block as HTMLElement).dataset.source || '';
+  if (!code) {
+    return;
+  }
+  const id = `mermaid-${Date.now()}-${index}`;
+
+  try {
+    const { svg } = await mermaid.render(id, code);
+    block.innerHTML = svg;
+    block.setAttribute('data-processed', 'true');
+    (block as HTMLElement).classList.add('mermaid-rendered');
+  } catch (err) {
+    const errorDiv = document.createElement('div');
+    errorDiv.className = 'mermaid-error';
+    errorDiv.textContent = `Mermaid diagram error: ${(err as Error).message}`;
+    block.replaceChildren(errorDiv);
+    block.setAttribute('data-processed', 'true');
   }
 }
 
@@ -111,49 +168,56 @@ async function renderMermaid(): Promise<void> {
     return;
   }
 
-  if (!mermaidInitialized) {
-    const isDark = isDarkTheme();
-
-    mermaid.initialize({
-      startOnLoad: false,
-      theme: isDark ? 'dark' : 'default',
-      // 'strict': labels are sanitized and `click` JS directives are never
-      // bound — diagram text comes straight from the untrusted document.
-      securityLevel: 'strict',
-      // Mermaid 12 changed its defaults to the ELK layout engine and the
-      // `neo` look — pin dagre + classic to keep the pre-v12 rendering.
-      layout: 'dagre',
-      look: 'classic',
-      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif',
-    });
-
-    mermaidInitialized = true;
-  }
+  ensureMermaidInitialized(mermaid);
 
   for (let i = 0; i < mermaidBlocks.length; i++) {
-    const block = mermaidBlocks[i];
-    const pre = block.querySelector('pre.mermaid');
-    const code = pre ? pre.textContent || '' : (block as HTMLElement).dataset.source || '';
-    if (!code) {
-      continue;
-    }
-    const id = `mermaid-${Date.now()}-${i}`;
+    await renderMermaidBlock(mermaid, mermaidBlocks[i], i);
+  }
+}
 
-    try {
-      const { svg } = await mermaid.render(id, code);
-      block.innerHTML = svg;
-      block.setAttribute('data-processed', 'true');
-      (block as HTMLElement).classList.add('mermaid-rendered');
-    } catch (err) {
-      // textContent, not innerHTML+escape: the error message is untrusted
-      // text, so the DOM escapes it natively (issue #55 — this replaced the
-      // webview-local escapeHtml, which escaped a narrower character set).
-      const errorDiv = document.createElement('div');
-      errorDiv.className = 'mermaid-error';
-      errorDiv.textContent = `Mermaid diagram error: ${(err as Error).message}`;
-      block.replaceChildren(errorDiv);
-      block.setAttribute('data-processed', 'true');
+// Render one .excalidraw-block: parse its source JSON, export to SVG, or show
+// a DOM-escaped error div (same textContent-not-innerHTML reasoning as the
+// mermaid-error path).
+async function renderExcalidrawBlock(
+  ExcalidrawUtils: NonNullable<typeof window.ExcalidrawUtils>,
+  block: Element,
+  isDark: boolean
+): Promise<void> {
+  const pre = block.querySelector('pre.excalidraw-source');
+  const jsonStr = pre ? pre.textContent || '' : (block as HTMLElement).dataset.source || '';
+  if (!jsonStr) {
+    return;
+  }
+
+  try {
+    const data = JSON.parse(jsonStr);
+
+    if (!data.elements || !Array.isArray(data.elements)) {
+      throw new Error('Invalid Excalidraw data: missing elements array');
     }
+
+    const svg = await ExcalidrawUtils.exportToSvg({
+      data: {
+        elements: data.elements,
+        appState: {
+          ...data.appState,
+          exportWithDarkMode: isDark,
+          viewBackgroundColor: isDark ? '#1e1e1e' : '#ffffff',
+        },
+        files: data.files || null,
+      },
+    });
+
+    block.innerHTML = '';
+    block.appendChild(svg);
+    block.setAttribute('data-processed', 'true');
+    (block as HTMLElement).classList.add('excalidraw-rendered');
+  } catch (err) {
+    const errorDiv = document.createElement('div');
+    errorDiv.className = 'excalidraw-error';
+    errorDiv.textContent = `Excalidraw diagram error: ${(err as Error).message}`;
+    block.replaceChildren(errorDiv);
+    block.setAttribute('data-processed', 'true');
   }
 }
 
@@ -172,44 +236,7 @@ async function renderExcalidraw(): Promise<void> {
   const isDark = isDarkTheme();
 
   for (let i = 0; i < blocks.length; i++) {
-    const block = blocks[i];
-    const pre = block.querySelector('pre.excalidraw-source');
-    const jsonStr = pre ? pre.textContent || '' : (block as HTMLElement).dataset.source || '';
-    if (!jsonStr) {
-      continue;
-    }
-
-    try {
-      const data = JSON.parse(jsonStr);
-
-      if (!data.elements || !Array.isArray(data.elements)) {
-        throw new Error('Invalid Excalidraw data: missing elements array');
-      }
-
-      const svg = await ExcalidrawUtils.exportToSvg({
-        data: {
-          elements: data.elements,
-          appState: {
-            ...data.appState,
-            exportWithDarkMode: isDark,
-            viewBackgroundColor: isDark ? '#1e1e1e' : '#ffffff',
-          },
-          files: data.files || null,
-        },
-      });
-
-      block.innerHTML = '';
-      block.appendChild(svg);
-      block.setAttribute('data-processed', 'true');
-      (block as HTMLElement).classList.add('excalidraw-rendered');
-    } catch (err) {
-      // Same textContent-not-innerHTML reasoning as the mermaid-error path.
-      const errorDiv = document.createElement('div');
-      errorDiv.className = 'excalidraw-error';
-      errorDiv.textContent = `Excalidraw diagram error: ${(err as Error).message}`;
-      block.replaceChildren(errorDiv);
-      block.setAttribute('data-processed', 'true');
-    }
+    await renderExcalidrawBlock(ExcalidrawUtils, blocks[i], isDark);
   }
 }
 
