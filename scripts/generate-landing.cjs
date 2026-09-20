@@ -123,9 +123,14 @@ function getFontMimeType(ext) {
 }
 
 async function embedImages(html, documentPath) {
-  const matches = [...html.matchAll(/<img\s+[^>]*src=["']([^"']+)["'][^>]*>/g)];
-  let result = html;
+  const imgRegex = /<img\s+[^>]*src=["']([^"']+)["'][^>]*>/g;
+  const matches = [...html.matchAll(imgRegex)];
 
+  // Resolve each matched tag's image to a data URI first, keyed by the tag's
+  // offset in the document. The src string alone is not a safe String.replace
+  // needle: it can repeat across tags or appear in prose, and the first
+  // textual occurrence is not necessarily the tag that produced it.
+  const dataUriByOffset = new Map();
   for (const match of matches) {
     const originalSrc = match[1];
     if (originalSrc.startsWith('data:') || /^https?:\/\//.test(originalSrc)) continue;
@@ -134,14 +139,21 @@ async function embedImages(html, documentPath) {
     try {
       const data = await fs.readFile(filePath);
       const mime = getImageMimeType(path.extname(filePath));
-      const dataUri = `data:${mime};base64,${data.toString('base64')}`;
-      result = result.replace(originalSrc, dataUri);
+      dataUriByOffset.set(match.index, `data:${mime};base64,${data.toString('base64')}`);
     } catch {
       // Leave broken src as-is
     }
   }
 
-  return result;
+  // Single pass: each matched tag rewrites only its own src attribute.
+  return html.replace(imgRegex, (tag, _src, offset) => {
+    const dataUri = dataUriByOffset.get(offset);
+    if (dataUri === undefined) return tag;
+    return tag.replace(
+      /(\ssrc=)(["'])[^"']*\2/,
+      (_m, prefix, quote) => `${prefix}${quote}${dataUri}${quote}`
+    );
+  });
 }
 
 async function embedFonts(css, fontsDir) {

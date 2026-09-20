@@ -314,7 +314,11 @@ ${sanitizedHtml}
     const matches = [...html.matchAll(imgRegex)];
     const refused: string[] = [];
 
-    let result = html;
+    // Resolve each matched tag's image to a data URI first, keyed by the tag's
+    // offset in the document. The src string alone is not a safe String.replace
+    // needle: it can repeat across tags or appear in prose, and the first
+    // textual occurrence is not necessarily the tag that produced it.
+    const dataUriByOffset = new Map<number, string>();
     for (const match of matches) {
       const src = match[1];
 
@@ -346,12 +350,23 @@ ${sanitizedHtml}
         const ext = path.extname(filePath).slice(1).toLowerCase();
         const mimeType = this.getImageMimeType(ext);
         const base64 = imageData.toString('base64');
-        const dataUri = `data:${mimeType};base64,${base64}`;
-        result = result.replace(match[1], dataUri);
+        dataUriByOffset.set(match.index ?? -1, `data:${mimeType};base64,${base64}`);
       } catch {
         // Image not found, leave original src
       }
     }
+
+    // Single pass: each matched tag rewrites only its own src attribute.
+    const result = html.replace(imgRegex, (tag: string, _src: string, offset: number) => {
+      const dataUri = dataUriByOffset.get(offset);
+      if (dataUri === undefined) {
+        return tag;
+      }
+      return tag.replace(
+        /(\ssrc=)(["'])[^"']*\2/,
+        (_m: string, prefix: string, quote: string) => `${prefix}${quote}${dataUri}${quote}`
+      );
+    });
 
     if (refused.length > 0) {
       const shown = refused.slice(0, 3);
