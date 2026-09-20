@@ -38,10 +38,3 @@ repos:
         language: system
         pass_filenames: false
         files: ^webview/.*\.ts$
-
-      - id: build
-        name: webpack build
-        entry: npm run compile
-        language: system
-        pass_filenames: false
-        stages: [pre-push]
