@@ -6,6 +6,7 @@ import { MarkdownEngine } from './markdownEngine';
 import { ScrollSync } from './scrollSync';
 import { toggleCheckbox } from './checkboxHandler';
 import { getPreviewConfig } from './utils/config';
+import { computeLocalResourceRoots, isDocumentCoveredByRoots } from './utils/uri';
 import { buildWebviewHtml, PreviewAboutInfo } from './utils/webviewHtml';
 import { WebviewMessage, PreviewConfig } from './types/messages';
 
@@ -69,36 +70,12 @@ export class PreviewManager {
     this.createPanel(editor.document, viewColumn);
   }
 
-  private getLocalResourceRoots(documentUri: vscode.Uri): vscode.Uri[] {
-    const roots: vscode.Uri[] = [
-      vscode.Uri.joinPath(this.extensionUri, 'dist', 'webview'),
-      ...(vscode.workspace.workspaceFolders?.map((f) => f.uri) || []),
-      // Always include the document's parent directory
-      vscode.Uri.joinPath(documentUri, '..'),
-    ];
-
-    // Always add the filesystem root so local images from any location can
-    // be resolved. This matches the approach used by the VS Code built-in
-    // markdown preview.
-    if (process.platform === 'win32') {
-      const driveLetter = documentUri.fsPath.match(/^([a-zA-Z]):\\/);
-      if (driveLetter) {
-        roots.push(vscode.Uri.file(`${driveLetter[1]}:\\`));
-      }
-    } else {
-      roots.push(vscode.Uri.file('/'));
-    }
-
-    return roots;
-  }
-
-  private isDocumentCoveredByRoots(documentUri: vscode.Uri): boolean {
-    const docDir = vscode.Uri.joinPath(documentUri, '..').fsPath;
-    return this.currentResourceRoots.some((root) => docDir.startsWith(root.fsPath));
-  }
-
   private createPanel(document: vscode.TextDocument, viewColumn: vscode.ViewColumn): void {
-    this.currentResourceRoots = this.getLocalResourceRoots(document.uri);
+    this.currentResourceRoots = computeLocalResourceRoots(
+      this.extensionUri,
+      vscode.workspace.workspaceFolders?.map((f) => f.uri),
+      document.uri
+    );
 
     this.panel = vscode.window.createWebviewPanel(
       'markdownPreviewPro',
@@ -171,7 +148,10 @@ export class PreviewManager {
       vscode.window.onDidChangeActiveTextEditor((editor) => {
         if (editor && editor.document.languageId === 'markdown') {
           // Check if the new document's directory is covered by current roots
-          if (this.panel && !this.isDocumentCoveredByRoots(editor.document.uri)) {
+          if (
+            this.panel &&
+            !isDocumentCoveredByRoots(this.currentResourceRoots, editor.document.uri)
+          ) {
             this.recreatePanel(editor.document);
             return;
           }

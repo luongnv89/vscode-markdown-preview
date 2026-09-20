@@ -2,10 +2,17 @@ import * as vscode from 'vscode';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 import { sanitizeExportHtml } from './htmlSanitizer';
-import { getNonce } from '../utils/uri';
+import { getNonce, isPathInsideAny } from '../utils/uri';
 
 export class StandaloneHtmlBuilder {
-  constructor(private readonly extensionUri: vscode.Uri) {}
+  constructor(
+    private readonly extensionUri: vscode.Uri,
+    // The user-visible warning channel for refused assets — injectable so tests
+    // can observe it; production wiring is vscode.window.showWarningMessage.
+    private readonly warn: (message: string) => void = (message) => {
+      void vscode.window.showWarningMessage(message);
+    }
+  ) {}
 
   /**
    * Build HTML with vendor scripts for Puppeteer rendering.
@@ -282,10 +289,30 @@ ${sanitizedHtml}
     return `/* Print/PDF export theme defaults - optimized for readability */\n:root {\n${rootBlock}\n}\n\n${css}`;
   }
 
-  private async embedImages(html: string, documentUri: vscode.Uri): Promise<string> {
+  /**
+   * The directories a local image may legitimately be read from during export:
+   * the document's own directory plus every workspace folder, so a
+   * workspace-relative reference like `../assets/x.png` still resolves while
+   * anything further afield is refused.
+   */
+  private getImageResourceRoots(documentUri: vscode.Uri): string[] {
     const docDir = path.dirname(documentUri.fsPath);
+    const workspaceDirs = (vscode.workspace.workspaceFolders ?? []).map(
+      (folder) => folder.uri.fsPath
+    );
+    return [docDir, ...workspaceDirs];
+  }
+
+  private async embedImages(
+    html: string,
+    documentUri: vscode.Uri,
+    allowedRoots?: string[]
+  ): Promise<string> {
+    const docDir = path.dirname(documentUri.fsPath);
+    const roots = allowedRoots ?? this.getImageResourceRoots(documentUri);
     const imgRegex = /<img\s+[^>]*src=["']([^"']+)["'][^>]*>/g;
     const matches = [...html.matchAll(imgRegex)];
+    const refused: string[] = [];
 
     let result = html;
     for (const match of matches) {
@@ -306,8 +333,11 @@ ${sanitizedHtml}
         filePath = path.resolve(docDir, src);
       }
 
-      // Prevent path traversal outside the document directory
-      if (!filePath.startsWith(docDir)) {
+      // Prevent path traversal outside the document directory and workspace —
+      // a real containment check, not a startsWith prefix match that admits
+      // sibling directories like /home/u/notes-private.
+      if (!isPathInsideAny(filePath, roots)) {
+        refused.push(src);
         continue;
       }
 
@@ -321,6 +351,16 @@ ${sanitizedHtml}
       } catch {
         // Image not found, leave original src
       }
+    }
+
+    if (refused.length > 0) {
+      const shown = refused.slice(0, 3);
+      const remainder = refused.length - shown.length;
+      this.warn(
+        `Markdown Preview Pro: skipped ${refused.length} image(s) outside the ` +
+          `document/workspace folders: ${shown.join(', ')}` +
+          `${remainder > 0 ? ` and ${remainder} more` : ''}`
+      );
     }
 
     return result;
