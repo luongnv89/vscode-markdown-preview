@@ -1,6 +1,8 @@
 import * as vscode from 'vscode';
 import * as fs from 'fs/promises';
 import * as path from 'path';
+import { sanitizeExportHtml } from './htmlSanitizer';
+import { getNonce } from '../utils/uri';
 
 export class StandaloneHtmlBuilder {
   constructor(private readonly extensionUri: vscode.Uri) {}
@@ -8,14 +10,42 @@ export class StandaloneHtmlBuilder {
   /**
    * Build HTML with vendor scripts for Puppeteer rendering.
    * This includes mermaid.js and katex.js so the headless browser can render them.
+   *
+   * The rendered markdown is sanitized BEFORE it is embedded: the markdown
+   * engine renders with `html: true`, so raw author markup (scripts, event
+   * handlers, iframes) would otherwise reach the headless browser and execute
+   * during `page.setContent`. A per-export nonce CSP is defense in depth on
+   * top: only the extension's own nonced scripts may run, and no network
+   * loads other than images are permitted.
    */
   async buildForBrowser(
     markdownHtml: string,
     title: string,
     documentUri: vscode.Uri
   ): Promise<string> {
+    const nonce = getNonce();
+    const contentSecurityPolicy = [
+      "default-src 'none'",
+      `script-src 'nonce-${nonce}'`,
+      "style-src 'unsafe-inline'",
+      'img-src data: file: https: http:',
+      'font-src data:',
+      "connect-src 'none'",
+      "media-src 'none'",
+      "object-src 'none'",
+      "frame-src 'none'",
+      "worker-src 'none'",
+      "base-uri 'none'",
+      "form-action 'none'",
+    ].join('; ');
+
     const css = await this.getCombinedCss();
+    // Embed local images as data: URIs first (a trusted transform of our own),
+    // then sanitize: DOMPurify keeps data: image URIs but strips file-system
+    // paths (and would drop Windows-style C:\... srcs), so embedding before
+    // sanitizing preserves images across platforms.
     const htmlWithEmbeddedImages = await this.embedImages(markdownHtml, documentUri);
+    const sanitizedHtml = await sanitizeExportHtml(htmlWithEmbeddedImages);
     const vendorDir = path.join(this.extensionUri.fsPath, 'dist', 'webview', 'vendor');
     const katexJsPath = path.join(vendorDir, 'katex.min.js');
     const mermaidJsPath = path.join(vendorDir, 'mermaid.min.js');
@@ -41,9 +71,10 @@ export class StandaloneHtmlBuilder {
       // Excalidraw not available
     }
 
-    // Script that renders Mermaid and KaTeX client-side, then signals completion
+    // Script that renders Mermaid and KaTeX client-side, then signals completion.
+    // Nonced so the document CSP allows it while blocking any markup-borne script.
     const renderScript = `
-<script>
+<script nonce="${nonce}">
 (async function() {
   // Render KaTeX
   if (typeof katex !== 'undefined') {
@@ -124,18 +155,19 @@ export class StandaloneHtmlBuilder {
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <meta http-equiv="Content-Security-Policy" content="${contentSecurityPolicy}">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>${this.escapeHtml(title)}</title>
   <style>
 ${css}
   </style>
-  <script>${katexJs}</script>
-  <script>${mermaidJs}</script>
-  <script>${excalidrawJs}</script>
+  <script nonce="${nonce}">${katexJs}</script>
+  <script nonce="${nonce}">${mermaidJs}</script>
+  <script nonce="${nonce}">${excalidrawJs}</script>
 </head>
 <body>
   <div id="preview-content">
-${htmlWithEmbeddedImages}
+${sanitizedHtml}
   </div>
   ${renderScript}
 </body>
