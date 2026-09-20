@@ -681,7 +681,14 @@ async function main() {
   );
 }
 
-main().catch((error) => {
-  console.error(error);
-  process.exit(1);
-});
+// Exported for tests (src/test/suite/buildDeps.test.ts) — the landing
+// generator's engine must keep producing checkbox markup without
+// markdown-it-task-lists.
+module.exports = { createMarkdownEngine };
+
+if (require.main === module) {
+  main().catch((error) => {
+    console.error(error);
+    process.exit(1);
+  });
+}
