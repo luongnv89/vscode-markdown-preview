@@ -1,5 +1,6 @@
 import { addCopyButtons } from './copyButton';
 import { isDarkTheme, themeFollowsHost } from './theme';
+import { syncThemeButtonFromHost } from './toolbar';
 import { refreshBlockHighlighter } from './blockHighlighter';
 import { refreshToc } from './toc';
 import { refreshStats } from './statsBar';
@@ -475,6 +476,7 @@ function handleHostThemeClassChange(): void {
   // appears or disappears so GitHub Dark tokens and hljs stay live.
   if (themeFollowsHost()) {
     document.body.classList.remove('preview-theme-dark', 'preview-theme-light');
+    syncThemeButtonFromHost();
   }
   mermaidInitialized = false;
   // Dark/light changes what every diagram renders to — cached output is

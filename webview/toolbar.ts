@@ -16,6 +16,36 @@ import {
 
 type PreviewTheme = 'light' | 'dark';
 
+// Shared with watchThemeChanges so a follow-host vscode-dark swap can rewrite
+// the toggle chrome — currentTheme used to live only in the click closure.
+let currentTheme: PreviewTheme = 'light';
+let themeButtonEl: HTMLButtonElement | undefined;
+
+function themeIcon(theme: PreviewTheme): string {
+  return theme === 'dark' ? sunIcon : moonIcon;
+}
+
+function themeActionLabel(theme: PreviewTheme): string {
+  return theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme';
+}
+
+function syncThemeButtonChrome(): void {
+  if (!themeButtonEl) {
+    return;
+  }
+  themeButtonEl.innerHTML = themeIcon(currentTheme);
+  const label = themeActionLabel(currentTheme);
+  themeButtonEl.title = label;
+  themeButtonEl.setAttribute('aria-label', label);
+  themeButtonEl.dataset.label = label;
+  themeButtonEl.setAttribute('aria-pressed', String(currentTheme === 'dark'));
+}
+
+export function syncThemeButtonFromHost(): void {
+  currentTheme = isDarkTheme() ? 'dark' : 'light';
+  syncThemeButtonChrome();
+}
+
 function applyTheme(theme: PreviewTheme): void {
   document.body.classList.toggle('preview-theme-dark', theme === 'dark');
   document.body.classList.toggle('preview-theme-light', theme === 'light');
@@ -41,26 +71,16 @@ function persistedTheme(vscode: VsCodeApi): PreviewTheme | undefined {
 }
 
 function createThemeButton(vscode: VsCodeApi, initial: PreviewTheme): HTMLButtonElement {
-  let currentTheme = initial;
-  const themeButton = createButton(
-    currentTheme === 'dark' ? sunIcon : moonIcon,
-    currentTheme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme',
-    () => {
-      currentTheme = currentTheme === 'dark' ? 'light' : 'dark';
-      setThemeFollowsHost(false);
-      applyTheme(currentTheme);
-      persistTheme(vscode, currentTheme);
-      themeButton.innerHTML = currentTheme === 'dark' ? sunIcon : moonIcon;
-      const label = currentTheme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme';
-      themeButton.title = label;
-      themeButton.setAttribute('aria-label', label);
-      // Keep the CSS hover/focus tooltip (attr(data-label)) in sync — it would
-      // otherwise keep announcing the pre-toggle action.
-      themeButton.dataset.label = label;
-      themeButton.setAttribute('aria-pressed', String(currentTheme === 'dark'));
-    }
-  );
-  themeButton.setAttribute('aria-pressed', String(currentTheme === 'dark'));
+  currentTheme = initial;
+  const themeButton = createButton(themeIcon(currentTheme), themeActionLabel(currentTheme), () => {
+    currentTheme = currentTheme === 'dark' ? 'light' : 'dark';
+    setThemeFollowsHost(false);
+    applyTheme(currentTheme);
+    persistTheme(vscode, currentTheme);
+    syncThemeButtonChrome();
+  });
+  themeButtonEl = themeButton;
+  syncThemeButtonChrome();
   return themeButton;
 }
 

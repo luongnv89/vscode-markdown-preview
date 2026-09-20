@@ -133,8 +133,11 @@ function sleep(ms: number): Promise<void> {
 // A tiny CommonJS loader: transpile each webview/*.ts with the bundled
 // esbuild and evaluate it with the jsdom globals the webview runs under.
 // The webview layer only has relative './x' imports, so the resolver is a
-// path join.
-function loadWebviewModule<T>(entry: string, document: TestDocument, view?: TestWindow): T {
+// path join. Shared cache so toolbar + renderer hold the same currentTheme.
+function createWebviewLoader(
+  document: TestDocument,
+  view?: TestWindow
+): { load<T>(entry: string): T } {
   const cache = new Map<string, { exports: unknown }>();
   const load = (absNoExt: string): unknown => {
     const abs = absNoExt.endsWith('.ts') ? absNoExt : `${absNoExt}.ts`;
@@ -179,7 +182,15 @@ function loadWebviewModule<T>(entry: string, document: TestDocument, view?: Test
     );
     return module.exports;
   };
-  return load(path.join(webviewDir, entry)) as T;
+  return {
+    load<T>(entry: string): T {
+      return load(path.join(webviewDir, entry)) as T;
+    },
+  };
+}
+
+function loadWebviewModule<T>(entry: string, document: TestDocument, view?: TestWindow): T {
+  return createWebviewLoader(document, view).load<T>(entry);
 }
 
 // --- CSS helpers -----------------------------------------------------------
@@ -536,6 +547,44 @@ suite('preview toolbar UX (#66, #67, #69)', () => {
       assert.ok(
         !document.body.classList.contains('preview-theme-dark'),
         'class-swap pinned preview-theme-dark instead of following the host'
+      );
+    });
+
+    test('follow-host vscode-dark class-swap resyncs theme button chrome', async () => {
+      const { document, window } = makeDom();
+      document.body.classList.add('vscode-light');
+      const vscode = fakeVscode();
+      const loader = createWebviewLoader(document, window);
+      loader.load<ToolbarModule>('toolbar.ts').initToolbar(vscode);
+
+      const themeButton = Array.from(document.querySelectorAll('.toolbar-button')).find((b) =>
+        (b.getAttribute('aria-label') || '').includes('theme')
+      )!;
+      assert.strictEqual(themeButton.getAttribute('aria-label'), 'Switch to dark theme');
+      assert.strictEqual(themeButton.getAttribute('aria-pressed'), 'false');
+      assert.strictEqual(themeButton.dataset.label, 'Switch to dark theme');
+
+      const renderer = loader.load<RendererModule>('renderer.ts');
+      const observer = renderer.watchThemeChanges();
+      document.body.classList.remove('vscode-light');
+      document.body.classList.add('vscode-dark');
+      await sleep(renderer.THEME_CHANGE_DEBOUNCE + 40);
+      observer.disconnect();
+
+      assert.strictEqual(
+        themeButton.getAttribute('aria-label'),
+        'Switch to light theme',
+        'aria-label still announces the pre-swap light action'
+      );
+      assert.strictEqual(
+        themeButton.getAttribute('aria-pressed'),
+        'true',
+        'aria-pressed still reflects the pre-swap light state'
+      );
+      assert.strictEqual(
+        themeButton.dataset.label,
+        'Switch to light theme',
+        'hover tooltip still announces the pre-swap light action'
       );
     });
   });
