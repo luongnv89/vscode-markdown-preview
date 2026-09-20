@@ -89,7 +89,12 @@ export function buildWebviewHtml(
   <title>Markdown Preview Pro</title>
 </head>
 <body data-version="${escapeHtmlAttr(aboutInfo.version)}" data-commit="${escapeHtmlAttr(aboutInfo.commit)}" data-publisher="${escapeHtmlAttr(aboutInfo.publisher)}" data-repo="${escapeHtmlAttr(aboutInfo.repo)}">
-  <div id="preview-content"></div>
+  <div id="preview-content"><div class="preview-placeholder" role="status" aria-live="polite">
+    <div class="preview-placeholder-title">Rendering preview&#8230;</div>
+    <div class="preview-placeholder-skeleton"></div>
+    <div class="preview-placeholder-skeleton"></div>
+    <div class="preview-placeholder-skeleton preview-placeholder-short"></div>
+  </div></div>
 ${scriptTags}
 </body>
 </html>`;

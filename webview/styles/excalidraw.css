@@ -33,6 +33,27 @@
   white-space: pre-wrap;
 }
 
+/* Readable error (issue #68): same lead-line + collapsed <details> shape as
+   the mermaid error. */
+.excalidraw-error-lead {
+  white-space: normal;
+}
+
+.excalidraw-error-details {
+  margin-top: 0.6em;
+  white-space: normal;
+}
+
+.excalidraw-error-details summary {
+  cursor: pointer;
+}
+
+.excalidraw-error-raw {
+  margin: 0.6em 0 0;
+  white-space: pre-wrap;
+  font-size: 0.9em;
+}
+
 /* Loading animation for excalidraw */
 .excalidraw-block[data-processed='false'] pre.excalidraw-source {
   color: var(--fg-muted);

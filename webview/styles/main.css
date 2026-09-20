@@ -57,6 +57,46 @@ body {
   overflow-wrap: break-word;
 }
 
+/* Rendering placeholder (#68): shown inside #preview-content until the first
+   updateContent swaps in real HTML, so a blank preview never looks like a
+   failed one while the vendor bundles parse. */
+.preview-placeholder {
+  padding: var(--spacing-xl) 0;
+}
+
+.preview-placeholder-title {
+  color: var(--fg-muted);
+  font-size: 13px;
+  margin-bottom: var(--spacing-lg);
+}
+
+.preview-placeholder-skeleton {
+  height: 14px;
+  border-radius: 4px;
+  background: var(--hover-bg);
+  margin-bottom: var(--spacing-md);
+}
+
+.preview-placeholder-short {
+  width: 45%;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .preview-placeholder-skeleton {
+    animation: preview-placeholder-pulse 1.6s ease-in-out infinite;
+  }
+}
+
+@keyframes preview-placeholder-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.35;
+  }
+}
+
 /* Selection */
 ::selection {
   background-color: var(--selection-bg);
