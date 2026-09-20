@@ -120,11 +120,19 @@ suite('feature flags enableMermaid / enableExcalidraw (#32)', () => {
       (html.match(/<script nonce=/g) || []).length;
 
     test('buildForBrowser drops the mermaid/excalidraw embeds when disabled', async () => {
-      const off = await builder.buildForBrowser('<p>x</p>', 'doc', docUri, {
+      // The doc must actually carry diagram placeholders: exports embed a
+      // vendor runtime only when the rendered markup uses it (#74), so a
+      // feature-less document would show no diff between on and off.
+      const diagramDoc =
+        '<div class="mermaid-block" data-processed="false" data-source="eA==">' +
+        '<pre class="mermaid">graph TD</pre></div>' +
+        '<div class="excalidraw-block" data-processed="false" data-source="e30=">' +
+        '<pre class="excalidraw-source">{}</pre></div>';
+      const off = await builder.buildForBrowser(diagramDoc, 'doc', docUri, {
         enableMermaid: false,
         enableExcalidraw: false,
       });
-      const on = await builder.buildForBrowser('<p>x</p>', 'doc', docUri, {
+      const on = await builder.buildForBrowser(diagramDoc, 'doc', docUri, {
         enableMermaid: true,
         enableExcalidraw: true,
       });
