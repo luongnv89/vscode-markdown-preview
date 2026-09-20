@@ -17,7 +17,45 @@ This produces a `.vsix` file (e.g., `markdown-preview-pro-0.1.0.vsix`).
 code --install-extension markdown-preview-pro-*.vsix
 ```
 
-## Publishing to VS Code Marketplace
+## Releasing (automated)
+
+The `Release` workflow (`.github/workflows/release.yml`) runs on every pushed
+`v*` tag and:
+
+1. Verifies the tag's version matches `package.json` (the pre-release suffix is
+   ignored, so `v0.9.5-rc1` still validates against `0.9.5`).
+2. Runs the full test suite (`xvfb-run -a npm test`).
+3. Builds and packages the `.vsix`.
+4. Extracts the `## [x.y.z]` section matching the tag's base version from
+   `CHANGELOG.md` and creates a GitHub release with those notes and the `.vsix`
+   attached (tags containing a `-` suffix are marked as pre-releases).
+5. Publishes the `.vsix` to the VS Code Marketplace — only when the `VSCE_PAT`
+   repository secret is set (see below); otherwise the step is skipped.
+
+To cut a release:
+
+```bash
+# Bump the version and update CHANGELOG.md first
+npm version patch   # or minor / major — then commit and merge to main
+
+git tag v0.9.5
+git push origin v0.9.5
+```
+
+The workflow fails fast when the tag does not match `package.json`, and warns
+when `CHANGELOG.md` has no matching section (falling back to GitHub-generated
+notes) — always add a `## [x.y.z]` section for the version being tagged.
+
+### Marketplace publishing secret
+
+Publishing requires an Azure DevOps Personal Access Token with **Marketplace >
+Manage** scope for all accessible organizations (see
+`.agents/skills/vscode-extension-publisher/` for the full setup guide). Store it
+as a repository secret named `VSCE_PAT` under **Settings > Secrets and
+variables > Actions**. Without it the workflow still produces the GitHub
+release and `.vsix` asset.
+
+## Publishing to VS Code Marketplace (manual)
 
 ### Prerequisites
 
@@ -54,19 +92,12 @@ npm version major
 
 ## Distribution via GitHub Releases
 
-1. Tag the release:
+Tags pushed as `v*` trigger the automated release above. Users can install via
+the one-liner:
 
-   ```bash
-   git tag v0.1.0
-   git push origin v0.1.0
-   ```
-
-2. Create a GitHub release and attach the `.vsix` file
-
-3. Users can install via the one-liner:
-   ```bash
-   curl -sSL https://raw.githubusercontent.com/luongnv89/vscode-markdown-preview/main/install.sh | bash
-   ```
+```bash
+curl -sSL https://raw.githubusercontent.com/luongnv89/vscode-markdown-preview/main/install.sh | bash
+```
 
 ## GitHub Pages Landing Page
 
