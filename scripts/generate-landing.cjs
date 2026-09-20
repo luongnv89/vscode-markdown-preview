@@ -180,9 +180,11 @@ function warnMissingAsset(label, err) {
   );
 }
 
-async function getCombinedCss() {
+// Reads the stylesheets the page inlines, in join order: vendor CSS is
+// optional garnish (warn-and-skip) while main.css is the core bundle
+// (warn-and-fail).
+async function readCssParts(vendorDir) {
   const parts = [];
-  const vendorDir = path.join(repoRoot, 'dist', 'webview', 'vendor');
   for (const file of ['katex.min.css', 'github-dark.min.css']) {
     try {
       parts.push(`/* ${file} */\n${await fs.readFile(path.join(vendorDir, file), 'utf8')}`);
@@ -201,10 +203,12 @@ async function getCombinedCss() {
     warnMissingAsset('dist/webview/main.css', err);
     throw err;
   }
-  let css = parts.join('\n\n');
-  css = await embedFonts(css, path.join(vendorDir, 'fonts'));
-  css = replaceThemeVariables(css);
-  css += `
+  return parts;
+}
+
+// Landing-only framing appended after the theme variables — leading blank
+// lines are part of the emitted stylesheet.
+const LANDING_CSS = `
 
 /* Landing page framing */
 body {
@@ -245,6 +249,14 @@ img.preview-image {
   box-shadow: 0 18px 48px rgba(0,0,0,0.12);
 }
 `;
+
+async function getCombinedCss() {
+  const vendorDir = path.join(repoRoot, 'dist', 'webview', 'vendor');
+  const parts = await readCssParts(vendorDir);
+  let css = parts.join('\n\n');
+  css = await embedFonts(css, path.join(vendorDir, 'fonts'));
+  css = replaceThemeVariables(css);
+  css += LANDING_CSS;
   return css;
 }
 
@@ -260,9 +272,9 @@ async function getFaviconDataUri() {
   }
 }
 
-async function buildHtml(markdownHtml, title, documentPath, frontmatter) {
-  const css = await getCombinedCss();
-  const vendorDir = path.join(repoRoot, 'dist', 'webview', 'vendor');
+// Reads the two vendor scripts the page inlines (KaTeX + Mermaid). Both are
+// optional garnish: an unreadable file warns and embeds nothing.
+async function loadVendorScripts(vendorDir) {
   const katexJs = await fs.readFile(path.join(vendorDir, 'katex.min.js'), 'utf8').catch((err) => {
     warnMissingAsset('katex.min.js', err);
     return '';
@@ -273,81 +285,89 @@ async function buildHtml(markdownHtml, title, documentPath, frontmatter) {
       warnMissingAsset('mermaid.min.js', err);
       return '';
     });
-  const htmlWithEmbeddedImages = await embedImages(markdownHtml, documentPath);
-  const faviconUri = await getFaviconDataUri();
+  return { katexJs, mermaidJs };
+}
 
-  const siteUrl = 'https://luongnv.com/vscode-markdown-preview/';
-  const description =
-    (frontmatter && frontmatter.subtitle) ||
-    'Clean, minimal markdown preview for VS Code with syntax highlighting, Mermaid diagrams, KaTeX math, HTML/PDF export, and interactive features.';
-  const version = (frontmatter && frontmatter.version) || '';
-  const repoUrl =
-    (frontmatter && frontmatter.repository) ||
-    'https://github.com/luongnv89/vscode-markdown-preview';
-  const marketplaceUrl = (frontmatter && frontmatter.marketplace) || '';
-  const screenshotUri = await (async () => {
-    try {
-      const data = await fs.readFile(path.join(repoRoot, 'media', 'screenshot.png'));
-      return `data:image/png;base64,${data.toString('base64')}`;
-    } catch {
-      // Local screenshot unreadable — fall back to the hosted URL so the
-      // social-preview meta tags still resolve to a real image.
-      return `${repoUrl}/raw/main/media/screenshot.png`;
-    }
-  })();
+// The values the <head> metadata derives from frontmatter, with the
+// published-site fallbacks for the fields the page does not set.
+function resolvePageMetadata(frontmatter) {
+  return {
+    siteUrl: 'https://luongnv.com/vscode-markdown-preview/',
+    description:
+      (frontmatter && frontmatter.subtitle) ||
+      'Clean, minimal markdown preview for VS Code with syntax highlighting, Mermaid diagrams, KaTeX math, HTML/PDF export, and interactive features.',
+    version: (frontmatter && frontmatter.version) || '',
+    repoUrl:
+      (frontmatter && frontmatter.repository) ||
+      'https://github.com/luongnv89/vscode-markdown-preview',
+    marketplaceUrl: (frontmatter && frontmatter.marketplace) || '',
+  };
+}
 
-  const seoMeta = `
-  <meta name="description" content="${escapeHtml(description)}">
-  <meta name="author" content="luongnv89">
-  <meta name="theme-color" content="#0969da" media="(prefers-color-scheme: light)">
-  <meta name="theme-color" content="#1e1e1e" media="(prefers-color-scheme: dark)">
-  <link rel="canonical" href="${escapeHtml(siteUrl)}">
-  ${faviconUri ? `<link rel="icon" type="image/png" href="${faviconUri}">` : ''}
-
-  <!-- OpenGraph -->
-  <meta property="og:type" content="website">
-  <meta property="og:title" content="${escapeHtml(title)}">
-  <meta property="og:description" content="${escapeHtml(description)}">
-  <meta property="og:url" content="${escapeHtml(siteUrl)}">
-  <meta property="og:image" content="${escapeHtml(repoUrl)}/raw/main/media/screenshot.png">
-  <meta property="og:image:alt" content="Markdown Preview Pro — VS Code extension preview">
-  <meta property="og:site_name" content="Markdown Preview Pro">
-
-  <!-- Twitter Card -->
-  <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="${escapeHtml(title)}">
-  <meta name="twitter:description" content="${escapeHtml(description)}">
-  <meta name="twitter:image" content="${escapeHtml(repoUrl)}/raw/main/media/screenshot.png">
-
-  <!-- JSON-LD Structured Data -->
-  <script type="application/ld+json">
+// The schema.org SoftwareApplication block. Every interpolation is
+// escapeHtml'd — title/description/version come from the landing frontmatter.
+function buildJsonLd(meta) {
+  return `<script type="application/ld+json">
   {
     "@context": "https://schema.org",
     "@type": "SoftwareApplication",
-    "name": "${escapeHtml(title)}",
-    "description": "${escapeHtml(description)}",
+    "name": "${escapeHtml(meta.title)}",
+    "description": "${escapeHtml(meta.description)}",
     "applicationCategory": "DeveloperApplication",
     "operatingSystem": "Windows, macOS, Linux",
-    "softwareVersion": "${escapeHtml(version)}",
+    "softwareVersion": "${escapeHtml(meta.version)}",
     "author": {
       "@type": "Person",
       "name": "luongnv89",
       "url": "https://github.com/luongnv89"
     },
-    "url": "${escapeHtml(siteUrl)}",
-    "downloadUrl": "${escapeHtml(marketplaceUrl)}",
-    "codeRepository": "${escapeHtml(repoUrl)}",
+    "url": "${escapeHtml(meta.siteUrl)}",
+    "downloadUrl": "${escapeHtml(meta.marketplaceUrl)}",
+    "codeRepository": "${escapeHtml(meta.repoUrl)}",
     "license": "https://opensource.org/licenses/MIT",
     "offers": {
       "@type": "Offer",
       "price": "0",
       "priceCurrency": "USD"
     },
-    "image": "${escapeHtml(repoUrl)}/raw/main/media/screenshot.png"
+    "image": "${escapeHtml(meta.repoUrl)}/raw/main/media/screenshot.png"
   }
   </script>`;
+}
 
-  const renderScript = `
+// The SEO/OpenGraph/Twitter block for the page <head>. meta carries the
+// resolvePageMetadata() fields plus { title, faviconUri }.
+function buildSeoMeta(meta) {
+  return `
+  <meta name="description" content="${escapeHtml(meta.description)}">
+  <meta name="author" content="luongnv89">
+  <meta name="theme-color" content="#0969da" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#1e1e1e" media="(prefers-color-scheme: dark)">
+  <link rel="canonical" href="${escapeHtml(meta.siteUrl)}">
+  ${meta.faviconUri ? `<link rel="icon" type="image/png" href="${meta.faviconUri}">` : ''}
+
+  <!-- OpenGraph -->
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="${escapeHtml(meta.title)}">
+  <meta property="og:description" content="${escapeHtml(meta.description)}">
+  <meta property="og:url" content="${escapeHtml(meta.siteUrl)}">
+  <meta property="og:image" content="${escapeHtml(meta.repoUrl)}/raw/main/media/screenshot.png">
+  <meta property="og:image:alt" content="Markdown Preview Pro — VS Code extension preview">
+  <meta property="og:site_name" content="Markdown Preview Pro">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="${escapeHtml(meta.title)}">
+  <meta name="twitter:description" content="${escapeHtml(meta.description)}">
+  <meta name="twitter:image" content="${escapeHtml(meta.repoUrl)}/raw/main/media/screenshot.png">
+
+  <!-- JSON-LD Structured Data -->
+  ${buildJsonLd(meta)}`;
+}
+
+// The client-side script inlined into the page: theme toolbar with localStorage
+// persistence, copy buttons on code blocks, KaTeX rendering, Mermaid rendering.
+const RENDER_SCRIPT = `
 <script>
 const COPY_ICON = '<svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="5" y="5" width="8" height="8" rx="1" stroke="currentColor" stroke-width="1.2"/><path d="M3 11V3C3 2.44772 3.44772 2 4 2H10" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>';
 const CHECK_ICON = '<svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M3 8.5L6.5 12L13 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>';
@@ -489,6 +509,18 @@ async function renderMermaid(theme) {
 })();
 </script>`;
 
+async function buildHtml(markdownHtml, title, documentPath, frontmatter) {
+  const vendorDir = path.join(repoRoot, 'dist', 'webview', 'vendor');
+  const css = await getCombinedCss();
+  const { katexJs, mermaidJs } = await loadVendorScripts(vendorDir);
+  const htmlWithEmbeddedImages = await embedImages(markdownHtml, documentPath);
+  const faviconUri = await getFaviconDataUri();
+  const seoMeta = buildSeoMeta({
+    title,
+    faviconUri,
+    ...resolvePageMetadata(frontmatter),
+  });
+
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -504,7 +536,7 @@ ${seoMeta}
   <div id="preview-content">
 ${htmlWithEmbeddedImages}
   </div>
-  ${renderScript}
+  ${RENDER_SCRIPT}
 </body>
 </html>`;
 }
