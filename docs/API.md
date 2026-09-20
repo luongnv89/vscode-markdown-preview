@@ -228,10 +228,9 @@ Resolves image `src` attributes:
 
 ### `copyButton.ts`
 
-| Function               | Description                                           |
-| ---------------------- | ----------------------------------------------------- |
-| `initCopyButtons()`    | Initial setup (no-op, waits for `refreshCopyButtons`) |
-| `refreshCopyButtons()` | Adds a "Copy" button to every `.code-block` element   |
+| Function           | Description                                         |
+| ------------------ | --------------------------------------------------- |
+| `addCopyButtons()` | Adds a "Copy" button to every `.code-block` element |
 
 ### `blockHighlighter.ts`
 

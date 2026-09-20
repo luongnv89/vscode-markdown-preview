@@ -1,4 +1,5 @@
-import { refreshCopyButtons } from './copyButton';
+import { addCopyButtons } from './copyButton';
+import { isDarkTheme } from './theme';
 import { refreshBlockHighlighter } from './blockHighlighter';
 import { refreshToc } from './toc';
 import { refreshStats } from './statsBar';
@@ -57,7 +58,7 @@ export async function updateContent(html: string): Promise<void> {
     container.innerHTML = html;
 
     // Post-process: add features
-    refreshCopyButtons();
+    addCopyButtons();
 
     // Render mermaid diagrams (skipped entirely when the feature is off)
     if (currentConfig.enableMermaid) {
@@ -107,11 +108,7 @@ async function renderMermaid(): Promise<void> {
   }
 
   if (!mermaidInitialized) {
-    const isDark =
-      document.body.classList.contains('preview-theme-dark') ||
-      (!document.body.classList.contains('preview-theme-light') &&
-        (document.body.classList.contains('vscode-dark') ||
-          document.body.classList.contains('vscode-high-contrast')));
+    const isDark = isDarkTheme();
 
     mermaid.initialize({
       startOnLoad: false,
@@ -162,11 +159,7 @@ async function renderExcalidraw(): Promise<void> {
     return;
   }
 
-  const isDark =
-    document.body.classList.contains('preview-theme-dark') ||
-    (!document.body.classList.contains('preview-theme-light') &&
-      (document.body.classList.contains('vscode-dark') ||
-        document.body.classList.contains('vscode-high-contrast')));
+  const isDark = isDarkTheme();
 
   for (let i = 0; i < blocks.length; i++) {
     const block = blocks[i];

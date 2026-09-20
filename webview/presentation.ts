@@ -2,10 +2,6 @@ let overlay: HTMLElement | null = null;
 let slides: HTMLElement[] = [];
 let currentSlide = 0;
 
-export function initPresentation(): void {
-  // Nothing to initialize upfront; presentation is created on demand
-}
-
 export function enterPresentation(): void {
   const container = document.getElementById('preview-content');
   if (!container) return;
