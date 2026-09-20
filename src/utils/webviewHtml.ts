@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+import { escapeHtml } from './htmlEscape';
 import { getNonce } from './uri';
 
 /**
@@ -27,15 +28,11 @@ export interface WebviewResourceSource {
  * (`<body data-version="...">`). Escaping `&`, `<`, `>`, `"` and `'` keeps a
  * hostile value from terminating the attribute or opening a new element — the
  * `<body data-*>` values are read back by the webview via `dataset`.
+ *
+ * Delegates to the shared escapeHtml for the core four and adds `'` on top —
+ * the attribute escaper is a superset, not a second implementation (issue #55).
  */
-export function escapeHtmlAttr(value: string): string {
-  return value
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;');
-}
+export const escapeHtmlAttr = (value: string): string => escapeHtml(value).replace(/'/g, '&#39;');
 
 /**
  * Build the webview HTML document.

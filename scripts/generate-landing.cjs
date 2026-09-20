@@ -24,7 +24,7 @@ try {
   }
   throw err;
 }
-const { createMarkdownIt, parseFrontmatter, renderFrontmatterHtml } = sharedCore;
+const { createMarkdownIt, parseFrontmatter, renderFrontmatterHtml, escapeHtml } = sharedCore;
 
 // Mirrors the flags the extension renders the preview with (PreviewConfig):
 // typographer on, hard line breaks off, every renderer feature on.
@@ -43,14 +43,6 @@ function createLandingRenderer() {
     // untouched here because embedImages() rewrites them to data URIs later.
     decorateImageToken: (token) => token.attrJoin('class', 'preview-image'),
   });
-}
-
-function escapeHtml(str) {
-  return String(str)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;');
 }
 
 function resolveImageUri(src, documentPath) {
@@ -176,17 +168,39 @@ function replaceThemeVariables(css) {
   return `:root {\n${root}\n}\n\n${css}`;
 }
 
+// One rule for every built asset the generator embeds (issue #59): an
+// unreadable file warns and names itself in the build log — never a silent
+// empty catch. The generated page is a function of the webpack output
+// (F-CI-001), and a quietly missing stylesheet is exactly the failure that
+// hid four months of broken landing builds.
+function warnMissingAsset(label, err) {
+  console.warn(
+    `generate-landing: ${label} unreadable (${(err && err.code) || err}) — ` +
+      'run `npm run compile` to rebuild dist/'
+  );
+}
+
 async function getCombinedCss() {
   const parts = [];
   const vendorDir = path.join(repoRoot, 'dist', 'webview', 'vendor');
   for (const file of ['katex.min.css', 'github-dark.min.css']) {
     try {
       parts.push(`/* ${file} */\n${await fs.readFile(path.join(vendorDir, file), 'utf8')}`);
-    } catch {}
+    } catch (err) {
+      // Vendor CSS is optional garnish — warn, then degrade gracefully.
+      warnMissingAsset(file, err);
+    }
   }
-  parts.push(
-    `/* main.css */\n${await fs.readFile(path.join(repoRoot, 'dist', 'webview', 'main.css'), 'utf8')}`
-  );
+  try {
+    parts.push(
+      `/* main.css */\n${await fs.readFile(path.join(repoRoot, 'dist', 'webview', 'main.css'), 'utf8')}`
+    );
+  } catch (err) {
+    // main.css is the core stylesheet, not garnish — warn so the log names
+    // the missing file, then fail loudly rather than ship an unstyled page.
+    warnMissingAsset('dist/webview/main.css', err);
+    throw err;
+  }
   let css = parts.join('\n\n');
   css = await embedFonts(css, path.join(vendorDir, 'fonts'));
   css = replaceThemeVariables(css);
@@ -240,6 +254,8 @@ async function getFaviconDataUri() {
     const data = await fs.readFile(iconPath);
     return `data:image/png;base64,${data.toString('base64')}`;
   } catch {
+    // Favicon is cosmetic — omit the <link rel="icon"> when media/icon.png
+    // cannot be read.
     return '';
   }
 }
@@ -247,10 +263,16 @@ async function getFaviconDataUri() {
 async function buildHtml(markdownHtml, title, documentPath, frontmatter) {
   const css = await getCombinedCss();
   const vendorDir = path.join(repoRoot, 'dist', 'webview', 'vendor');
-  const katexJs = await fs.readFile(path.join(vendorDir, 'katex.min.js'), 'utf8').catch(() => '');
+  const katexJs = await fs.readFile(path.join(vendorDir, 'katex.min.js'), 'utf8').catch((err) => {
+    warnMissingAsset('katex.min.js', err);
+    return '';
+  });
   const mermaidJs = await fs
     .readFile(path.join(vendorDir, 'mermaid.min.js'), 'utf8')
-    .catch(() => '');
+    .catch((err) => {
+      warnMissingAsset('mermaid.min.js', err);
+      return '';
+    });
   const htmlWithEmbeddedImages = await embedImages(markdownHtml, documentPath);
   const faviconUri = await getFaviconDataUri();
 
@@ -268,6 +290,8 @@ async function buildHtml(markdownHtml, title, documentPath, frontmatter) {
       const data = await fs.readFile(path.join(repoRoot, 'media', 'screenshot.png'));
       return `data:image/png;base64,${data.toString('base64')}`;
     } catch {
+      // Local screenshot unreadable — fall back to the hosted URL so the
+      // social-preview meta tags still resolve to a real image.
       return `${repoUrl}/raw/main/media/screenshot.png`;
     }
   })();
@@ -388,6 +412,7 @@ function getStoredTheme() {
     if (stored === 'light' || stored === 'dark') return stored;
     return 'dark';
   } catch {
+    // localStorage unavailable (private mode etc.) — default to dark.
     return 'dark';
   }
 }
@@ -402,7 +427,10 @@ function setTheme(theme, button) {
   }
   try {
     localStorage.setItem(THEME_STORAGE_KEY, theme);
-  } catch {}
+  } catch {
+    // localStorage can throw (private mode, quota, disabled storage) — theme
+    // persistence is best-effort, so a failed write is safe to ignore.
+  }
 }
 
 function ensureThemeToolbar(initialTheme) {
@@ -450,10 +478,10 @@ async function renderMermaid(theme) {
   ensureThemeToolbar(initialTheme);
   if (typeof katex !== 'undefined') {
     document.querySelectorAll('.katex-inline[data-math]').forEach(function(el) {
-      try { katex.render(el.getAttribute('data-math'), el, { throwOnError: false, displayMode: false }); } catch (e) {}
+      try { katex.render(el.getAttribute('data-math'), el, { throwOnError: false, displayMode: false }); } catch (e) { /* throwOnError:false already renders errors in place; this only guards an unexpected engine throw */ }
     });
     document.querySelectorAll('.katex-block[data-math]').forEach(function(el) {
-      try { katex.render(el.getAttribute('data-math'), el, { throwOnError: false, displayMode: true }); } catch (e) {}
+      try { katex.render(el.getAttribute('data-math'), el, { throwOnError: false, displayMode: true }); } catch (e) { /* same guard as the inline-math path above */ }
     });
   }
   wrapCodeBlocks();

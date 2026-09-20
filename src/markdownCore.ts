@@ -362,7 +362,8 @@ function rewriteRawHtmlImages(html: string, resolveImageSrc: (src: string) => st
 }
 
 // Re-exported so the compiled dist/markdownCore.js gives the landing generator
-// the shared frontmatter helpers too — its local copies were byte-level
-// duplicates of src/utils/frontmatter.ts.
+// the shared frontmatter helpers and escapeHtml too — its local copies were
+// byte-level duplicates of src/utils/frontmatter.ts / src/utils/htmlEscape.ts.
 export { parseFrontmatter, renderFrontmatterHtml } from './utils/frontmatter';
 export type { FrontmatterResult } from './utils/frontmatter';
+export { escapeHtml } from './utils/htmlEscape';

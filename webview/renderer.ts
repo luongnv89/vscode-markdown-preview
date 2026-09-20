@@ -141,7 +141,13 @@ async function renderMermaid(): Promise<void> {
       block.setAttribute('data-processed', 'true');
       (block as HTMLElement).classList.add('mermaid-rendered');
     } catch (err) {
-      block.innerHTML = `<div class="mermaid-error">Mermaid diagram error: ${escapeHtml((err as Error).message)}</div>`;
+      // textContent, not innerHTML+escape: the error message is untrusted
+      // text, so the DOM escapes it natively (issue #55 — this replaced the
+      // webview-local escapeHtml, which escaped a narrower character set).
+      const errorDiv = document.createElement('div');
+      errorDiv.className = 'mermaid-error';
+      errorDiv.textContent = `Mermaid diagram error: ${(err as Error).message}`;
+      block.replaceChildren(errorDiv);
       block.setAttribute('data-processed', 'true');
     }
   }
@@ -193,7 +199,11 @@ async function renderExcalidraw(): Promise<void> {
       block.setAttribute('data-processed', 'true');
       (block as HTMLElement).classList.add('excalidraw-rendered');
     } catch (err) {
-      block.innerHTML = `<div class="excalidraw-error">Excalidraw diagram error: ${escapeHtml((err as Error).message)}</div>`;
+      // Same textContent-not-innerHTML reasoning as the mermaid-error path.
+      const errorDiv = document.createElement('div');
+      errorDiv.className = 'excalidraw-error';
+      errorDiv.textContent = `Excalidraw diagram error: ${(err as Error).message}`;
+      block.replaceChildren(errorDiv);
       block.setAttribute('data-processed', 'true');
     }
   }
@@ -232,12 +242,6 @@ function renderKatex(): void {
       // Leave the raw text as fallback
     }
   });
-}
-
-function escapeHtml(text: string): string {
-  const div = document.createElement('div');
-  div.textContent = text;
-  return div.innerHTML;
 }
 
 // Watch for theme changes to reinitialize mermaid and excalidraw
