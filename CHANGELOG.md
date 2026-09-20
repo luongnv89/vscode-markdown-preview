@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- Fix: clicking a Table of Contents entry now scrolls to that heading instead of jumping to the document header — TOC navigation uses the same programmatic `scrollToLine` path as editor↔preview sync, so scroll-sync cannot override an in-flight jump (#6)
+
 ## [0.9.5] - 2026-09-20
 
 - Perf: the generated landing page (`docs/index.html`) drops from ~7.8 MB to ~515 KB — vendor runtimes (KaTeX, Mermaid) and the KaTeX stylesheet/fonts are emitted as separate cacheable files under `docs/assets/` instead of being inlined, gated on the shared `detectVendorNeeds` content probe so a page with no math or diagrams ships neither runtime; the client-side render script and JSON-LD are external too, leaving every `<script>` element `src`-backed with under 1 KB of inline script text (#78)

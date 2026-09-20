@@ -1,3 +1,5 @@
+import { scrollToLine } from './scrollSync';
+
 let sidebar: HTMLElement | null = null;
 let tocList: HTMLElement | null = null;
 let observer: IntersectionObserver | null = null;
@@ -50,7 +52,12 @@ function buildTocEntries(headings: readonly HTMLElement[]): TocEntry[] {
     a.href = '#';
     a.addEventListener('click', (e) => {
       e.preventDefault();
-      heading.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      const line = parseInt(heading.getAttribute('data-line') || '', 10);
+      if (line >= 0) {
+        scrollToLine(line);
+      } else {
+        heading.scrollIntoView({ behavior: 'auto', block: 'start' });
+      }
     });
 
     li.appendChild(a);

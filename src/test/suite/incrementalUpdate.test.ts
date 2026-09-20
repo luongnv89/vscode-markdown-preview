@@ -41,6 +41,8 @@ interface TestElement {
   querySelectorAll(sel: string): ArrayLike<TestElement>;
   appendChild<T>(node: T): T;
   remove(): void;
+  click(): void;
+  scrollIntoView(arg?: unknown): void;
 }
 interface TestWindow {
   setTimeout(handler: () => void, timeout: number): number;
@@ -442,6 +444,54 @@ suite('incremental preview update patching (#77)', () => {
       retargeted,
       first,
       'heading inside a replaced blockquote kept a stale TOC entry'
+    );
+  });
+
+  test('a TOC click on a later heading navigates via scrollToLine (#6)', async () => {
+    const { document, window } = makeDom('<div id="preview-content"></div>');
+    const scrollCalls: unknown[] = [];
+    Object.defineProperty(window, 'scrollTo', {
+      configurable: true,
+      value: (opts: unknown) => scrollCalls.push(opts),
+    });
+    installObserverRecorder();
+    const load = makeLoader(document, window);
+    load<TocModule>('toc.ts').initToc();
+    const mod = load<RendererModule>('renderer.ts');
+
+    await mod.updateContent(
+      '<h1 class="code-line" data-line="0">First</h1>' +
+        '<h2 class="code-line" data-line="10">Second</h2>'
+    );
+
+    const links = Array.from(document.querySelectorAll('.toc-sidebar a'));
+    assert.strictEqual(links.length, 2, 'expected two TOC entries');
+
+    const headings = Array.from(document.querySelectorAll('h1, h2'));
+    const intoViewCalls: unknown[] = [];
+    for (const heading of headings) {
+      Object.defineProperty(heading, 'scrollIntoView', {
+        configurable: true,
+        value: (opts: unknown) => intoViewCalls.push(opts),
+      });
+    }
+
+    links[0].click();
+    const afterFirst = scrollCalls.length;
+    scrollCalls.length = 0;
+    intoViewCalls.length = 0;
+
+    links[1].click();
+
+    assert.ok(
+      scrollCalls.length > 0,
+      'TOC click on the later heading did not navigate via scrollToLine'
+    );
+    assert.ok(afterFirst > 0, 'TOC click on the first heading did not navigate via scrollToLine');
+    assert.strictEqual(
+      intoViewCalls.length,
+      0,
+      'TOC click used heading.scrollIntoView instead of scrollToLine'
     );
   });
 
