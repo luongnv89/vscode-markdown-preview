@@ -17,7 +17,7 @@ coverage/**
 webpack.config.js
 **/*.ts
 **/*.map
-.eslintrc.json
+.oxlintrc.json
 install.sh
 test-sample.md
 package-lock.json

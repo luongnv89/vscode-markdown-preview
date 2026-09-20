@@ -50,7 +50,7 @@ This creates an optimized build with hidden source maps in `dist/`.
 | `compile`       | `npm run compile`       | One-time Webpack development build into `dist/`                                                                        |
 | `watch`         | `npm run watch`         | Webpack watch mode — rebuilds `dist/` on file changes                                                                  |
 | `package`       | `npm run package`       | Production build (`webpack --mode production --devtool hidden-source-map`) into `dist/`                                |
-| `lint`          | `npm run lint`          | ESLint check over `src/` and `webview/`                                                                                |
+| `lint`          | `npm run lint`          | oxlint check over `src/` and `webview/` (native linter; config `.oxlintrc.json`)                                       |
 | `format:check`  | `npm run format:check`  | Prettier check over the whole repo (same gate CI runs)                                                                 |
 | `build:landing` | `npm run build:landing` | Regenerates the landing page at `docs/index.html` — a generated, gitignored file, so it never dirties the working tree |
 | `test`          | `npm test`              | Builds the extension + `src/test/` into `out/`, then runs the Mocha suite inside an Extension Development Host         |

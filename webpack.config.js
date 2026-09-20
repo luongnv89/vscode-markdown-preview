@@ -33,9 +33,13 @@ const extensionConfig = {
         exclude: /node_modules/,
         use: [
           {
-            loader: 'ts-loader',
+            // TypeScript 7 is a native binary without the JS compiler API
+            // ts-loader requires; esbuild transpiles TS, `tsc --noEmit`
+            // (CI) keeps the typecheck gate.
+            loader: 'esbuild-loader',
             options: {
-              configFile: 'tsconfig.json',
+              loader: 'ts',
+              target: 'es2020',
             },
           },
         ],
@@ -72,9 +76,10 @@ const webviewConfig = {
         exclude: /node_modules/,
         use: [
           {
-            loader: 'ts-loader',
+            loader: 'esbuild-loader',
             options: {
-              configFile: 'tsconfig.webview.json',
+              loader: 'ts',
+              target: 'es2020',
             },
           },
         ],
