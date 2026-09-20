@@ -152,7 +152,7 @@ graph TD
     EXC[webview/excalidrawUtils.ts] -->|Webpack| DIST5[dist/webview/vendor/<br/>excalidraw-utils.min.js]
 ```
 
-1. **Extension** (`src/extension.ts` → `dist/extension.js`) - CommonJS for Node.js
+1. **Extension** (`src/extension.ts` → `dist/extension.js`) - CommonJS for Node.js. Only the activation path is bundled here: the export-only heavyweights `jsdom` and `puppeteer-core` sit behind `await import()` and emit as separate lazy `dist/<id>.extension.js` chunks, `require()`d on first export use (issue #73). Syntax highlighting registers a ~28-language subset via `highlight.js/lib/core` (`src/hljsLanguages.ts`) rather than the full ~190-grammar package.
 2. **Shared engine** (`src/markdownCore.ts` → `dist/markdownCore.js`) - CommonJS for Node.js; `require()`d by `scripts/generate-landing.cjs` so the landing page renders through the same pipeline
 3. **Webview** (`webview/main.ts` → `dist/webview/main.js`) - Browser bundle with CSS
 4. **Vendor files** - KaTeX, Mermaid, and highlight.js are copied to `dist/webview/vendor/`; `@excalidraw/utils` (ESM-only since 0.1.4) is bundled there by webpack from a thin wrapper that exposes `window.ExcalidrawUtils`

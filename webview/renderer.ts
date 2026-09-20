@@ -25,6 +25,77 @@ let currentConfig: Pick<PreviewConfig, 'enableMermaid' | 'enableExcalidraw'> = {
 // new flags without waiting for the host's own re-render.
 let lastHtml: string | null = null;
 
+// ---- Diagram render cache (issue #75) ----
+// container.innerHTML re-creates every diagram block on each update and the
+// host re-flags each as data-processed="false", so without a cache every
+// mermaid/excalidraw source re-renders on every keystroke. Entries are keyed
+// by a hash of the diagram source — never by block index, which shifts as the
+// document is edited — and the stored source is compared on lookup so a hash
+// collision can never inject the wrong SVG. The whole cache clears on theme
+// change, since dark/light changes what the same source renders to.
+interface DiagramCacheEntry {
+  source: string;
+  kind: 'svg' | 'error';
+  content: string;
+}
+const diagramCache = new Map<string, DiagramCacheEntry>();
+const DIAGRAM_CACHE_LIMIT = 64;
+
+// cyrb53 — a small 53-bit string hash — derives stable mermaid render ids and
+// cache keys from diagram source (replacing the per-render timestamp ids that
+// defeated any caching and orphaned Mermaid's per-id <style> blocks).
+function hashSource(str: string): string {
+  let h1 = 0xdeadbeef;
+  let h2 = 0x41c6ce57;
+  for (let i = 0; i < str.length; i++) {
+    const ch = str.charCodeAt(i);
+    h1 = Math.imul(h1 ^ ch, 2654435761);
+    h2 = Math.imul(h2 ^ ch, 1597334677);
+  }
+  h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507);
+  h1 ^= Math.imul(h2 ^ (h2 >>> 13), 3266489909);
+  h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507);
+  h2 ^= Math.imul(h1 ^ (h1 >>> 13), 3266489909);
+  return (h2 >>> 0).toString(36) + (h1 >>> 0).toString(36);
+}
+
+function cacheStore(key: string, entry: DiagramCacheEntry): void {
+  if (diagramCache.size >= DIAGRAM_CACHE_LIMIT) {
+    // FIFO eviction — Map iterates in insertion order, so the first key is
+    // the oldest entry. Editing churn creates one entry per source variant;
+    // the cap keeps a long session from growing it without bound.
+    const oldest = diagramCache.keys().next();
+    if (!oldest.done) {
+      diagramCache.delete(oldest.value);
+    }
+  }
+  diagramCache.set(key, entry);
+}
+
+// On a verified cache hit (same engine, same source) re-inject the recorded
+// output instead of re-rendering: SVG markup is innerHTML'd back, an error is
+// rebuilt through buildDiagramError so the lead still names this block's
+// current data-line. Returns true when the block was restored.
+function restoreCachedDiagram(
+  block: Element,
+  key: string,
+  source: string,
+  engine: 'mermaid' | 'excalidraw'
+): boolean {
+  const entry = diagramCache.get(key);
+  if (!entry || entry.source !== source) {
+    return false;
+  }
+  if (entry.kind === 'svg') {
+    block.innerHTML = entry.content;
+    (block as HTMLElement).classList.add(`${engine}-rendered`);
+  } else {
+    block.replaceChildren(buildDiagramError(block, engine, entry.content));
+  }
+  block.setAttribute('data-processed', 'true');
+  return true;
+}
+
 /**
  * Apply a config pushed by the host's configChanged message. Stores the flags
  * the renderers consult and re-renders the current content when a diagram flag
@@ -48,31 +119,32 @@ export async function updateContent(html: string): Promise<void> {
   }
 
   updateInProgress = true;
-  lastHtml = html;
 
   try {
-    const container = document.getElementById('preview-content');
-    if (!container) {
-      return;
+    // Drain the queue in a loop rather than recursing out of finally — a
+    // sustained typing stream queues continuously and recursion would stack
+    // an await chain per keystroke (issue #75).
+    let current: string | null = html;
+    while (current !== null) {
+      lastHtml = current;
+
+      const container = document.getElementById('preview-content');
+      if (container) {
+        // Save scroll position
+        const scrollTop = window.scrollY;
+
+        container.innerHTML = current;
+        await postProcessRenderedContent();
+
+        // Restore scroll position
+        window.scrollTo(0, scrollTop);
+      }
+
+      current = pendingUpdate;
+      pendingUpdate = null;
     }
-
-    // Save scroll position
-    const scrollTop = window.scrollY;
-
-    container.innerHTML = html;
-    await postProcessRenderedContent();
-
-    // Restore scroll position
-    window.scrollTo(0, scrollTop);
   } finally {
     updateInProgress = false;
-
-    // Process queued update if any
-    if (pendingUpdate !== null) {
-      const next = pendingUpdate;
-      pendingUpdate = null;
-      await updateContent(next);
-    }
   }
 }
 
@@ -160,27 +232,40 @@ function buildDiagramError(block: Element, engine: string, err: unknown): HTMLEl
 
 // Render one .mermaid-block: swap its <pre> for the rendered SVG, or show a
 // readable error div (buildDiagramError keeps the raw parser output behind a
-// <details> and names the document line).
+// <details> and names the document line). Output is cached on the source
+// hash — an unchanged diagram skips mermaid.render entirely (issue #75).
 async function renderMermaidBlock(
   mermaid: NonNullable<typeof window.mermaid>,
-  block: Element,
-  index: number
+  block: Element
 ): Promise<void> {
   const pre = block.querySelector('pre.mermaid');
   const code = pre ? pre.textContent || '' : (block as HTMLElement).dataset.source || '';
   if (!code) {
     return;
   }
-  const id = `mermaid-${Date.now()}-${index}`;
+  const hash = hashSource(code);
+  if (restoreCachedDiagram(block, `mermaid:${hash}`, code, 'mermaid')) {
+    return;
+  }
 
   try {
-    const { svg } = await mermaid.render(id, code);
+    // The render id is derived from the source hash: identical sources reuse
+    // the id (and its styles) instead of orphaning a fresh set each update.
+    const { svg } = await mermaid.render(`mermaid-${hash}`, code);
     block.innerHTML = svg;
     block.setAttribute('data-processed', 'true');
     (block as HTMLElement).classList.add('mermaid-rendered');
+    cacheStore(`mermaid:${hash}`, { source: code, kind: 'svg', content: svg });
   } catch (err) {
     block.replaceChildren(buildDiagramError(block, 'mermaid', err));
     block.setAttribute('data-processed', 'true');
+    // Cache failures too — the same source would fail the same way on every
+    // keystroke, and the error div is rebuilt with the block's own data-line.
+    cacheStore(`mermaid:${hash}`, {
+      source: code,
+      kind: 'error',
+      content: err instanceof Error ? err.message : String(err),
+    });
   }
 }
 
@@ -200,12 +285,39 @@ async function renderMermaid(): Promise<void> {
   ensureMermaidInitialized(mermaid);
 
   for (let i = 0; i < mermaidBlocks.length; i++) {
-    await renderMermaidBlock(mermaid, mermaidBlocks[i], i);
+    await renderMermaidBlock(mermaid, mermaidBlocks[i]);
   }
+}
+
+// Parse + export one excalidraw source string to its SVG element; throws on
+// malformed JSON or a missing elements array.
+async function exportExcalidrawSvg(
+  ExcalidrawUtils: NonNullable<typeof window.ExcalidrawUtils>,
+  jsonStr: string,
+  isDark: boolean
+): Promise<SVGSVGElement> {
+  const data = JSON.parse(jsonStr);
+
+  if (!data.elements || !Array.isArray(data.elements)) {
+    throw new Error('Invalid Excalidraw data: missing elements array');
+  }
+
+  return ExcalidrawUtils.exportToSvg({
+    data: {
+      elements: data.elements,
+      appState: {
+        ...data.appState,
+        exportWithDarkMode: isDark,
+        viewBackgroundColor: isDark ? '#1e1e1e' : '#ffffff',
+      },
+      files: data.files || null,
+    },
+  });
 }
 
 // Render one .excalidraw-block: parse its source JSON, export to SVG, or show
 // the same readable error div the mermaid path uses (buildDiagramError).
+// Output is cached on the source hash, like the mermaid path (issue #75).
 async function renderExcalidrawBlock(
   ExcalidrawUtils: NonNullable<typeof window.ExcalidrawUtils>,
   block: Element,
@@ -216,33 +328,26 @@ async function renderExcalidrawBlock(
   if (!jsonStr) {
     return;
   }
+  const hash = hashSource(jsonStr);
+  if (restoreCachedDiagram(block, `excalidraw:${hash}`, jsonStr, 'excalidraw')) {
+    return;
+  }
 
   try {
-    const data = JSON.parse(jsonStr);
-
-    if (!data.elements || !Array.isArray(data.elements)) {
-      throw new Error('Invalid Excalidraw data: missing elements array');
-    }
-
-    const svg = await ExcalidrawUtils.exportToSvg({
-      data: {
-        elements: data.elements,
-        appState: {
-          ...data.appState,
-          exportWithDarkMode: isDark,
-          viewBackgroundColor: isDark ? '#1e1e1e' : '#ffffff',
-        },
-        files: data.files || null,
-      },
-    });
-
+    const svg = await exportExcalidrawSvg(ExcalidrawUtils, jsonStr, isDark);
     block.innerHTML = '';
     block.appendChild(svg);
     block.setAttribute('data-processed', 'true');
     (block as HTMLElement).classList.add('excalidraw-rendered');
+    cacheStore(`excalidraw:${hash}`, { source: jsonStr, kind: 'svg', content: svg.outerHTML });
   } catch (err) {
     block.replaceChildren(buildDiagramError(block, 'excalidraw', err));
     block.setAttribute('data-processed', 'true');
+    cacheStore(`excalidraw:${hash}`, {
+      source: jsonStr,
+      kind: 'error',
+      content: err instanceof Error ? err.message : String(err),
+    });
   }
 }
 
@@ -316,6 +421,9 @@ export function watchThemeChanges(): void {
     themeChangeTimer = setTimeout(() => {
       themeChangeTimer = null;
       mermaidInitialized = false;
+      // Dark/light changes what every diagram renders to — cached output is
+      // only valid under the theme that produced it.
+      diagramCache.clear();
 
       // Re-render mermaid diagrams
       if (currentConfig.enableMermaid) {

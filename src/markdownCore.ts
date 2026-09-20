@@ -1,6 +1,6 @@
 import MarkdownIt from 'markdown-it';
 import type { RendererRule, Token } from 'markdown-it';
-import hljs from 'highlight.js';
+import hljs from './hljsLanguages';
 
 // Shared markdown-it rendering pipeline for Markdown Preview Pro. This module
 // is vscode-free on purpose: webpack compiles it to dist/markdownCore.js

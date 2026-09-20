@@ -36,7 +36,7 @@ export const CHROME_LAUNCH_ARGS = ['--disable-gpu'];
 export async function launchBrowser(): Promise<Browser> {
   const chromePath = findChromePath();
   // Dynamic import to lazy-load puppeteer-core and avoid slowing extension activation
-  const puppeteer = await import('puppeteer-core');
+  const puppeteer = await import(/* webpackChunkName: "puppeteer" */ 'puppeteer-core');
   return puppeteer.launch({
     executablePath: chromePath,
     headless: true,

@@ -2,7 +2,6 @@
 'use strict';
 
 const path = require('path');
-const webpack = require('webpack');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const CopyPlugin = require('copy-webpack-plugin');
 
@@ -15,14 +14,22 @@ const extensionConfig = {
     path: path.resolve(__dirname, 'dist'),
     filename: 'extension.js',
     libraryTarget: 'commonjs2',
+    // Wipe stale output (including lazy chunks from a previous mode's build)
+    // before this config emits — the first config in the array owns cleaning.
+    // The keep patterns preserve what the sibling configs emit into the same
+    // directory (dist/markdownCore.js, dist/webview/), whichever order the
+    // MultiCompiler runs the emits in.
+    clean: { keep: /^webview\/|^markdownCore\.js/ },
   },
   externals: {
     vscode: 'commonjs vscode',
   },
-  plugins: [
-    // Force everything into a single chunk - VS Code extensions must be a single file
-    new webpack.optimize.LimitChunkCountPlugin({ maxChunks: 1 }),
-  ],
+  // No LimitChunkCountPlugin: the two heavy export-only deps behind
+  // `await import()` (jsdom, puppeteer-core) emit as separate lazy chunks in
+  // dist/ and are require()'d on first export, instead of inflating
+  // dist/extension.js — the activation-time bundle (issue #73). Synchronous
+  // imports still land in the single entry chunk.
+  plugins: [],
   resolve: {
     extensions: ['.ts', '.js'],
   },
@@ -66,11 +73,20 @@ const sharedCoreConfig = {
     filename: 'markdownCore.js',
     libraryTarget: 'commonjs2',
   },
-  externals: {
-    'markdown-it': 'commonjs markdown-it',
-    'highlight.js': 'commonjs highlight.js',
-    yaml: 'commonjs yaml',
-  },
+  externals: [
+    {
+      'markdown-it': 'commonjs markdown-it',
+      yaml: 'commonjs yaml',
+    },
+    // highlight.js resolves from node_modules like the other runtime deps —
+    // lib/core plus the grammar subset src/hljsLanguages.ts registers.
+    ({ request }, callback) => {
+      if (request === 'highlight.js' || request.startsWith('highlight.js/')) {
+        return callback(null, `commonjs ${request}`);
+      }
+      callback();
+    },
+  ],
   resolve: {
     extensions: ['.ts', '.js'],
   },

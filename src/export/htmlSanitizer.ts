@@ -25,7 +25,7 @@ let sanitizer: DOMPurify | undefined;
 
 async function getSanitizer(): Promise<DOMPurify> {
   if (!sanitizer) {
-    const { JSDOM } = await import('jsdom');
+    const { JSDOM } = await import(/* webpackChunkName: "jsdom" */ 'jsdom');
     const window: DOMWindow = new JSDOM('').window;
     sanitizer = createDOMPurify(window as unknown as WindowLike);
   }
