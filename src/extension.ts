@@ -41,6 +41,9 @@ export function activate(context: vscode.ExtensionContext) {
     console.log('[Markdown Preview Pro] Activation complete');
   } catch (error) {
     console.error('[Markdown Preview Pro] Activation FAILED:', error);
+    const message = error instanceof Error ? error.message : String(error);
+    vscode.window.showErrorMessage(`Markdown Preview Pro failed to activate: ${message}`);
+    throw error;
   }
 }
 
