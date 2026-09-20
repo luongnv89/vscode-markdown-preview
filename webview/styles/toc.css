@@ -102,10 +102,12 @@ body.toc-open #preview-content {
   color: var(--accent-color);
 }
 
-/* Responsive: hide on narrow views */
+/* Responsive: overlay drawer on narrow views. The sidebar used to be
+   display:none here while toggleToc() still marked the button active —
+   asserting a state that was not true. As a drawer it stays openable. */
 @media (max-width: 500px) {
   .toc-sidebar {
-    display: none !important;
+    max-width: 85vw;
   }
   body.toc-open #preview-content {
     margin-left: 0;
@@ -115,7 +117,7 @@ body.toc-open #preview-content {
 /* Hide in print */
 @media print {
   .toc-sidebar {
-    display: none !important;
+    display: none;
   }
   body.toc-open #preview-content {
     margin-left: 0;

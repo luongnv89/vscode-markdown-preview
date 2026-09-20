@@ -15,6 +15,7 @@ export function initToc(): void {
 
 export function setTocToggleButton(button: HTMLButtonElement): void {
   toggleButton = button;
+  toggleButton.setAttribute('aria-pressed', 'false');
 }
 
 export function toggleToc(): void {
@@ -22,6 +23,7 @@ export function toggleToc(): void {
   const isVisible = sidebar.classList.toggle('toc-visible');
   document.body.classList.toggle('toc-open', isVisible);
   toggleButton?.classList.toggle('toc-toggle-active', isVisible);
+  toggleButton?.setAttribute('aria-pressed', String(isVisible));
 }
 
 interface TocEntry {

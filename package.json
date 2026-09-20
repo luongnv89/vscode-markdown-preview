@@ -116,6 +116,18 @@
           "command": "markdownPreviewPro.exportToPdf",
           "group": "export@2"
         }
+      ],
+      "webview/context": [
+        {
+          "when": "webviewId == 'markdownPreviewPro'",
+          "command": "markdownPreviewPro.exportToHtml",
+          "group": "export@1"
+        },
+        {
+          "when": "webviewId == 'markdownPreviewPro'",
+          "command": "markdownPreviewPro.exportToPdf",
+          "group": "export@2"
+        }
       ]
     },
     "configuration": {

@@ -5,25 +5,32 @@
   right: 16px;
   z-index: 1000;
   display: flex;
-  gap: 2px;
+  gap: 6px;
   padding: 4px;
   background: var(--bg-primary);
   border: 1px solid var(--border-color);
   border-radius: 6px;
-  opacity: 0.4;
+  /* Resting 0.95 keeps the muted icon colour above the 4.5:1 contrast floor
+     against the toolbar background (0.85 was still only ~4.0:1 once the
+     composited value is measured). */
+  opacity: 0.95;
   transition: opacity 0.2s ease;
 }
 
-.preview-toolbar:hover {
+.preview-toolbar:hover,
+.preview-toolbar:focus-within {
   opacity: 1;
 }
 
 .toolbar-button {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 28px;
-  height: 28px;
+  gap: 6px;
+  width: 32px;
+  min-width: 32px;
+  height: 32px;
   padding: 0;
   border: none;
   border-radius: 4px;
@@ -40,9 +47,49 @@
   color: var(--fg-primary);
 }
 
+.toolbar-button:focus-visible {
+  outline: 2px solid var(--accent-color);
+  outline-offset: 1px;
+}
+
+/* Buttons that carry a persistent text label next to their icon. */
+.toolbar-button--labeled {
+  width: auto;
+  padding: 0 8px;
+}
+
+.toolbar-button-label {
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+/* Icon-only buttons surface their label on hover/focus — an immediate
+   CSS tooltip instead of the ~1s native `title` delay. */
+.toolbar-button[data-label]:hover::after,
+.toolbar-button[data-label]:focus-visible::after {
+  content: attr(data-label);
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  padding: 3px 8px;
+  background: var(--bg-primary);
+  color: var(--fg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  font-size: 11px;
+  font-weight: 400;
+  line-height: 1.4;
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 1001;
+}
+
 .toolbar-button svg {
   width: 16px;
   height: 16px;
+  flex: 0 0 auto;
 }
 
 /* Theme overrides - Light */
@@ -88,7 +135,7 @@ body.preview-theme-dark {
   width: 1px;
   height: 18px;
   background: var(--border-color);
-  margin: 5px 2px;
+  margin: 7px 2px;
 }
 
 /* About Popup */
