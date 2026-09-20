@@ -118,18 +118,51 @@ interface VendorScriptContents {
   excalidrawJs: string;
 }
 
-// A disabled engine's vendor runtime is not embedded at all — its diagram
-// fences rendered as plain code blocks upstream, so nothing references it.
+// Feature flags that can force a renderer off even when its placeholder
+// markup is present — a disabled engine emits no placeholders upstream
+// (markdownCore.ts), so the flag check is defense in depth, not the gate.
+type ExportFeatureFlags = Partial<
+  Pick<PreviewConfig, 'enableKatex' | 'enableMermaid' | 'enableExcalidraw'>
+>;
+
+// Which client-side runtimes the exported document actually uses. Each
+// renderer's vendor bundle (~26 MB combined) is read from disk and inlined
+// only when the document carries its placeholder markup; KaTeX additionally
+// gates its stylesheet and the base64 font embedding (~1.4 MB of output).
+interface ExportAssetNeeds {
+  math: boolean;
+  mermaid: boolean;
+  excalidraw: boolean;
+}
+
+// Detection runs on the sanitized markup — post-DOMPurify — so it counts
+// exactly the placeholders the render script will find. The match requires a
+// class attribute (`class="…katex-block…"`), so prose merely mentioning a
+// class name cannot trigger an embed; the classes are the same selectors the
+// render script queries (`.katex-inline[data-math]`, `.mermaid-block`,
+// `.excalidraw-block`).
+function detectExportAssetNeeds(
+  sanitizedHtml: string,
+  features: Required<ExportFeatureFlags>
+): ExportAssetNeeds {
+  return {
+    math: features.enableKatex && /class="[^"]*\bkatex-(?:inline|block)\b/.test(sanitizedHtml),
+    mermaid: features.enableMermaid && /class="[^"]*\bmermaid-block\b/.test(sanitizedHtml),
+    excalidraw: features.enableExcalidraw && /class="[^"]*\bexcalidraw-block\b/.test(sanitizedHtml),
+  };
+}
+
+// A runtime the document does not reference is not embedded at all — its
+// fences rendered as plain code blocks, or no such fences exist.
 function buildVendorScriptTags(
   nonce: string,
   scripts: VendorScriptContents,
-  enableMermaid: boolean,
-  enableExcalidraw: boolean
+  needs: ExportAssetNeeds
 ): string {
   return [
-    `  <script nonce="${nonce}">${scripts.katexJs}</script>`,
-    enableMermaid ? `  <script nonce="${nonce}">${scripts.mermaidJs}</script>` : '',
-    enableExcalidraw ? `  <script nonce="${nonce}">${scripts.excalidrawJs}</script>` : '',
+    needs.math ? `  <script nonce="${nonce}">${scripts.katexJs}</script>` : '',
+    needs.mermaid ? `  <script nonce="${nonce}">${scripts.mermaidJs}</script>` : '',
+    needs.excalidraw ? `  <script nonce="${nonce}">${scripts.excalidrawJs}</script>` : '',
   ]
     .filter(Boolean)
     .join('\n');
@@ -142,15 +175,22 @@ export class StandaloneHtmlBuilder {
     // can observe it; production wiring is vscode.window.showWarningMessage.
     private readonly warn: (message: string) => void = (message) => {
       void vscode.window.showWarningMessage(message);
-    }
+    },
+    // Injectable so tests can observe which files an export actually reads —
+    // asset gating must skip the disk read, not just the embed. Defaults to
+    // the real fs.promises.readFile (Buffer form; text callers decode).
+    private readonly readFile: (filePath: string) => Promise<Buffer> = (filePath) =>
+      fs.readFile(filePath)
   ) {}
 
   /**
    * Build HTML with vendor scripts for Puppeteer rendering.
-   * This includes mermaid.js and katex.js so the headless browser can render them.
-   * `features` carries the markdownPreviewPro.enable* flags: a disabled diagram
-   * engine emits no diagram blocks, so its vendor runtime is neither read from
-   * disk nor embedded in the exported document.
+   * Only the runtimes the rendered document actually uses are read and
+   * inlined: a document with no math gets no KaTeX script, stylesheet or
+   * embedded fonts, and a document with no mermaid/excalidraw blocks gets
+   * neither diagram bundle. `features` carries the markdownPreviewPro.enable*
+   * flags as a second gate: a disabled engine emits no placeholders upstream,
+   * and its vendor runtime is never embedded even if markup claims otherwise.
    *
    * The rendered markdown is sanitized BEFORE it is embedded: the markdown
    * engine renders with `html: true`, so raw author markup (scripts, event
@@ -163,23 +203,31 @@ export class StandaloneHtmlBuilder {
     markdownHtml: string,
     title: string,
     documentUri: vscode.Uri,
-    features?: Pick<PreviewConfig, 'enableMermaid' | 'enableExcalidraw'>
+    features?: ExportFeatureFlags
   ): Promise<string> {
     const nonce = getNonce();
-    const enableMermaid = features?.enableMermaid ?? true;
-    const enableExcalidraw = features?.enableExcalidraw ?? true;
+    const flags: Required<ExportFeatureFlags> = {
+      enableKatex: features?.enableKatex ?? true,
+      enableMermaid: features?.enableMermaid ?? true,
+      enableExcalidraw: features?.enableExcalidraw ?? true,
+    };
     const contentSecurityPolicy = buildExportContentSecurityPolicy(nonce);
 
-    const css = await this.getCombinedCss();
     // Embed local images as data: URIs first (a trusted transform of our own),
     // then sanitize: DOMPurify keeps data: image URIs but strips file-system
     // paths (and would drop Windows-style C:\... srcs), so embedding before
     // sanitizing preserves images across platforms.
     const htmlWithEmbeddedImages = await this.embedImages(markdownHtml, documentUri);
     const sanitizedHtml = await sanitizeExportHtml(htmlWithEmbeddedImages);
-    const vendorJs = await this.readVendorScripts(enableMermaid, enableExcalidraw);
+    // Content gating happens on the sanitized markup: it is exactly what the
+    // headless browser will render, so a placeholder that would not survive
+    // sanitization never triggers an asset embed.
+    const needs = detectExportAssetNeeds(sanitizedHtml, flags);
+
+    const css = await this.getCombinedCss(needs.math);
+    const vendorJs = await this.readVendorScripts(needs);
     const renderScript = buildRenderScript(nonce);
-    const vendorScripts = buildVendorScriptTags(nonce, vendorJs, enableMermaid, enableExcalidraw);
+    const vendorScripts = buildVendorScriptTags(nonce, vendorJs, needs);
 
     return `<!DOCTYPE html>
 <html lang="en">
@@ -202,32 +250,33 @@ ${sanitizedHtml}
 </html>`;
   }
 
-  // Read the vendor runtimes the export embeds — a disabled diagram engine is
-  // skipped entirely, and every read failure degrades to an empty string so
-  // the export still completes without that runtime.
-  private async readVendorScripts(
-    enableMermaid: boolean,
-    enableExcalidraw: boolean
-  ): Promise<VendorScriptContents> {
+  // Read the vendor runtimes the export embeds — a runtime the document does
+  // not use is never opened, and every read failure degrades to an empty
+  // string so the export still completes without that runtime.
+  private async readVendorScripts(needs: ExportAssetNeeds): Promise<VendorScriptContents> {
     const vendorDir = path.join(this.extensionUri.fsPath, 'dist', 'webview', 'vendor');
     let katexJs = '';
     let mermaidJs = '';
     let excalidrawJs = '';
-    try {
-      katexJs = await fs.readFile(path.join(vendorDir, 'katex.min.js'), 'utf-8');
-    } catch {
-      // KaTeX not available
-    }
-    if (enableMermaid) {
+    if (needs.math) {
       try {
-        mermaidJs = await fs.readFile(path.join(vendorDir, 'mermaid.min.js'), 'utf-8');
+        katexJs = (await this.readFile(path.join(vendorDir, 'katex.min.js'))).toString('utf-8');
+      } catch {
+        // KaTeX not available
+      }
+    }
+    if (needs.mermaid) {
+      try {
+        mermaidJs = (await this.readFile(path.join(vendorDir, 'mermaid.min.js'))).toString('utf-8');
       } catch {
         // Mermaid not available
       }
     }
-    if (enableExcalidraw) {
+    if (needs.excalidraw) {
       try {
-        excalidrawJs = await fs.readFile(path.join(vendorDir, 'excalidraw-utils.min.js'), 'utf-8');
+        excalidrawJs = (
+          await this.readFile(path.join(vendorDir, 'excalidraw-utils.min.js'))
+        ).toString('utf-8');
       } catch {
         // Excalidraw not available
       }
@@ -235,54 +284,67 @@ ${sanitizedHtml}
     return { katexJs, mermaidJs, excalidrawJs };
   }
 
-  private async getCombinedCss(): Promise<string> {
+  private async getCombinedCss(includeKatexAssets: boolean): Promise<string> {
     const parts: string[] = [];
 
-    // Read vendor CSS
+    // KaTeX's stylesheet ships the @font-face rules whose url(fonts/…) refs
+    // embedFonts inlines — without math in the document, neither the CSS nor
+    // the ~1.4 MB of base64 font data is needed.
     const vendorDir = path.join(this.extensionUri.fsPath, 'dist', 'webview', 'vendor');
-    for (const file of ['katex.min.css']) {
-      try {
-        const css = await fs.readFile(path.join(vendorDir, file), 'utf-8');
-        parts.push(`/* ${file} */\n${css}`);
-      } catch {
-        // Vendor file not available
-      }
-    }
-
-    // Read bundled main.css (contains all webview styles)
-    const mainCssPath = path.join(this.extensionUri.fsPath, 'dist', 'webview', 'main.css');
-    try {
-      const css = await fs.readFile(mainCssPath, 'utf-8');
-      parts.push(`/* main.css */\n${css}`);
-    } catch {
-      // Fall back to reading source CSS files
-      const stylesDir = path.join(this.extensionUri.fsPath, 'webview', 'styles');
-      for (const file of [
-        'main.css',
-        'markdown.css',
-        'code.css',
-        'mermaid.css',
-        'excalidraw.css',
-        'highlight.css',
-      ]) {
+    if (includeKatexAssets) {
+      for (const file of ['katex.min.css']) {
         try {
-          const css = await fs.readFile(path.join(stylesDir, file), 'utf-8');
+          const css = (await this.readFile(path.join(vendorDir, file))).toString('utf-8');
           parts.push(`/* ${file} */\n${css}`);
         } catch {
-          // Style file not available
+          // Vendor file not available
         }
       }
     }
 
-    // Embed KaTeX fonts as base64
-    const fontsDir = path.join(vendorDir, 'fonts');
+    await this.pushMainCss(parts);
+
     let combined = parts.join('\n\n');
-    combined = await this.embedFonts(combined, fontsDir);
+    // url(fonts/…) references only ever come from katex.min.css, so the font
+    // embedding is gated on the same flag that included that stylesheet.
+    if (includeKatexAssets) {
+      const fontsDir = path.join(vendorDir, 'fonts');
+      combined = await this.embedFonts(combined, fontsDir);
+    }
 
     // Replace VS Code theme variables with sensible defaults for standalone
     combined = this.replaceThemeVariables(combined);
 
     return combined;
+  }
+
+  // Bundled main.css carries all webview styles; when the webpack output is
+  // absent the source stylesheets are the fallback.
+  private async pushMainCss(parts: string[]): Promise<void> {
+    const mainCssPath = path.join(this.extensionUri.fsPath, 'dist', 'webview', 'main.css');
+    try {
+      const css = (await this.readFile(mainCssPath)).toString('utf-8');
+      parts.push(`/* main.css */\n${css}`);
+      return;
+    } catch {
+      // Fall back to reading source CSS files
+    }
+    const stylesDir = path.join(this.extensionUri.fsPath, 'webview', 'styles');
+    for (const file of [
+      'main.css',
+      'markdown.css',
+      'code.css',
+      'mermaid.css',
+      'excalidraw.css',
+      'highlight.css',
+    ]) {
+      try {
+        const css = (await this.readFile(path.join(stylesDir, file))).toString('utf-8');
+        parts.push(`/* ${file} */\n${css}`);
+      } catch {
+        // Style file not available
+      }
+    }
   }
 
   private async embedFonts(css: string, fontsDir: string): Promise<string> {
@@ -294,7 +356,7 @@ ${sanitizedHtml}
       const fontFile = match[1];
       const fontPath = path.join(fontsDir, fontFile);
       try {
-        const fontData = await fs.readFile(fontPath);
+        const fontData = await this.readFile(fontPath);
         const ext = path.extname(fontFile).slice(1);
         const mimeType = this.getFontMimeType(ext);
         const base64 = fontData.toString('base64');
@@ -415,7 +477,7 @@ ${sanitizedHtml}
       }
 
       try {
-        const imageData = await fs.readFile(filePath);
+        const imageData = await this.readFile(filePath);
         const ext = path.extname(filePath).slice(1).toLowerCase();
         const mimeType = this.getImageMimeType(ext);
         const base64 = imageData.toString('base64');
