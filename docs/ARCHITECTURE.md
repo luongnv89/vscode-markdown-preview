@@ -41,16 +41,20 @@ graph LR
 
 Runs in Node.js within VS Code's extension host process.
 
-| File                 | Responsibility                                                                                                       |
-| -------------------- | -------------------------------------------------------------------------------------------------------------------- |
-| `extension.ts`       | Entry point, registers commands                                                                                      |
-| `previewManager.ts`  | Creates/manages webview panels, handles lifecycle                                                                    |
-| `markdownEngine.ts`  | Renders markdown to HTML; adds the vscode seam (image URI resolution, frontmatter) over the shared core              |
-| `markdownCore.ts`    | vscode-free shared markdown-it pipeline — also compiled to `dist/markdownCore.js` for `scripts/generate-landing.cjs` |
-| `checkboxHandler.ts` | Syncs checkbox state changes back to the source document                                                             |
-| `scrollSync.ts`      | Calculates scroll positions from editor cursor                                                                       |
-| `utils/config.ts`    | Reads VS Code configuration settings                                                                                 |
-| `utils/uri.ts`       | Resolves local image and resource URIs                                                                               |
+| File                      | Responsibility                                                                                                       |
+| ------------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| `extension.ts`            | Entry point, registers commands                                                                                      |
+| `previewManager.ts`       | Creates/manages webview panels, handles lifecycle; delegates messages and events to the modules below                |
+| `messageRouter.ts`        | Webview → extension message dispatch table and per-type handlers (`routeWebviewMessage`)                             |
+| `previewEventBindings.ts` | Registers the workspace/webview event subscriptions against a narrow `PreviewEventHost` interface                    |
+| `markdownEngine.ts`       | Renders markdown to HTML; adds the vscode seam (image URI resolution, frontmatter) over the shared core              |
+| `markdownCore.ts`         | vscode-free shared markdown-it pipeline — also compiled to `dist/markdownCore.js` for `scripts/generate-landing.cjs` |
+| `checkboxHandler.ts`      | Syncs checkbox state changes back to the source document                                                             |
+| `scrollSync.ts`           | Calculates scroll positions from editor cursor                                                                       |
+| `utils/config.ts`         | Reads VS Code configuration settings                                                                                 |
+| `utils/uri.ts`            | Resolves local image and resource URIs                                                                               |
+| `utils/aboutInfo.ts`      | Collects the About-popup metadata (package.json version/publisher/repo + git short SHA)                              |
+| `utils/webviewHtml.ts`    | Builds the webview HTML document (CSP meta, nonce, feature-flagged vendor scripts)                                   |
 
 ## Webview (`webview/`)
 

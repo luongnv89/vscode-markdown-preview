@@ -135,7 +135,7 @@ interface PreviewConfig {
 
 ### `PreviewManager` (`src/previewManager.ts`)
 
-Central class that manages the preview panel lifecycle and coordinates all extension-side logic.
+Central class that manages the preview panel lifecycle and coordinates all extension-side logic. Webview → extension messages are dispatched by the `webviewMessageHandlers` table in `src/messageRouter.ts` (via `routeWebviewMessage`), and the event subscriptions below are registered by `setupPreviewEventListeners` in `src/previewEventBindings.ts` — both drive the manager through narrow `PreviewMessageContext` / `PreviewEventHost` interfaces it implements.
 
 | Method                      | Description                                 |
 | --------------------------- | ------------------------------------------- |
