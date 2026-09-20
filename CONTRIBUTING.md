@@ -14,7 +14,7 @@ Thank you for your interest in contributing! This guide will help you get starte
 
 ### Prerequisites
 
-- [Node.js](https://nodejs.org/) >= 20 (see `engines.node` in `package.json`; `.nvmrc` pins the CI version)
+- [Node.js](https://nodejs.org/) >= 24 (see `engines.node` in `package.json`; `.nvmrc` pins the CI version)
 - [VS Code](https://code.visualstudio.com/) >= 1.85.0
 - [Git](https://git-scm.com/)
 

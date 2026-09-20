@@ -9,7 +9,7 @@
 
 ## Commands
 
-- Install: `npm ci` — Node 20 (the CI pin, also in `.nvmrc`; `engines.node` declares `>=20.0.0`) or newer LTS; no `.env.example` exists.
+- Install: `npm ci` — Node 24 (the CI pin, also in `.nvmrc`; `engines.node` declares `>=24.0.0`) or newer LTS; no `.env.example` exists.
 - Dev build: `npm run compile` — one-time Webpack build into `dist/` (`npm run watch` for rebuild-on-change).
 - Production build: `npm run package` — optimized bundle with hidden source maps.
 - Lint: `npm run lint` — ESLint over `src/` and `webview/`.
