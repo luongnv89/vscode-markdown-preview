@@ -37,7 +37,7 @@
 
 ## Conventions
 
-- Webpack emits three bundles: `dist/extension.js` (CommonJS/Node), `dist/markdownCore.js` (CommonJS shared engine, consumed by `scripts/generate-landing.cjs`), and `dist/webview/main.js` + `main.css`; vendor assets are copied to `dist/webview/vendor/`.
+- Webpack emits three bundles: `dist/extension.js` (CommonJS/Node — export-only deps like jsdom/puppeteer-core stay behind `await import()` as lazy `dist/*.extension.js` chunks), `dist/markdownCore.js` (CommonJS shared engine, consumed by `scripts/generate-landing.cjs`), and `dist/webview/main.js` + `main.css`; vendor assets are copied to `dist/webview/vendor/`.
 - Prettier and oxlint are the style authority — never hand-tune formatting they enforce.
 
 ## Done when
