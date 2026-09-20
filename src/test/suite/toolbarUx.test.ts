@@ -66,6 +66,10 @@ interface TestDocument {
 interface ToolbarModule {
   initToolbar(vscode: unknown): void;
 }
+interface RendererModule {
+  watchThemeChanges(): { disconnect(): void };
+  THEME_CHANGE_DEBOUNCE: number;
+}
 interface TocModule {
   initToc(): void;
   setTocToggleButton(button: TestElement): void;
@@ -73,6 +77,12 @@ interface TocModule {
 }
 interface DomUtilsModule {
   createButton(icon: string, title: string, onClick: () => void, label?: string): TestElement;
+}
+interface TestWindow {
+  MutationObserver: unknown;
+  IntersectionObserver?: unknown;
+  setTimeout(handler: () => void, timeout: number): number;
+  clearTimeout(id: number): void;
 }
 
 interface FakeVscodeState {
@@ -104,16 +114,30 @@ function fakeVscode(initial?: FakeVscodeState): FakeVscode {
   return fake;
 }
 
-function makeDocument(): TestDocument {
+function makeDom(): { document: TestDocument; window: TestWindow } {
   const dom = new JSDOM('<!doctype html><html><body></body></html>');
-  return dom.window.document as unknown as TestDocument;
+  return {
+    document: dom.window.document as unknown as TestDocument,
+    window: dom.window as unknown as TestWindow,
+  };
+}
+
+function makeDocument(): TestDocument {
+  return makeDom().document;
+}
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 // A tiny CommonJS loader: transpile each webview/*.ts with the bundled
 // esbuild and evaluate it with the jsdom globals the webview runs under.
 // The webview layer only has relative './x' imports, so the resolver is a
-// path join.
-function loadWebviewModule<T>(entry: string, document: TestDocument): T {
+// path join. Shared cache so toolbar + renderer hold the same currentTheme.
+function createWebviewLoader(
+  document: TestDocument,
+  view?: TestWindow
+): { load<T>(entry: string): T } {
   const cache = new Map<string, { exports: unknown }>();
   const load = (absNoExt: string): unknown => {
     const abs = absNoExt.endsWith('.ts') ? absNoExt : `${absNoExt}.ts`;
@@ -147,10 +171,26 @@ function loadWebviewModule<T>(entry: string, document: TestDocument): T {
       'MutationObserver',
       code
     );
-    fn(module, module.exports, localRequire, document, undefined, undefined, undefined);
+    fn(
+      module,
+      module.exports,
+      localRequire,
+      document,
+      view,
+      view?.IntersectionObserver,
+      view?.MutationObserver
+    );
     return module.exports;
   };
-  return load(path.join(webviewDir, entry)) as T;
+  return {
+    load<T>(entry: string): T {
+      return load(path.join(webviewDir, entry)) as T;
+    },
+  };
+}
+
+function loadWebviewModule<T>(entry: string, document: TestDocument, view?: TestWindow): T {
+  return createWebviewLoader(document, view).load<T>(entry);
 }
 
 // --- CSS helpers -----------------------------------------------------------
@@ -353,7 +393,14 @@ suite('preview toolbar UX (#66, #67, #69)', () => {
       document.body.classList.add('vscode-dark');
       const vscode = fakeVscode();
       loadWebviewModule<ToolbarModule>('toolbar.ts', document).initToolbar(vscode);
-      assert.ok(document.body.classList.contains('preview-theme-dark'), 'dark theme not applied');
+      assert.ok(
+        !document.body.classList.contains('preview-theme-dark'),
+        'follow-host init must not pin preview-theme-dark'
+      );
+      assert.ok(
+        !document.body.classList.contains('preview-theme-light'),
+        'follow-host init must not pin preview-theme-light'
+      );
 
       const themeButton = Array.from(document.querySelectorAll('.toolbar-button')).find(
         (b) => b.getAttribute('aria-label') === 'Switch to light theme'
@@ -421,6 +468,124 @@ suite('preview toolbar UX (#66, #67, #69)', () => {
       assert.strictEqual(button.classList.contains('toc-toggle-active'), false);
       assert.strictEqual(button.getAttribute('aria-pressed'), 'false');
       assert.ok(!document.body.classList.contains('toc-open'));
+    });
+  });
+
+  suite('GitHub Dark follow-host (#4)', () => {
+    test('vscode-dark with no persisted theme does not pin a preview-theme overlay', () => {
+      const document = makeDocument();
+      document.body.classList.add('vscode-dark');
+      const vscode = fakeVscode();
+      loadWebviewModule<ToolbarModule>('toolbar.ts', document).initToolbar(vscode);
+
+      assert.ok(
+        !document.body.classList.contains('preview-theme-light'),
+        'GitHub Dark init pinned preview-theme-light'
+      );
+      assert.ok(
+        !document.body.classList.contains('preview-theme-dark'),
+        'GitHub Dark init pinned preview-theme-dark over host tokens'
+      );
+      assert.strictEqual(vscode.state?.theme, undefined, 'follow-host must not persist a theme');
+
+      const themeButton = Array.from(document.querySelectorAll('.toolbar-button')).find((b) =>
+        (b.getAttribute('aria-label') || '').includes('theme')
+      )!;
+      assert.strictEqual(
+        themeButton.getAttribute('aria-label'),
+        'Switch to light theme',
+        'toolbar chrome should reflect host dark without an overlay pin'
+      );
+    });
+
+    test('unpinned body keeps host editor tokens; Primer hex is overlay-only', () => {
+      const toolbarCss = readRepoFile('webview/styles/toolbar.css');
+      const mainCss = readRepoFile('webview/styles/main.css');
+      const rootBlock = cssBlock(mainCss, ':root');
+      assert.ok(
+        decl(rootBlock, '--bg-primary').includes('--vscode-editor-background'),
+        ':root --bg-primary must follow --vscode-editor-background'
+      );
+      assert.ok(
+        decl(rootBlock, '--fg-primary').includes('--vscode-editor-foreground'),
+        ':root --fg-primary must follow --vscode-editor-foreground'
+      );
+      assert.ok(
+        !/body\.vscode-dark[^{]*\{[^}]*--bg-primary\s*:/.test(toolbarCss),
+        'toolbar.css must not freeze Primer --bg-primary on unpinned vscode-dark'
+      );
+      assert.match(toolbarCss, /body\.preview-theme-light\s*\{/);
+      assert.match(toolbarCss, /body\.preview-theme-dark\s*\{/);
+    });
+
+    test('vscode-dark hljs applies unless an explicit preview-theme overlay is present', () => {
+      const css = readRepoFile('webview/styles/code.css');
+      assert.ok(
+        /body\.vscode-dark:not\(\.preview-theme-light\):not\(\.preview-theme-dark\)/.test(css),
+        'vscode-dark hljs is not gated off explicit preview-theme overlay'
+      );
+      assert.match(css, /body\.preview-theme-light\s+\.hljs/);
+      assert.match(css, /body\.preview-theme-dark\s+\.hljs/);
+    });
+
+    test('persist undefined + vscode-dark class-swap drops a stale overlay', async () => {
+      const { document, window } = makeDom();
+      document.body.classList.add('vscode-light');
+      document.body.classList.add('preview-theme-light');
+      const renderer = loadWebviewModule<RendererModule>('renderer.ts', document, window);
+      const observer = renderer.watchThemeChanges();
+
+      document.body.classList.remove('vscode-light');
+      document.body.classList.add('vscode-dark');
+      await sleep(renderer.THEME_CHANGE_DEBOUNCE + 40);
+      observer.disconnect();
+
+      assert.ok(
+        !document.body.classList.contains('preview-theme-light'),
+        'stale light overlay survived vscode-dark host switch'
+      );
+      assert.ok(
+        !document.body.classList.contains('preview-theme-dark'),
+        'class-swap pinned preview-theme-dark instead of following the host'
+      );
+    });
+
+    test('follow-host vscode-dark class-swap resyncs theme button chrome', async () => {
+      const { document, window } = makeDom();
+      document.body.classList.add('vscode-light');
+      const vscode = fakeVscode();
+      const loader = createWebviewLoader(document, window);
+      loader.load<ToolbarModule>('toolbar.ts').initToolbar(vscode);
+
+      const themeButton = Array.from(document.querySelectorAll('.toolbar-button')).find((b) =>
+        (b.getAttribute('aria-label') || '').includes('theme')
+      )!;
+      assert.strictEqual(themeButton.getAttribute('aria-label'), 'Switch to dark theme');
+      assert.strictEqual(themeButton.getAttribute('aria-pressed'), 'false');
+      assert.strictEqual(themeButton.dataset.label, 'Switch to dark theme');
+
+      const renderer = loader.load<RendererModule>('renderer.ts');
+      const observer = renderer.watchThemeChanges();
+      document.body.classList.remove('vscode-light');
+      document.body.classList.add('vscode-dark');
+      await sleep(renderer.THEME_CHANGE_DEBOUNCE + 40);
+      observer.disconnect();
+
+      assert.strictEqual(
+        themeButton.getAttribute('aria-label'),
+        'Switch to light theme',
+        'aria-label still announces the pre-swap light action'
+      );
+      assert.strictEqual(
+        themeButton.getAttribute('aria-pressed'),
+        'true',
+        'aria-pressed still reflects the pre-swap light state'
+      );
+      assert.strictEqual(
+        themeButton.dataset.label,
+        'Switch to light theme',
+        'hover tooltip still announces the pre-swap light action'
+      );
     });
   });
 });

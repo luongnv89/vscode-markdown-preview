@@ -1,7 +1,7 @@
 import { toggleToc, setTocToggleButton } from './toc';
 import { toggleStats, setStatsToggleButton } from './statsBar';
 import { enterPresentation } from './presentation';
-import { isDarkTheme } from './theme';
+import { isDarkTheme, setThemeFollowsHost } from './theme';
 import { createButton, createSeparator } from './domUtils';
 import { createAboutButton } from './aboutPopup';
 import {
@@ -16,9 +16,43 @@ import {
 
 type PreviewTheme = 'light' | 'dark';
 
+// Shared with watchThemeChanges so a follow-host vscode-dark swap can rewrite
+// the toggle chrome — currentTheme used to live only in the click closure.
+let currentTheme: PreviewTheme = 'light';
+let themeButtonEl: HTMLButtonElement | undefined;
+
+function themeIcon(theme: PreviewTheme): string {
+  return theme === 'dark' ? sunIcon : moonIcon;
+}
+
+function themeActionLabel(theme: PreviewTheme): string {
+  return theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme';
+}
+
+function syncThemeButtonChrome(): void {
+  if (!themeButtonEl) {
+    return;
+  }
+  themeButtonEl.innerHTML = themeIcon(currentTheme);
+  const label = themeActionLabel(currentTheme);
+  themeButtonEl.title = label;
+  themeButtonEl.setAttribute('aria-label', label);
+  themeButtonEl.dataset.label = label;
+  themeButtonEl.setAttribute('aria-pressed', String(currentTheme === 'dark'));
+}
+
+export function syncThemeButtonFromHost(): void {
+  currentTheme = isDarkTheme() ? 'dark' : 'light';
+  syncThemeButtonChrome();
+}
+
 function applyTheme(theme: PreviewTheme): void {
   document.body.classList.toggle('preview-theme-dark', theme === 'dark');
   document.body.classList.toggle('preview-theme-light', theme === 'light');
+}
+
+function clearThemeOverlay(): void {
+  document.body.classList.remove('preview-theme-dark', 'preview-theme-light');
 }
 
 // The manual toggle's choice survives panel reloads via vscode.setState —
@@ -27,35 +61,26 @@ function persistTheme(vscode: VsCodeApi, theme: PreviewTheme): void {
   vscode.setState({ ...vscode.getState(), theme });
 }
 
-// A persisted manual choice wins; otherwise follow the VS Code theme.
-function initialTheme(vscode: VsCodeApi): PreviewTheme {
+// A persisted manual choice is an explicit overlay; undefined means follow-host.
+function persistedTheme(vscode: VsCodeApi): PreviewTheme | undefined {
   const persisted = vscode.getState()?.theme;
   if (persisted === 'dark' || persisted === 'light') {
     return persisted;
   }
-  return isDarkTheme() ? 'dark' : 'light';
+  return undefined;
 }
 
 function createThemeButton(vscode: VsCodeApi, initial: PreviewTheme): HTMLButtonElement {
-  let currentTheme = initial;
-  const themeButton = createButton(
-    currentTheme === 'dark' ? sunIcon : moonIcon,
-    currentTheme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme',
-    () => {
-      currentTheme = currentTheme === 'dark' ? 'light' : 'dark';
-      applyTheme(currentTheme);
-      persistTheme(vscode, currentTheme);
-      themeButton.innerHTML = currentTheme === 'dark' ? sunIcon : moonIcon;
-      const label = currentTheme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme';
-      themeButton.title = label;
-      themeButton.setAttribute('aria-label', label);
-      // Keep the CSS hover/focus tooltip (attr(data-label)) in sync — it would
-      // otherwise keep announcing the pre-toggle action.
-      themeButton.dataset.label = label;
-      themeButton.setAttribute('aria-pressed', String(currentTheme === 'dark'));
-    }
-  );
-  themeButton.setAttribute('aria-pressed', String(currentTheme === 'dark'));
+  currentTheme = initial;
+  const themeButton = createButton(themeIcon(currentTheme), themeActionLabel(currentTheme), () => {
+    currentTheme = currentTheme === 'dark' ? 'light' : 'dark';
+    setThemeFollowsHost(false);
+    applyTheme(currentTheme);
+    persistTheme(vscode, currentTheme);
+    syncThemeButtonChrome();
+  });
+  themeButtonEl = themeButton;
+  syncThemeButtonChrome();
   return themeButton;
 }
 
@@ -86,8 +111,15 @@ export function initToolbar(vscode: VsCodeApi): void {
   const toolbar = document.createElement('div');
   toolbar.className = 'preview-toolbar';
 
-  const startTheme = initialTheme(vscode);
-  applyTheme(startTheme);
+  const override = persistedTheme(vscode);
+  if (override) {
+    setThemeFollowsHost(false);
+    applyTheme(override);
+  } else {
+    setThemeFollowsHost(true);
+    clearThemeOverlay();
+  }
+  const startTheme = override ?? (isDarkTheme() ? 'dark' : 'light');
 
   const tocButton = createButton(listIcon, 'Toggle Table of Contents', toggleToc);
   setTocToggleButton(tocButton);

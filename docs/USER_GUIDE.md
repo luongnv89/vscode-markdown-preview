@@ -13,7 +13,7 @@ You can also:
 
 ## Syntax Highlighting
 
-Code blocks are highlighted automatically using highlight.js with the GitHub Dark theme.
+Code blocks are highlighted automatically using highlight.js. Colors follow your VS Code theme (including GitHub Dark); the preview toolbar can pin a light or dark overlay.
 
 Specify a language for best results:
 

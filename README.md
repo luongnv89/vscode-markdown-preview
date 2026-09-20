@@ -31,26 +31,26 @@ code --install-extension luongnv89.markdown-preview-pro
 
 ## Features
 
-| Feature                   | Description                                                                          |
-| ------------------------- | ------------------------------------------------------------------------------------ |
-| Syntax Highlighting       | GitHub Dark theme, auto language detection, one-click copy                           |
-| Mermaid Diagrams          | Flowcharts, sequence diagrams, and more via [Mermaid](https://mermaid.js.org/)       |
-| Math Rendering            | Inline and block equations via [KaTeX](https://katex.org/)                           |
-| Interactive Task Lists    | Toggle checkboxes in preview — syncs back to source file                             |
-| Bidirectional Scroll Sync | Editor and preview scroll positions stay in sync                                     |
-| Table of Contents         | Collapsible sidebar listing all headings with scroll-to and active section highlight |
-| Word Count & Stats        | Bottom bar showing word count, character count, and estimated reading time           |
-| Presentation Mode         | Splits content by `---` into slides with keyboard navigation                         |
-| Theme Toggle              | Switch between light and dark preview independently from VS Code theme               |
-| Export to HTML            | Standalone HTML file with diagrams and math fully rendered                           |
-| Export to PDF             | PDF export using Chrome/Chromium                                                     |
-| YAML Frontmatter          | Parse and display frontmatter as a styled, collapsible metadata card                 |
-| Image Support             | Local, workspace-relative, absolute paths, and Excalidraw diagrams                   |
-| Smart Typography          | Smart quotes, em-dashes, and other typographic enhancements                          |
+| Feature                   | Description                                                                                                           |
+| ------------------------- | --------------------------------------------------------------------------------------------------------------------- |
+| Syntax Highlighting       | Follows the VS Code / GitHub Dark editor theme (or a pinned toolbar overlay), auto language detection, one-click copy |
+| Mermaid Diagrams          | Flowcharts, sequence diagrams, and more via [Mermaid](https://mermaid.js.org/)                                        |
+| Math Rendering            | Inline and block equations via [KaTeX](https://katex.org/)                                                            |
+| Interactive Task Lists    | Toggle checkboxes in preview — syncs back to source file                                                              |
+| Bidirectional Scroll Sync | Editor and preview scroll positions stay in sync                                                                      |
+| Table of Contents         | Collapsible sidebar listing all headings with scroll-to and active section highlight                                  |
+| Word Count & Stats        | Bottom bar showing word count, character count, and estimated reading time                                            |
+| Presentation Mode         | Splits content by `---` into slides with keyboard navigation                                                          |
+| Theme Toggle              | Pins an explicit light/dark overlay; with no pin, the preview follows the VS Code color theme                         |
+| Export to HTML            | Standalone HTML file with diagrams and math fully rendered                                                            |
+| Export to PDF             | PDF export using Chrome/Chromium                                                                                      |
+| YAML Frontmatter          | Parse and display frontmatter as a styled, collapsible metadata card                                                  |
+| Image Support             | Local, workspace-relative, absolute paths, and Excalidraw diagrams                                                    |
+| Smart Typography          | Smart quotes, em-dashes, and other typographic enhancements                                                           |
 
 ### Syntax Highlighting
 
-Code blocks are highlighted with the GitHub Dark theme and automatic language detection powered by highlight.js. A one-click copy button appears on every code block.
+Code blocks are highlighted with highlight.js. Colors follow the VS Code editor theme (including GitHub Dark) unless you pin light or dark from the preview toolbar. A one-click copy button appears on every code block.
 
 ### Mermaid Diagrams
 

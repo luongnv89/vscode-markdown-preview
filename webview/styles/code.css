@@ -103,254 +103,278 @@ pre > code {
   background: transparent;
 }
 
-/* ── VS Code light theme ────────────────────────────────────── */
-body.vscode-light .hljs,
-body.vscode-high-contrast-light .hljs {
+/* ── VS Code light theme (host tokens; skipped when an overlay is pinned) ─ */
+body.vscode-light:not(.preview-theme-light):not(.preview-theme-dark) .hljs,
+body.vscode-high-contrast-light:not(.preview-theme-light):not(.preview-theme-dark) .hljs {
   color: #24292e;
 }
-body.vscode-light .hljs-doctag,
-body.vscode-light .hljs-keyword,
-body.vscode-light .hljs-meta .hljs-keyword,
-body.vscode-light .hljs-template-tag,
-body.vscode-light .hljs-template-variable,
-body.vscode-light .hljs-type,
-body.vscode-light .hljs-variable.language_,
-body.vscode-high-contrast-light .hljs-doctag,
-body.vscode-high-contrast-light .hljs-keyword,
-body.vscode-high-contrast-light .hljs-meta .hljs-keyword,
-body.vscode-high-contrast-light .hljs-template-tag,
-body.vscode-high-contrast-light .hljs-template-variable,
-body.vscode-high-contrast-light .hljs-type,
-body.vscode-high-contrast-light .hljs-variable.language_ {
+body.vscode-light:not(.preview-theme-light):not(.preview-theme-dark) .hljs-doctag,
+body.vscode-light:not(.preview-theme-light):not(.preview-theme-dark) .hljs-keyword,
+body.vscode-light:not(.preview-theme-light):not(.preview-theme-dark) .hljs-meta .hljs-keyword,
+body.vscode-light:not(.preview-theme-light):not(.preview-theme-dark) .hljs-template-tag,
+body.vscode-light:not(.preview-theme-light):not(.preview-theme-dark) .hljs-template-variable,
+body.vscode-light:not(.preview-theme-light):not(.preview-theme-dark) .hljs-type,
+body.vscode-light:not(.preview-theme-light):not(.preview-theme-dark) .hljs-variable.language_,
+body.vscode-high-contrast-light:not(.preview-theme-light):not(.preview-theme-dark) .hljs-doctag,
+body.vscode-high-contrast-light:not(.preview-theme-light):not(.preview-theme-dark) .hljs-keyword,
+body.vscode-high-contrast-light:not(.preview-theme-light):not(.preview-theme-dark)
+  .hljs-meta
+  .hljs-keyword,
+body.vscode-high-contrast-light:not(.preview-theme-light):not(.preview-theme-dark)
+  .hljs-template-tag,
+body.vscode-high-contrast-light:not(.preview-theme-light):not(.preview-theme-dark)
+  .hljs-template-variable,
+body.vscode-high-contrast-light:not(.preview-theme-light):not(.preview-theme-dark) .hljs-type,
+body.vscode-high-contrast-light:not(.preview-theme-light):not(.preview-theme-dark)
+  .hljs-variable.language_ {
   color: #d73a49;
 }
-body.vscode-light .hljs-title,
-body.vscode-light .hljs-title.class_,
-body.vscode-light .hljs-title.class_.inherited__,
-body.vscode-light .hljs-title.function_,
-body.vscode-high-contrast-light .hljs-title,
-body.vscode-high-contrast-light .hljs-title.class_,
-body.vscode-high-contrast-light .hljs-title.class_.inherited__,
-body.vscode-high-contrast-light .hljs-title.function_ {
+body.vscode-light:not(.preview-theme-light):not(.preview-theme-dark) .hljs-title,
+body.vscode-light:not(.preview-theme-light):not(.preview-theme-dark) .hljs-title.class_,
+body.vscode-light:not(.preview-theme-light):not(.preview-theme-dark) .hljs-title.class_.inherited__,
+body.vscode-light:not(.preview-theme-light):not(.preview-theme-dark) .hljs-title.function_,
+body.vscode-high-contrast-light:not(.preview-theme-light):not(.preview-theme-dark) .hljs-title,
+body.vscode-high-contrast-light:not(.preview-theme-light):not(.preview-theme-dark)
+  .hljs-title.class_,
+body.vscode-high-contrast-light:not(.preview-theme-light):not(.preview-theme-dark)
+  .hljs-title.class_.inherited__,
+body.vscode-high-contrast-light:not(.preview-theme-light):not(.preview-theme-dark)
+  .hljs-title.function_ {
   color: #6f42c1;
 }
-body.vscode-light .hljs-attr,
-body.vscode-light .hljs-attribute,
-body.vscode-light .hljs-literal,
-body.vscode-light .hljs-meta,
-body.vscode-light .hljs-number,
-body.vscode-light .hljs-operator,
-body.vscode-light .hljs-selector-attr,
-body.vscode-light .hljs-selector-class,
-body.vscode-light .hljs-selector-id,
-body.vscode-light .hljs-variable,
-body.vscode-high-contrast-light .hljs-attr,
-body.vscode-high-contrast-light .hljs-attribute,
-body.vscode-high-contrast-light .hljs-literal,
-body.vscode-high-contrast-light .hljs-meta,
-body.vscode-high-contrast-light .hljs-number,
-body.vscode-high-contrast-light .hljs-operator,
-body.vscode-high-contrast-light .hljs-selector-attr,
-body.vscode-high-contrast-light .hljs-selector-class,
-body.vscode-high-contrast-light .hljs-selector-id,
-body.vscode-high-contrast-light .hljs-variable {
+body.vscode-light:not(.preview-theme-light):not(.preview-theme-dark) .hljs-attr,
+body.vscode-light:not(.preview-theme-light):not(.preview-theme-dark) .hljs-attribute,
+body.vscode-light:not(.preview-theme-light):not(.preview-theme-dark) .hljs-literal,
+body.vscode-light:not(.preview-theme-light):not(.preview-theme-dark) .hljs-meta,
+body.vscode-light:not(.preview-theme-light):not(.preview-theme-dark) .hljs-number,
+body.vscode-light:not(.preview-theme-light):not(.preview-theme-dark) .hljs-operator,
+body.vscode-light:not(.preview-theme-light):not(.preview-theme-dark) .hljs-selector-attr,
+body.vscode-light:not(.preview-theme-light):not(.preview-theme-dark) .hljs-selector-class,
+body.vscode-light:not(.preview-theme-light):not(.preview-theme-dark) .hljs-selector-id,
+body.vscode-light:not(.preview-theme-light):not(.preview-theme-dark) .hljs-variable,
+body.vscode-high-contrast-light:not(.preview-theme-light):not(.preview-theme-dark) .hljs-attr,
+body.vscode-high-contrast-light:not(.preview-theme-light):not(.preview-theme-dark) .hljs-attribute,
+body.vscode-high-contrast-light:not(.preview-theme-light):not(.preview-theme-dark) .hljs-literal,
+body.vscode-high-contrast-light:not(.preview-theme-light):not(.preview-theme-dark) .hljs-meta,
+body.vscode-high-contrast-light:not(.preview-theme-light):not(.preview-theme-dark) .hljs-number,
+body.vscode-high-contrast-light:not(.preview-theme-light):not(.preview-theme-dark) .hljs-operator,
+body.vscode-high-contrast-light:not(.preview-theme-light):not(.preview-theme-dark)
+  .hljs-selector-attr,
+body.vscode-high-contrast-light:not(.preview-theme-light):not(.preview-theme-dark)
+  .hljs-selector-class,
+body.vscode-high-contrast-light:not(.preview-theme-light):not(.preview-theme-dark)
+  .hljs-selector-id,
+body.vscode-high-contrast-light:not(.preview-theme-light):not(.preview-theme-dark) .hljs-variable {
   color: #005cc5;
 }
-body.vscode-light .hljs-meta .hljs-string,
-body.vscode-light .hljs-regexp,
-body.vscode-light .hljs-string,
-body.vscode-high-contrast-light .hljs-meta .hljs-string,
-body.vscode-high-contrast-light .hljs-regexp,
-body.vscode-high-contrast-light .hljs-string {
+body.vscode-light:not(.preview-theme-light):not(.preview-theme-dark) .hljs-meta .hljs-string,
+body.vscode-light:not(.preview-theme-light):not(.preview-theme-dark) .hljs-regexp,
+body.vscode-light:not(.preview-theme-light):not(.preview-theme-dark) .hljs-string,
+body.vscode-high-contrast-light:not(.preview-theme-light):not(.preview-theme-dark)
+  .hljs-meta
+  .hljs-string,
+body.vscode-high-contrast-light:not(.preview-theme-light):not(.preview-theme-dark) .hljs-regexp,
+body.vscode-high-contrast-light:not(.preview-theme-light):not(.preview-theme-dark) .hljs-string {
   color: #032f62;
 }
-body.vscode-light .hljs-built_in,
-body.vscode-light .hljs-symbol,
-body.vscode-high-contrast-light .hljs-built_in,
-body.vscode-high-contrast-light .hljs-symbol {
+body.vscode-light:not(.preview-theme-light):not(.preview-theme-dark) .hljs-built_in,
+body.vscode-light:not(.preview-theme-light):not(.preview-theme-dark) .hljs-symbol,
+body.vscode-high-contrast-light:not(.preview-theme-light):not(.preview-theme-dark) .hljs-built_in,
+body.vscode-high-contrast-light:not(.preview-theme-light):not(.preview-theme-dark) .hljs-symbol {
   color: #e36209;
 }
-body.vscode-light .hljs-code,
-body.vscode-light .hljs-comment,
-body.vscode-light .hljs-formula,
-body.vscode-high-contrast-light .hljs-code,
-body.vscode-high-contrast-light .hljs-comment,
-body.vscode-high-contrast-light .hljs-formula {
+body.vscode-light:not(.preview-theme-light):not(.preview-theme-dark) .hljs-code,
+body.vscode-light:not(.preview-theme-light):not(.preview-theme-dark) .hljs-comment,
+body.vscode-light:not(.preview-theme-light):not(.preview-theme-dark) .hljs-formula,
+body.vscode-high-contrast-light:not(.preview-theme-light):not(.preview-theme-dark) .hljs-code,
+body.vscode-high-contrast-light:not(.preview-theme-light):not(.preview-theme-dark) .hljs-comment,
+body.vscode-high-contrast-light:not(.preview-theme-light):not(.preview-theme-dark) .hljs-formula {
   color: #6a737d;
 }
-body.vscode-light .hljs-name,
-body.vscode-light .hljs-quote,
-body.vscode-light .hljs-selector-pseudo,
-body.vscode-light .hljs-selector-tag,
-body.vscode-high-contrast-light .hljs-name,
-body.vscode-high-contrast-light .hljs-quote,
-body.vscode-high-contrast-light .hljs-selector-pseudo,
-body.vscode-high-contrast-light .hljs-selector-tag {
+body.vscode-light:not(.preview-theme-light):not(.preview-theme-dark) .hljs-name,
+body.vscode-light:not(.preview-theme-light):not(.preview-theme-dark) .hljs-quote,
+body.vscode-light:not(.preview-theme-light):not(.preview-theme-dark) .hljs-selector-pseudo,
+body.vscode-light:not(.preview-theme-light):not(.preview-theme-dark) .hljs-selector-tag,
+body.vscode-high-contrast-light:not(.preview-theme-light):not(.preview-theme-dark) .hljs-name,
+body.vscode-high-contrast-light:not(.preview-theme-light):not(.preview-theme-dark) .hljs-quote,
+body.vscode-high-contrast-light:not(.preview-theme-light):not(.preview-theme-dark)
+  .hljs-selector-pseudo,
+body.vscode-high-contrast-light:not(.preview-theme-light):not(.preview-theme-dark)
+  .hljs-selector-tag {
   color: #22863a;
 }
-body.vscode-light .hljs-subst,
-body.vscode-high-contrast-light .hljs-subst {
+body.vscode-light:not(.preview-theme-light):not(.preview-theme-dark) .hljs-subst,
+body.vscode-high-contrast-light:not(.preview-theme-light):not(.preview-theme-dark) .hljs-subst {
   color: #24292e;
 }
-body.vscode-light .hljs-section,
-body.vscode-high-contrast-light .hljs-section {
+body.vscode-light:not(.preview-theme-light):not(.preview-theme-dark) .hljs-section,
+body.vscode-high-contrast-light:not(.preview-theme-light):not(.preview-theme-dark) .hljs-section {
   color: #005cc5;
   font-weight: 700;
 }
-body.vscode-light .hljs-bullet,
-body.vscode-high-contrast-light .hljs-bullet {
+body.vscode-light:not(.preview-theme-light):not(.preview-theme-dark) .hljs-bullet,
+body.vscode-high-contrast-light:not(.preview-theme-light):not(.preview-theme-dark) .hljs-bullet {
   color: #735c0f;
 }
-body.vscode-light .hljs-emphasis,
-body.vscode-high-contrast-light .hljs-emphasis {
+body.vscode-light:not(.preview-theme-light):not(.preview-theme-dark) .hljs-emphasis,
+body.vscode-high-contrast-light:not(.preview-theme-light):not(.preview-theme-dark) .hljs-emphasis {
   color: #24292e;
   font-style: italic;
 }
-body.vscode-light .hljs-strong,
-body.vscode-high-contrast-light .hljs-strong {
+body.vscode-light:not(.preview-theme-light):not(.preview-theme-dark) .hljs-strong,
+body.vscode-high-contrast-light:not(.preview-theme-light):not(.preview-theme-dark) .hljs-strong {
   color: #24292e;
   font-weight: 700;
 }
-body.vscode-light .hljs-addition,
-body.vscode-high-contrast-light .hljs-addition {
+body.vscode-light:not(.preview-theme-light):not(.preview-theme-dark) .hljs-addition,
+body.vscode-high-contrast-light:not(.preview-theme-light):not(.preview-theme-dark) .hljs-addition {
   color: #22863a;
   background-color: #f0fff4;
 }
-body.vscode-light .hljs-deletion,
-body.vscode-high-contrast-light .hljs-deletion {
+body.vscode-light:not(.preview-theme-light):not(.preview-theme-dark) .hljs-deletion,
+body.vscode-high-contrast-light:not(.preview-theme-light):not(.preview-theme-dark) .hljs-deletion {
   color: #b31d28;
   background-color: #ffeef0;
 }
 
 /* VS Code light: inline code */
-body.vscode-light :not(pre) > code,
-body.vscode-high-contrast-light :not(pre) > code {
+body.vscode-light:not(.preview-theme-light):not(.preview-theme-dark) :not(pre) > code,
+body.vscode-high-contrast-light:not(.preview-theme-light):not(.preview-theme-dark)
+  :not(pre)
+  > code {
   color: #24292e;
   background-color: rgba(27, 31, 35, 0.07);
 }
 
-/* ── VS Code dark theme ─────────────────────────────────────── */
-body.vscode-dark .hljs,
-body.vscode-high-contrast .hljs {
+/* ── VS Code dark theme (host tokens; skipped when an overlay is pinned) ── */
+body.vscode-dark:not(.preview-theme-light):not(.preview-theme-dark) .hljs,
+body.vscode-high-contrast:not(.preview-theme-light):not(.preview-theme-dark) .hljs {
   color: #c9d1d9;
 }
-body.vscode-dark .hljs-doctag,
-body.vscode-dark .hljs-keyword,
-body.vscode-dark .hljs-meta .hljs-keyword,
-body.vscode-dark .hljs-template-tag,
-body.vscode-dark .hljs-template-variable,
-body.vscode-dark .hljs-type,
-body.vscode-dark .hljs-variable.language_,
-body.vscode-high-contrast .hljs-doctag,
-body.vscode-high-contrast .hljs-keyword,
-body.vscode-high-contrast .hljs-meta .hljs-keyword,
-body.vscode-high-contrast .hljs-template-tag,
-body.vscode-high-contrast .hljs-template-variable,
-body.vscode-high-contrast .hljs-type,
-body.vscode-high-contrast .hljs-variable.language_ {
+body.vscode-dark:not(.preview-theme-light):not(.preview-theme-dark) .hljs-doctag,
+body.vscode-dark:not(.preview-theme-light):not(.preview-theme-dark) .hljs-keyword,
+body.vscode-dark:not(.preview-theme-light):not(.preview-theme-dark) .hljs-meta .hljs-keyword,
+body.vscode-dark:not(.preview-theme-light):not(.preview-theme-dark) .hljs-template-tag,
+body.vscode-dark:not(.preview-theme-light):not(.preview-theme-dark) .hljs-template-variable,
+body.vscode-dark:not(.preview-theme-light):not(.preview-theme-dark) .hljs-type,
+body.vscode-dark:not(.preview-theme-light):not(.preview-theme-dark) .hljs-variable.language_,
+body.vscode-high-contrast:not(.preview-theme-light):not(.preview-theme-dark) .hljs-doctag,
+body.vscode-high-contrast:not(.preview-theme-light):not(.preview-theme-dark) .hljs-keyword,
+body.vscode-high-contrast:not(.preview-theme-light):not(.preview-theme-dark)
+  .hljs-meta
+  .hljs-keyword,
+body.vscode-high-contrast:not(.preview-theme-light):not(.preview-theme-dark) .hljs-template-tag,
+body.vscode-high-contrast:not(.preview-theme-light):not(.preview-theme-dark)
+  .hljs-template-variable,
+body.vscode-high-contrast:not(.preview-theme-light):not(.preview-theme-dark) .hljs-type,
+body.vscode-high-contrast:not(.preview-theme-light):not(.preview-theme-dark)
+  .hljs-variable.language_ {
   color: #ff7b72;
 }
-body.vscode-dark .hljs-title,
-body.vscode-dark .hljs-title.class_,
-body.vscode-dark .hljs-title.class_.inherited__,
-body.vscode-dark .hljs-title.function_,
-body.vscode-high-contrast .hljs-title,
-body.vscode-high-contrast .hljs-title.class_,
-body.vscode-high-contrast .hljs-title.class_.inherited__,
-body.vscode-high-contrast .hljs-title.function_ {
+body.vscode-dark:not(.preview-theme-light):not(.preview-theme-dark) .hljs-title,
+body.vscode-dark:not(.preview-theme-light):not(.preview-theme-dark) .hljs-title.class_,
+body.vscode-dark:not(.preview-theme-light):not(.preview-theme-dark) .hljs-title.class_.inherited__,
+body.vscode-dark:not(.preview-theme-light):not(.preview-theme-dark) .hljs-title.function_,
+body.vscode-high-contrast:not(.preview-theme-light):not(.preview-theme-dark) .hljs-title,
+body.vscode-high-contrast:not(.preview-theme-light):not(.preview-theme-dark) .hljs-title.class_,
+body.vscode-high-contrast:not(.preview-theme-light):not(.preview-theme-dark)
+  .hljs-title.class_.inherited__,
+body.vscode-high-contrast:not(.preview-theme-light):not(.preview-theme-dark) .hljs-title.function_ {
   color: #d2a8ff;
 }
-body.vscode-dark .hljs-attr,
-body.vscode-dark .hljs-attribute,
-body.vscode-dark .hljs-literal,
-body.vscode-dark .hljs-meta,
-body.vscode-dark .hljs-number,
-body.vscode-dark .hljs-operator,
-body.vscode-dark .hljs-selector-attr,
-body.vscode-dark .hljs-selector-class,
-body.vscode-dark .hljs-selector-id,
-body.vscode-dark .hljs-variable,
-body.vscode-high-contrast .hljs-attr,
-body.vscode-high-contrast .hljs-attribute,
-body.vscode-high-contrast .hljs-literal,
-body.vscode-high-contrast .hljs-meta,
-body.vscode-high-contrast .hljs-number,
-body.vscode-high-contrast .hljs-operator,
-body.vscode-high-contrast .hljs-selector-attr,
-body.vscode-high-contrast .hljs-selector-class,
-body.vscode-high-contrast .hljs-selector-id,
-body.vscode-high-contrast .hljs-variable {
+body.vscode-dark:not(.preview-theme-light):not(.preview-theme-dark) .hljs-attr,
+body.vscode-dark:not(.preview-theme-light):not(.preview-theme-dark) .hljs-attribute,
+body.vscode-dark:not(.preview-theme-light):not(.preview-theme-dark) .hljs-literal,
+body.vscode-dark:not(.preview-theme-light):not(.preview-theme-dark) .hljs-meta,
+body.vscode-dark:not(.preview-theme-light):not(.preview-theme-dark) .hljs-number,
+body.vscode-dark:not(.preview-theme-light):not(.preview-theme-dark) .hljs-operator,
+body.vscode-dark:not(.preview-theme-light):not(.preview-theme-dark) .hljs-selector-attr,
+body.vscode-dark:not(.preview-theme-light):not(.preview-theme-dark) .hljs-selector-class,
+body.vscode-dark:not(.preview-theme-light):not(.preview-theme-dark) .hljs-selector-id,
+body.vscode-dark:not(.preview-theme-light):not(.preview-theme-dark) .hljs-variable,
+body.vscode-high-contrast:not(.preview-theme-light):not(.preview-theme-dark) .hljs-attr,
+body.vscode-high-contrast:not(.preview-theme-light):not(.preview-theme-dark) .hljs-attribute,
+body.vscode-high-contrast:not(.preview-theme-light):not(.preview-theme-dark) .hljs-literal,
+body.vscode-high-contrast:not(.preview-theme-light):not(.preview-theme-dark) .hljs-meta,
+body.vscode-high-contrast:not(.preview-theme-light):not(.preview-theme-dark) .hljs-number,
+body.vscode-high-contrast:not(.preview-theme-light):not(.preview-theme-dark) .hljs-operator,
+body.vscode-high-contrast:not(.preview-theme-light):not(.preview-theme-dark) .hljs-selector-attr,
+body.vscode-high-contrast:not(.preview-theme-light):not(.preview-theme-dark) .hljs-selector-class,
+body.vscode-high-contrast:not(.preview-theme-light):not(.preview-theme-dark) .hljs-selector-id,
+body.vscode-high-contrast:not(.preview-theme-light):not(.preview-theme-dark) .hljs-variable {
   color: #79c0ff;
 }
-body.vscode-dark .hljs-meta .hljs-string,
-body.vscode-dark .hljs-regexp,
-body.vscode-dark .hljs-string,
-body.vscode-high-contrast .hljs-meta .hljs-string,
-body.vscode-high-contrast .hljs-regexp,
-body.vscode-high-contrast .hljs-string {
+body.vscode-dark:not(.preview-theme-light):not(.preview-theme-dark) .hljs-meta .hljs-string,
+body.vscode-dark:not(.preview-theme-light):not(.preview-theme-dark) .hljs-regexp,
+body.vscode-dark:not(.preview-theme-light):not(.preview-theme-dark) .hljs-string,
+body.vscode-high-contrast:not(.preview-theme-light):not(.preview-theme-dark)
+  .hljs-meta
+  .hljs-string,
+body.vscode-high-contrast:not(.preview-theme-light):not(.preview-theme-dark) .hljs-regexp,
+body.vscode-high-contrast:not(.preview-theme-light):not(.preview-theme-dark) .hljs-string {
   color: #a5d6ff;
 }
-body.vscode-dark .hljs-built_in,
-body.vscode-dark .hljs-symbol,
-body.vscode-high-contrast .hljs-built_in,
-body.vscode-high-contrast .hljs-symbol {
+body.vscode-dark:not(.preview-theme-light):not(.preview-theme-dark) .hljs-built_in,
+body.vscode-dark:not(.preview-theme-light):not(.preview-theme-dark) .hljs-symbol,
+body.vscode-high-contrast:not(.preview-theme-light):not(.preview-theme-dark) .hljs-built_in,
+body.vscode-high-contrast:not(.preview-theme-light):not(.preview-theme-dark) .hljs-symbol {
   color: #ffa657;
 }
-body.vscode-dark .hljs-code,
-body.vscode-dark .hljs-comment,
-body.vscode-dark .hljs-formula,
-body.vscode-high-contrast .hljs-code,
-body.vscode-high-contrast .hljs-comment,
-body.vscode-high-contrast .hljs-formula {
+body.vscode-dark:not(.preview-theme-light):not(.preview-theme-dark) .hljs-code,
+body.vscode-dark:not(.preview-theme-light):not(.preview-theme-dark) .hljs-comment,
+body.vscode-dark:not(.preview-theme-light):not(.preview-theme-dark) .hljs-formula,
+body.vscode-high-contrast:not(.preview-theme-light):not(.preview-theme-dark) .hljs-code,
+body.vscode-high-contrast:not(.preview-theme-light):not(.preview-theme-dark) .hljs-comment,
+body.vscode-high-contrast:not(.preview-theme-light):not(.preview-theme-dark) .hljs-formula {
   color: #8b949e;
 }
-body.vscode-dark .hljs-name,
-body.vscode-dark .hljs-quote,
-body.vscode-dark .hljs-selector-pseudo,
-body.vscode-dark .hljs-selector-tag,
-body.vscode-high-contrast .hljs-name,
-body.vscode-high-contrast .hljs-quote,
-body.vscode-high-contrast .hljs-selector-pseudo,
-body.vscode-high-contrast .hljs-selector-tag {
+body.vscode-dark:not(.preview-theme-light):not(.preview-theme-dark) .hljs-name,
+body.vscode-dark:not(.preview-theme-light):not(.preview-theme-dark) .hljs-quote,
+body.vscode-dark:not(.preview-theme-light):not(.preview-theme-dark) .hljs-selector-pseudo,
+body.vscode-dark:not(.preview-theme-light):not(.preview-theme-dark) .hljs-selector-tag,
+body.vscode-high-contrast:not(.preview-theme-light):not(.preview-theme-dark) .hljs-name,
+body.vscode-high-contrast:not(.preview-theme-light):not(.preview-theme-dark) .hljs-quote,
+body.vscode-high-contrast:not(.preview-theme-light):not(.preview-theme-dark) .hljs-selector-pseudo,
+body.vscode-high-contrast:not(.preview-theme-light):not(.preview-theme-dark) .hljs-selector-tag {
   color: #7ee787;
 }
-body.vscode-dark .hljs-subst,
-body.vscode-high-contrast .hljs-subst {
+body.vscode-dark:not(.preview-theme-light):not(.preview-theme-dark) .hljs-subst,
+body.vscode-high-contrast:not(.preview-theme-light):not(.preview-theme-dark) .hljs-subst {
   color: #c9d1d9;
 }
-body.vscode-dark .hljs-section,
-body.vscode-high-contrast .hljs-section {
+body.vscode-dark:not(.preview-theme-light):not(.preview-theme-dark) .hljs-section,
+body.vscode-high-contrast:not(.preview-theme-light):not(.preview-theme-dark) .hljs-section {
   color: #1f6feb;
   font-weight: 700;
 }
-body.vscode-dark .hljs-bullet,
-body.vscode-high-contrast .hljs-bullet {
+body.vscode-dark:not(.preview-theme-light):not(.preview-theme-dark) .hljs-bullet,
+body.vscode-high-contrast:not(.preview-theme-light):not(.preview-theme-dark) .hljs-bullet {
   color: #f2cc60;
 }
-body.vscode-dark .hljs-emphasis,
-body.vscode-high-contrast .hljs-emphasis {
+body.vscode-dark:not(.preview-theme-light):not(.preview-theme-dark) .hljs-emphasis,
+body.vscode-high-contrast:not(.preview-theme-light):not(.preview-theme-dark) .hljs-emphasis {
   color: #c9d1d9;
   font-style: italic;
 }
-body.vscode-dark .hljs-strong,
-body.vscode-high-contrast .hljs-strong {
+body.vscode-dark:not(.preview-theme-light):not(.preview-theme-dark) .hljs-strong,
+body.vscode-high-contrast:not(.preview-theme-light):not(.preview-theme-dark) .hljs-strong {
   color: #c9d1d9;
   font-weight: 700;
 }
-body.vscode-dark .hljs-addition,
-body.vscode-high-contrast .hljs-addition {
+body.vscode-dark:not(.preview-theme-light):not(.preview-theme-dark) .hljs-addition,
+body.vscode-high-contrast:not(.preview-theme-light):not(.preview-theme-dark) .hljs-addition {
   color: #aff5b4;
   background-color: #033a16;
 }
-body.vscode-dark .hljs-deletion,
-body.vscode-high-contrast .hljs-deletion {
+body.vscode-dark:not(.preview-theme-light):not(.preview-theme-dark) .hljs-deletion,
+body.vscode-high-contrast:not(.preview-theme-light):not(.preview-theme-dark) .hljs-deletion {
   color: #ffdcd7;
   background-color: #67060c;
 }
 
 /* VS Code dark: inline code */
-body.vscode-dark :not(pre) > code,
-body.vscode-high-contrast :not(pre) > code {
+body.vscode-dark:not(.preview-theme-light):not(.preview-theme-dark) :not(pre) > code,
+body.vscode-high-contrast:not(.preview-theme-light):not(.preview-theme-dark) :not(pre) > code {
   color: #c9d1d9;
 }
 

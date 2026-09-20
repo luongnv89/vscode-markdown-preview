@@ -59,7 +59,8 @@ Common issues and solutions when using or developing Markdown Preview Pro.
 **Solutions:**
 
 - Switch your VS Code theme, then switch back - this triggers a re-render
-- Mermaid auto-detects `vscode-dark` and `vscode-high-contrast` body classes
+- Mermaid follows `vscode-dark` and `vscode-high-contrast` when the preview is following the host theme
+- An explicit toolbar light overlay blocks host dark detection until you toggle again
 - Reload the window if theme detection fails
 
 ### Mermaid not rendering at all
