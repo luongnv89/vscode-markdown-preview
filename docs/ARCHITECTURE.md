@@ -157,11 +157,15 @@ CSS files are extracted via `mini-css-extract-plugin` into `dist/webview/main.cs
 The webview uses a strict Content Security Policy:
 
 - `default-src 'none'` - Block everything by default
-- `script-src 'nonce-...' 'unsafe-eval'` - Only nonced scripts (Mermaid needs `unsafe-eval`)
+- `script-src 'nonce-...'` - Only nonced scripts (Mermaid 11.x renders without `eval`/`new Function` under `securityLevel: 'strict'`, so `unsafe-eval` is not granted)
 - `style-src ... 'unsafe-inline'` - Extension styles and inline styles
-- `img-src ... https: data:` - Local images, HTTPS images, and data URIs
+- `img-src ... data:` - Local webview images and data URIs; remote `https:` images are blocked unless `markdownPreviewPro.allowRemoteImages` is enabled
 - `frame-src 'none'` - No iframes within the webview
 - `worker-src 'none'` - No web workers
+
+Extension metadata (`version`, `commit`, `publisher`, `repo`) reaches the
+webview through `<body data-*>` attributes that are attribute-escaped on write,
+and the About popup renders them with `textContent` — never `innerHTML`.
 
 ## Related Docs
 

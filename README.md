@@ -141,15 +141,16 @@ Optional typographic enhancements: smart quotes, em-dashes, and other replacemen
 
 All settings are under `markdownPreviewPro.*` in VS Code Settings:
 
-| Setting            | Default | Description                           |
-| ------------------ | ------- | ------------------------------------- |
-| `scrollSync`       | `true`  | Bidirectional scroll synchronization  |
-| `enableMermaid`    | `true`  | Mermaid diagram rendering             |
-| `enableKatex`      | `true`  | KaTeX math rendering                  |
-| `enableCheckboxes` | `true`  | Interactive task list checkboxes      |
-| `typographer`      | `true`  | Smart quotes and typography           |
-| `lineBreaks`       | `false` | Convert newlines to `<br>` tags       |
-| `showFrontmatter`  | `card`  | Frontmatter display: `card` or `none` |
+| Setting             | Default | Description                                 |
+| ------------------- | ------- | ------------------------------------------- |
+| `scrollSync`        | `true`  | Bidirectional scroll synchronization        |
+| `enableMermaid`     | `true`  | Mermaid diagram rendering                   |
+| `enableKatex`       | `true`  | KaTeX math rendering                        |
+| `enableCheckboxes`  | `true`  | Interactive task list checkboxes            |
+| `typographer`       | `true`  | Smart quotes and typography                 |
+| `lineBreaks`        | `false` | Convert newlines to `<br>` tags             |
+| `showFrontmatter`   | `card`  | Frontmatter display: `card` or `none`       |
+| `allowRemoteImages` | `false` | Allow remote `https:` images in the preview |
 
 ## Commands
 

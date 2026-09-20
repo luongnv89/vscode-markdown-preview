@@ -209,15 +209,16 @@ VS Code already has a markdown preview, but developers often want something shar
 
 ## Configuration snapshot
 
-| Setting                               | Default | Description                            |
-| ------------------------------------- | ------- | -------------------------------------- |
-| `markdownPreviewPro.scrollSync`       | `true`  | Bidirectional scroll synchronization   |
-| `markdownPreviewPro.enableMermaid`    | `true`  | Enable Mermaid rendering               |
-| `markdownPreviewPro.enableKatex`      | `true`  | Enable math rendering                  |
-| `markdownPreviewPro.enableCheckboxes` | `true`  | Enable interactive checkboxes          |
-| `markdownPreviewPro.typographer`      | `true`  | Enable smart typography                |
-| `markdownPreviewPro.lineBreaks`       | `false` | Convert new lines to `<br>`            |
-| `markdownPreviewPro.showFrontmatter`  | `card`  | Show YAML frontmatter as a styled card |
+| Setting                                | Default | Description                                 |
+| -------------------------------------- | ------- | ------------------------------------------- |
+| `markdownPreviewPro.scrollSync`        | `true`  | Bidirectional scroll synchronization        |
+| `markdownPreviewPro.enableMermaid`     | `true`  | Enable Mermaid rendering                    |
+| `markdownPreviewPro.enableKatex`       | `true`  | Enable math rendering                       |
+| `markdownPreviewPro.enableCheckboxes`  | `true`  | Enable interactive checkboxes               |
+| `markdownPreviewPro.typographer`       | `true`  | Enable smart typography                     |
+| `markdownPreviewPro.lineBreaks`        | `false` | Convert new lines to `<br>`                 |
+| `markdownPreviewPro.showFrontmatter`   | `card`  | Show YAML frontmatter as a styled card      |
+| `markdownPreviewPro.allowRemoteImages` | `false` | Allow remote `https:` images in the preview |
 
 ## Installation
 

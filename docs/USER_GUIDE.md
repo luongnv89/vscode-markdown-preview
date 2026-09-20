@@ -206,6 +206,13 @@ Use paths relative to the markdown file:
 ![Logo](https://example.com/logo.png)
 ```
 
+Remote `https:` images are **blocked by default** — the preview's Content
+Security Policy only permits local webview resources and `data:` URIs, so a
+document cannot beacon that it was opened or leak your IP address. To allow
+remote images, enable `markdownPreviewPro.allowRemoteImages` (the same kind of
+opt-in as VS Code's built-in markdown preview). This also affects remote
+frontmatter badge images.
+
 ### Excalidraw
 
 Reference exported Excalidraw files:
@@ -256,6 +263,10 @@ Enable smart quotes and typographic replacements (em-dash, en-dash, ellipsis).
 ### `lineBreaks` (default: `false`)
 
 Convert single newlines in paragraphs to `<br>` tags. By default, adjacent lines are joined into a single paragraph (standard markdown behavior).
+
+### `allowRemoteImages` (default: `false`)
+
+Allow remote `https:` images in the preview. Off by default so a document cannot load remote images (which would reveal that the preview was opened and the viewer's IP). Applies to newly loaded preview documents — toggling it reloads the open preview.
 
 ## Export
 
