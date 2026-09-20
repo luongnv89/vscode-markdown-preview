@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Fix `markdownPreviewPro.enableMermaid` and `markdownPreviewPro.enableExcalidraw` having no effect — the flags now gate diagram-block rendering in the engine (disabled fences render as plain code blocks), omit the mermaid/excalidraw vendor scripts (~4.86 MB) from the preview document and the standalone HTML/PDF export when disabled, and apply immediately via the `configChanged` message
 - Security: stop the HTML/PDF export pipeline executing document JavaScript — rendered markdown is now sanitized with DOMPurify before it reaches the headless browser, the export document carries a per-export nonce Content-Security-Policy (no `unsafe-inline` in `script-src`), and Chromium's renderer sandbox is no longer disabled during export
 - Security: harden the preview webview — Mermaid now runs at `securityLevel: 'strict'` (sanitized labels, no `click` JS directives) in both preview and export rendering, the preview CSP dropped `'unsafe-eval'` from `script-src` (verified unnecessary for Mermaid 11.x), `<body data-*>` extension metadata is attribute-escaped on write and the About popup renders it with `textContent`, and `img-src` is restricted to webview resources + `data:` unless the new `markdownPreviewPro.allowRemoteImages` opt-in (default `false`) is enabled
 

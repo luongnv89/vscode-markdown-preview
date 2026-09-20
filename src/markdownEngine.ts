@@ -35,11 +35,14 @@ export class MarkdownEngine {
             // Fall through to default
           }
         }
-        if (lang === 'mermaid') {
+        // Diagram blocks are gated on the feature flags: with the flag off the
+        // fence falls through to the plain code block below, so the preview
+        // neither renders the diagram nor needs its vendor script.
+        if (lang === 'mermaid' && config.enableMermaid) {
           const escaped = md.utils.escapeHtml(str);
           return `<div class="mermaid-block" data-processed="false" data-source="${escaped}"><pre class="mermaid">${escaped}</pre></div>`;
         }
-        if (lang === 'excalidraw') {
+        if (lang === 'excalidraw' && config.enableExcalidraw) {
           const escaped = md.utils.escapeHtml(str);
           return `<div class="excalidraw-block" data-processed="false" data-source="${escaped}"><pre class="excalidraw-source">${escaped}</pre></div>`;
         }

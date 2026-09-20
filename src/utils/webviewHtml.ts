@@ -49,12 +49,19 @@ export function escapeHtmlAttr(value: string): string {
  *   its open + the viewer's IP); the documented opt-in
  *   `markdownPreviewPro.allowRemoteImages` re-adds `https:`, mirroring the
  *   remote-content opt-in of VS Code's built-in markdown preview.
+ * - Vendor `<script>` tags follow the feature flags: mermaid.min.js and
+ *   excalidraw-utils.min.js make up most of the ~4.86 MB per-preview vendor
+ *   payload, so `enableMermaid`/`enableExcalidraw` off omits the tag entirely.
+ *   `script-src` is nonce-only either way, so a shorter list needs no CSP
+ *   change — every emitted tag still carries the nonce.
  */
 export function buildWebviewHtml(
   webview: WebviewResourceSource,
   extensionUri: vscode.Uri,
   aboutInfo: PreviewAboutInfo,
-  allowRemoteImages: boolean
+  allowRemoteImages: boolean,
+  enableMermaid = true,
+  enableExcalidraw = true
 ): string {
   const nonce = getNonce();
 
@@ -76,6 +83,20 @@ export function buildWebviewHtml(
     ? `img-src ${webview.cspSource} https: data:`
     : `img-src ${webview.cspSource} data:`;
 
+  // Emit a vendor <script> only for enabled features — a disabled diagram
+  // engine never needs its multi-MB runtime in the preview document.
+  const scriptUris = [katexScript];
+  if (enableMermaid) {
+    scriptUris.push(mermaidScript);
+  }
+  if (enableExcalidraw) {
+    scriptUris.push(excalidrawScript);
+  }
+  scriptUris.push(mainScript);
+  const scriptTags = scriptUris
+    .map((src) => `  <script nonce="${nonce}" src="${src}"></script>`)
+    .join('\n');
+
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -96,10 +117,7 @@ export function buildWebviewHtml(
 </head>
 <body data-version="${escapeHtmlAttr(aboutInfo.version)}" data-commit="${escapeHtmlAttr(aboutInfo.commit)}" data-publisher="${escapeHtmlAttr(aboutInfo.publisher)}" data-repo="${escapeHtmlAttr(aboutInfo.repo)}">
   <div id="preview-content"></div>
-  <script nonce="${nonce}" src="${katexScript}"></script>
-  <script nonce="${nonce}" src="${mermaidScript}"></script>
-  <script nonce="${nonce}" src="${excalidrawScript}"></script>
-  <script nonce="${nonce}" src="${mainScript}"></script>
+${scriptTags}
 </body>
 </html>`;
 }
