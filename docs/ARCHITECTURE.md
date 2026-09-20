@@ -109,8 +109,11 @@ sequenceDiagram
 ```
 Editor Change → Debounce (300ms) → markdownEngine.render()
     → previewManager sends "updateContent" message
-    → webview renderer updates DOM
-    → Mermaid/KaTeX render client-side
+    → webview renderer patches the DOM incrementally (domDiff.ts):
+      top-level blocks are diffed against the last render by signature and
+      only changed regions are replaced — kept blocks retain their nodes,
+      observers, and rendered output
+    → Mermaid/KaTeX render client-side inside the changed regions
 ```
 
 ### Scroll Sync

@@ -33,7 +33,7 @@ interface TocEntry {
 
 // One <li><a class="toc-hN"> per heading, appended to tocList; ensures each
 // heading has an id so the link target exists.
-function buildTocEntries(headings: NodeListOf<HTMLElement>): TocEntry[] {
+function buildTocEntries(headings: readonly HTMLElement[]): TocEntry[] {
   const entries: TocEntry[] = [];
 
   headings.forEach((heading, i) => {
@@ -91,13 +91,28 @@ function createTocObserver(entries: TocEntry[]): IntersectionObserver {
   );
 }
 
+let lastHeadings: HTMLElement[] = [];
+
 export function refreshToc(): void {
   if (!tocList) return;
 
   const container = document.getElementById('preview-content');
   if (!container) return;
 
-  const headings = container.querySelectorAll<HTMLElement>('h1, h2, h3, h4, h5, h6');
+  const headings = Array.from(container.querySelectorAll<HTMLElement>('h1, h2, h3, h4, h5, h6'));
+
+  // Rebuild only when the heading node set changed — an unrelated edit keeps
+  // the same nodes (domDiff keeps identical blocks), so the observer and the
+  // <li> list survive. Element identity is the precise predicate: a heading
+  // re-created under identical markup — an edited link target, or a replaced
+  // ancestor like a blockquote — is a different node, so the click targets
+  // and observed elements are refreshed instead of staying bound to a
+  // detached node (issue #77).
+  if (headings.length === lastHeadings.length && headings.every((h, i) => h === lastHeadings[i])) {
+    return;
+  }
+  lastHeadings = headings;
+
   tocList.innerHTML = '';
 
   if (observer) {
