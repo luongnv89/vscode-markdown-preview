@@ -220,7 +220,7 @@
     "dompurify": "^3.4.15",
     "highlight.js": "^11.12.0",
     "jsdom": "^30.1.0",
-    "katex": "^0.16.9",
+    "katex": "^0.18.7",
     "markdown-it": "^14.3.2",
     "markdown-it-task-lists": "^2.1.1",
     "mermaid": "^11.17.2",
