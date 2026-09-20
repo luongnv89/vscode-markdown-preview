@@ -442,24 +442,47 @@ suite('preview vendor gating (#72)', () => {
       assert.deepStrictEqual(await Promise.all([a, b]), [true, true]);
     });
 
-    test('waits for a shipped (initial-HTML) tag instead of injecting a duplicate', async () => {
+    test('a settled shipped tag with no global is replaced by an injected retry', async () => {
+      // Shipped vendor tags are parser-inserted synchronous scripts: by the
+      // time any webview code runs they have already fired load or error, so
+      // a found tag with no global definitively failed. The loader must drop
+      // it and inject a fresh tag that waits on real events — never wait on
+      // events that fired before main.js ran (that path only resolves via
+      // the 30 s timeout, once per update, stalling the render loop).
       const { window, loader } = loadLoader(
         true,
         '<script data-vendor="mermaid" src="https://res/mermaid.min.js" nonce="test-nonce"></script>'
       );
-      const shipped = window.document.querySelector(
-        'script[data-vendor="mermaid"]'
-      ) as HTMLScriptElement;
       const pending = loader.ensureVendor('mermaid');
       await nextTick();
-      assert.strictEqual(
-        window.document.querySelectorAll('script[data-vendor="mermaid"]').length,
-        1,
-        'loader injected a duplicate tag'
-      );
+      const tags = window.document.querySelectorAll('script[data-vendor="mermaid"]');
+      assert.strictEqual(tags.length, 1, 'expected exactly one managed tag');
+      const injected = tags[0] as HTMLScriptElement;
+      assert.strictEqual(injected.nonce, 'test-nonce', 'injected tag lost the CSP nonce');
       (window as { mermaid?: unknown }).mermaid = {};
-      shipped.dispatchEvent(new window.Event('load'));
+      injected.dispatchEvent(new window.Event('load'));
       assert.strictEqual(await pending, true);
+    });
+
+    test('a settled shipped tag whose injected retry fails resolves false', async () => {
+      const { window, loader } = loadLoader(
+        true,
+        '<script data-vendor="excalidraw" src="https://res/excalidraw-utils.min.js" nonce="test-nonce"></script>'
+      );
+      const pending = loader.ensureVendor('excalidraw');
+      await nextTick();
+      const injected = window.document.querySelector(
+        'script[data-vendor="excalidraw"]'
+      ) as HTMLScriptElement;
+      assert.ok(injected, 'dead shipped tag was not replaced by an injection');
+      injected.dispatchEvent(new window.Event('error'));
+      assert.strictEqual(await pending, false);
+      // The failed injected tag is cleaned up too — the next ensure retries.
+      assert.strictEqual(
+        window.document.querySelectorAll('script[data-vendor="excalidraw"]').length,
+        0,
+        'failed injected tag was not cleaned up'
+      );
     });
 
     test('a missing data-vendor URI resolves false without injecting anything', async () => {

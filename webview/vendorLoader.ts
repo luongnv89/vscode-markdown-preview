@@ -92,9 +92,17 @@ function loadVendor(key: VendorKey, spec: VendorSpec): Promise<void> {
   injectStylesheet(key, spec);
   const shipped = document.querySelector(`script[data-vendor="${key}"]`);
   if (shipped) {
-    // The initial HTML shipped the tag and it is still parsing — await it
-    // rather than injecting a duplicate fetch.
-    return waitForScript(shipped as HTMLScriptElement);
+    // A data-vendor tag found here has already settled: the shipped tags are
+    // parser-inserted synchronous scripts, and this code only runs inside
+    // main.js — which the parser reaches after every earlier tag has fired
+    // load or error (an injected tag still in flight is deduped above via
+    // `pending`, never found here). No load/error event can reach a listener
+    // attached now, so waiting would resolve only through the timeout —
+    // repeatedly, on every update, since the tag never goes away. With the
+    // global still absent the earlier load definitively failed; drop the dead
+    // tag like the injected-path failure does, then fall through and inject a
+    // fresh tag that waits on real events.
+    shipped.remove();
   }
   const script = document.createElement('script');
   script.src = uri;

@@ -72,9 +72,11 @@ export const escapeHtmlAttr = (value: string): string => escapeHtml(value).repla
  * resolved vendor URLs ship unconditionally as `data-vendor-*` attributes
  * (a data attribute never fetches), and webview/vendorLoader.ts injects the
  * missing nonce'd <script>/<link> tags on first use. Every shipped tag is
- * marked `data-vendor="<key>"` so the loader awaits the in-flight tag
- * instead of injecting a duplicate. `script-src` stays nonce-only either
- * way — no CSP change is needed for a shorter tag list.
+ * marked `data-vendor="<key>"` so the loader can recognize a tag it already
+ * manages — a settled tag whose global never appeared is dropped and a
+ * fresh one injected, keeping retry dedupe to a single element.
+ * `script-src` stays nonce-only either way — no CSP change is needed for a
+ * shorter tag list.
  */
 export function buildWebviewHtml(
   webview: WebviewResourceSource,
@@ -199,8 +201,9 @@ function resolveWebviewAssetUris(
  * Emit a vendor <script> only for enabled features the document's markup
  * actually uses — a runtime the render did not reference never reaches the
  * preview document (#72). Each emitted tag carries `data-vendor` so the
- * lazy loader can await an in-flight tag instead of duplicating it; the
- * main bundle loads last.
+ * lazy loader can recognize a tag it already manages — a settled tag with
+ * no global is dropped and replaced by an injected retry; the main bundle
+ * loads last.
  */
 function buildScriptTags(
   nonce: string,
