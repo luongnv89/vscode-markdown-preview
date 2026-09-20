@@ -15,9 +15,11 @@ const extensionConfig = {
     filename: 'extension.js',
     libraryTarget: 'commonjs2',
     // Wipe stale output (including lazy chunks from a previous mode's build)
-    // before this config emits — the first config in the array owns cleaning
-    // so markdownCore.js and dist/webview/ emit afterwards into the fresh dir.
-    clean: true,
+    // before this config emits — the first config in the array owns cleaning.
+    // The keep patterns preserve what the sibling configs emit into the same
+    // directory (dist/markdownCore.js, dist/webview/), whichever order the
+    // MultiCompiler runs the emits in.
+    clean: { keep: /^webview\/|^markdownCore\.js/ },
   },
   externals: {
     vscode: 'commonjs vscode',
