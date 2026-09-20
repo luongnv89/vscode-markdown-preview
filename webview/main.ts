@@ -15,7 +15,7 @@ import { initBlockHighlighter } from './blockHighlighter';
 import { initCopyButtons } from './copyButton';
 import { initCheckboxHandler } from './checkboxHandler';
 import { initNavigationHandler } from './navigationHandler';
-import { updateContent, watchThemeChanges } from './renderer';
+import { updateContent, watchThemeChanges, applyConfig } from './renderer';
 import { initToolbar } from './toolbar';
 import { initToc } from './toc';
 import { initStatsBar } from './statsBar';
@@ -49,7 +49,10 @@ window.addEventListener('message', async (event) => {
       break;
 
     case 'configChanged':
-      // Config changes are handled by the extension re-rendering
+      // Apply the pushed flags — the diagram renderers consult them, and a
+      // flag toggle re-renders the current content (the host also sends fresh
+      // gated HTML via updateContent; both paths converge).
+      applyConfig(message.config);
       break;
   }
 });

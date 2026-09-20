@@ -189,12 +189,17 @@ export class PreviewManager {
     this.disposables.push(
       vscode.workspace.onDidChangeConfiguration((event) => {
         if (event.affectsConfiguration('markdownPreviewPro')) {
-          const previousAllowRemoteImages = this.config.allowRemoteImages;
+          const previous = this.config;
           this.config = getPreviewConfig();
           this.engine.updateConfig(this.config);
-          if (this.panel && this.config.allowRemoteImages !== previousAllowRemoteImages) {
-            // img-src lives in the CSP meta baked into the webview document, so
-            // the opt-in only takes effect on a fresh document.
+          const documentShapeChanged =
+            this.config.allowRemoteImages !== previous.allowRemoteImages ||
+            this.config.enableMermaid !== previous.enableMermaid ||
+            this.config.enableExcalidraw !== previous.enableExcalidraw;
+          if (this.panel && documentShapeChanged) {
+            // img-src lives in the CSP meta and the vendor <script> set is
+            // baked into the webview document, so these opt-ins/outs only take
+            // effect on a fresh document.
             this.panel.webview.html = this.getWebviewHtml(this.panel.webview);
           }
           if (this.activeDocument) {
@@ -322,7 +327,9 @@ export class PreviewManager {
       webview,
       this.extensionUri,
       this.aboutInfo,
-      this.config.allowRemoteImages
+      this.config.allowRemoteImages,
+      this.config.enableMermaid,
+      this.config.enableExcalidraw
     );
   }
 

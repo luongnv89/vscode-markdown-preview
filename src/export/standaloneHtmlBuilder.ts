@@ -3,6 +3,7 @@ import * as fs from 'fs/promises';
 import * as path from 'path';
 import { sanitizeExportHtml } from './htmlSanitizer';
 import { getNonce, isPathInsideAny } from '../utils/uri';
+import { PreviewConfig } from '../types/messages';
 
 export class StandaloneHtmlBuilder {
   constructor(
@@ -17,6 +18,9 @@ export class StandaloneHtmlBuilder {
   /**
    * Build HTML with vendor scripts for Puppeteer rendering.
    * This includes mermaid.js and katex.js so the headless browser can render them.
+   * `features` carries the markdownPreviewPro.enable* flags: a disabled diagram
+   * engine emits no diagram blocks, so its vendor runtime is neither read from
+   * disk nor embedded in the exported document.
    *
    * The rendered markdown is sanitized BEFORE it is embedded: the markdown
    * engine renders with `html: true`, so raw author markup (scripts, event
@@ -28,9 +32,12 @@ export class StandaloneHtmlBuilder {
   async buildForBrowser(
     markdownHtml: string,
     title: string,
-    documentUri: vscode.Uri
+    documentUri: vscode.Uri,
+    features?: Pick<PreviewConfig, 'enableMermaid' | 'enableExcalidraw'>
   ): Promise<string> {
     const nonce = getNonce();
+    const enableMermaid = features?.enableMermaid ?? true;
+    const enableExcalidraw = features?.enableExcalidraw ?? true;
     const contentSecurityPolicy = [
       "default-src 'none'",
       `script-src 'nonce-${nonce}'`,
@@ -67,15 +74,19 @@ export class StandaloneHtmlBuilder {
     } catch {
       // KaTeX not available
     }
-    try {
-      mermaidJs = await fs.readFile(mermaidJsPath, 'utf-8');
-    } catch {
-      // Mermaid not available
+    if (enableMermaid) {
+      try {
+        mermaidJs = await fs.readFile(mermaidJsPath, 'utf-8');
+      } catch {
+        // Mermaid not available
+      }
     }
-    try {
-      excalidrawJs = await fs.readFile(excalidrawJsPath, 'utf-8');
-    } catch {
-      // Excalidraw not available
+    if (enableExcalidraw) {
+      try {
+        excalidrawJs = await fs.readFile(excalidrawJsPath, 'utf-8');
+      } catch {
+        // Excalidraw not available
+      }
     }
 
     // Script that renders Mermaid and KaTeX client-side, then signals completion.
@@ -158,6 +169,16 @@ export class StandaloneHtmlBuilder {
 })();
 </script>`;
 
+    // A disabled engine's vendor runtime is not embedded at all — its diagram
+    // fences rendered as plain code blocks upstream, so nothing references it.
+    const vendorScripts = [
+      `  <script nonce="${nonce}">${katexJs}</script>`,
+      enableMermaid ? `  <script nonce="${nonce}">${mermaidJs}</script>` : '',
+      enableExcalidraw ? `  <script nonce="${nonce}">${excalidrawJs}</script>` : '',
+    ]
+      .filter(Boolean)
+      .join('\n');
+
     return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -168,9 +189,7 @@ export class StandaloneHtmlBuilder {
   <style>
 ${css}
   </style>
-  <script nonce="${nonce}">${katexJs}</script>
-  <script nonce="${nonce}">${mermaidJs}</script>
-  <script nonce="${nonce}">${excalidrawJs}</script>
+${vendorScripts}
 </head>
 <body>
   <div id="preview-content">

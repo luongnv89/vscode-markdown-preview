@@ -95,7 +95,8 @@ export class ExportManager {
           const browserHtml = await this.htmlBuilder.buildForBrowser(
             result.html,
             title,
-            document.uri
+            document.uri,
+            config
           );
           if (token.isCancellationRequested) {
             return;

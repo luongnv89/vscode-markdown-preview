@@ -2,11 +2,38 @@ import { refreshCopyButtons } from './copyButton';
 import { refreshBlockHighlighter } from './blockHighlighter';
 import { refreshToc } from './toc';
 import { refreshStats } from './statsBar';
+import type { PreviewConfig } from './types/messages';
 
 let mermaidInitialized = false;
 let updateInProgress = false;
 let pendingUpdate: string | null = null;
 let themeObserver: MutationObserver | null = null;
+
+// Feature flags last pushed by the host via configChanged. They default to on
+// so content rendered before the first config push behaves exactly as before;
+// the host already gates block emission, this is the webview-side half.
+let currentConfig: Pick<PreviewConfig, 'enableMermaid' | 'enableExcalidraw'> = {
+  enableMermaid: true,
+  enableExcalidraw: true,
+};
+// The last HTML applied — retained so a configChanged can re-render under the
+// new flags without waiting for the host's own re-render.
+let lastHtml: string | null = null;
+
+/**
+ * Apply a config pushed by the host's configChanged message. Stores the flags
+ * the renderers consult and re-renders the current content when a diagram flag
+ * toggled, so already-emitted blocks are processed or dropped immediately.
+ */
+export function applyConfig(config: PreviewConfig): void {
+  const diagramFlagToggled =
+    config.enableMermaid !== currentConfig.enableMermaid ||
+    config.enableExcalidraw !== currentConfig.enableExcalidraw;
+  currentConfig = config;
+  if (diagramFlagToggled && lastHtml !== null) {
+    void updateContent(lastHtml);
+  }
+}
 
 export async function updateContent(html: string): Promise<void> {
   // If an update is already in progress, queue the latest one
@@ -16,6 +43,7 @@ export async function updateContent(html: string): Promise<void> {
   }
 
   updateInProgress = true;
+  lastHtml = html;
 
   try {
     const container = document.getElementById('preview-content');
@@ -31,11 +59,15 @@ export async function updateContent(html: string): Promise<void> {
     // Post-process: add features
     refreshCopyButtons();
 
-    // Render mermaid diagrams
-    await renderMermaid();
+    // Render mermaid diagrams (skipped entirely when the feature is off)
+    if (currentConfig.enableMermaid) {
+      await renderMermaid();
+    }
 
-    // Render excalidraw diagrams
-    await renderExcalidraw();
+    // Render excalidraw diagrams (skipped entirely when the feature is off)
+    if (currentConfig.enableExcalidraw) {
+      await renderExcalidraw();
+    }
 
     // Render KaTeX math
     renderKatex();
@@ -229,18 +261,22 @@ export function watchThemeChanges(): void {
       mermaidInitialized = false;
 
       // Re-render mermaid diagrams
-      const mermaidBlocks = document.querySelectorAll('.mermaid-block');
-      mermaidBlocks.forEach((block) => {
-        block.setAttribute('data-processed', 'false');
-      });
-      renderMermaid();
+      if (currentConfig.enableMermaid) {
+        const mermaidBlocks = document.querySelectorAll('.mermaid-block');
+        mermaidBlocks.forEach((block) => {
+          block.setAttribute('data-processed', 'false');
+        });
+        renderMermaid();
+      }
 
       // Re-render excalidraw diagrams
-      const excalidrawBlocks = document.querySelectorAll('.excalidraw-block');
-      excalidrawBlocks.forEach((block) => {
-        block.setAttribute('data-processed', 'false');
-      });
-      renderExcalidraw();
+      if (currentConfig.enableExcalidraw) {
+        const excalidrawBlocks = document.querySelectorAll('.excalidraw-block');
+        excalidrawBlocks.forEach((block) => {
+          block.setAttribute('data-processed', 'false');
+        });
+        renderExcalidraw();
+      }
     }, 50);
   });
 
