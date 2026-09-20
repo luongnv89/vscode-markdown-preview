@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Security: stop the HTML/PDF export pipeline executing document JavaScript — rendered markdown is now sanitized with DOMPurify before it reaches the headless browser, the export document carries a per-export nonce Content-Security-Policy (no `unsafe-inline` in `script-src`), and Chromium's renderer sandbox is no longer disabled during export
+
 ## 0.9.4
 
 - Fix PDF export title and header visibility — change from light gray to bold black text

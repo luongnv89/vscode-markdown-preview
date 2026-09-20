@@ -18,15 +18,25 @@ const PAGE_LOAD_TIMEOUT = 60000;
 const RENDER_COMPLETION_TIMEOUT = 30000;
 const FINAL_RENDER_DELAY = 500;
 
+/**
+ * Chromium launch arguments for export rendering.
+ *
+ * Chromium's own sandbox is intentionally NOT disabled: the export pipeline
+ * loads markdown-derived HTML, so the OS-level renderer sandbox is the last
+ * line of defense if hostile markup ever reaches the page. Exported so tests
+ * can pin the policy (no Chromium sandbox-disabling switches may appear).
+ */
+export const CHROME_LAUNCH_ARGS = ['--disable-gpu'];
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-async function launchBrowser(): Promise<any> {
+export async function launchBrowser(): Promise<any> {
   const chromePath = findChromePath();
   // Dynamic import to lazy-load puppeteer-core and avoid slowing extension activation
   const puppeteer = await import('puppeteer-core');
   return puppeteer.launch({
     executablePath: chromePath,
     headless: true,
-    args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-gpu'],
+    args: [...CHROME_LAUNCH_ARGS],
   });
 }
 
