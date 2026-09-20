@@ -7,6 +7,9 @@ const CHECK_ICON = `<svg width="16" height="16" viewBox="0 0 16 16" fill="none" 
   <path d="M3 8.5L6.5 12L13 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
 </svg>`;
 
+// How long the button shows the "copied" check before reverting to the copy icon.
+export const COPIED_FEEDBACK_TIMEOUT = 2000;
+
 export function addCopyButtons(): void {
   const codeBlocks = document.querySelectorAll(
     'pre.hljs:not(.mermaid), pre.code-block:not(.mermaid)'
@@ -59,7 +62,7 @@ async function handleCopy(pre: Element, btn: HTMLButtonElement): Promise<void> {
     setTimeout(() => {
       btn.innerHTML = COPY_ICON;
       btn.classList.remove('copied');
-    }, 2000);
+    }, COPIED_FEEDBACK_TIMEOUT);
   } catch {
     // Fallback for older browsers
     const textarea = document.createElement('textarea');
@@ -76,6 +79,6 @@ async function handleCopy(pre: Element, btn: HTMLButtonElement): Promise<void> {
     setTimeout(() => {
       btn.innerHTML = COPY_ICON;
       btn.classList.remove('copied');
-    }, 2000);
+    }, COPIED_FEEDBACK_TIMEOUT);
   }
 }

@@ -10,6 +10,10 @@ import { PreviewMessageContext, routeWebviewMessage } from './messageRouter';
 import { PreviewEventHost, setupPreviewEventListeners } from './previewEventBindings';
 import { WebviewMessage, PreviewConfig } from './types/messages';
 
+// Debounce before re-rendering the preview after a document change, coalescing
+// rapid keystrokes into a single render pass.
+export const PREVIEW_UPDATE_DEBOUNCE = 300;
+
 export class PreviewManager implements PreviewMessageContext, PreviewEventHost {
   public panel: vscode.WebviewPanel | undefined;
   public readonly engine: MarkdownEngine;
@@ -121,7 +125,7 @@ export class PreviewManager implements PreviewMessageContext, PreviewEventHost {
     }
     this.updateTimeout = setTimeout(() => {
       this.updatePreview(document);
-    }, 300);
+    }, PREVIEW_UPDATE_DEBOUNCE);
   }
 
   public updatePreview(document: vscode.TextDocument): void {

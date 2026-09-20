@@ -86,9 +86,12 @@ export function createMarkdownIt(
     addTaskListSupport(md);
   }
 
-  // KaTeX support
+  // KaTeX support — one registration function per rule
   if (config.enableKatex) {
-    addKatexSupport(md);
+    addInlineMathRule(md);
+    addInlineMathRenderer(md);
+    addBlockMathRule(md);
+    addBlockMathRenderer(md);
   }
 
   // Image rendering (local-image resolution + raw-HTML img rewrite)
@@ -200,8 +203,8 @@ function addTaskListSupport(md: MarkdownItInstance): void {
   });
 }
 
-function addKatexSupport(md: MarkdownItInstance): void {
-  // Inline math: $...$
+// Inline math rule: $...$ — a lone $, never $$, closed by an unescaped $.
+function addInlineMathRule(md: MarkdownItInstance): void {
   md.inline.ruler.after('escape', 'math_inline', (state, silent) => {
     if (state.src[state.pos] !== '$') {
       return false;
@@ -233,12 +236,16 @@ function addKatexSupport(md: MarkdownItInstance): void {
     state.pos = end + 1;
     return true;
   });
+}
 
+function addInlineMathRenderer(md: MarkdownItInstance): void {
   md.renderer.rules['math_inline'] = (tokens, idx) => {
     return `<span class="katex-inline" data-math="${md.utils.escapeHtml(tokens[idx].content)}">${md.utils.escapeHtml(tokens[idx].content)}</span>`;
   };
+}
 
-  // Block math: $$...$$
+// Block math rule: $$...$$ — an opening $$ line and a later closing $$ line.
+function addBlockMathRule(md: MarkdownItInstance): void {
   md.block.ruler.after('blockquote', 'math_block', (state, startLine, endLine, silent) => {
     const startPos = state.bMarks[startLine] + state.tShift[startLine];
     const maxPos = state.eMarks[startLine];
@@ -286,7 +293,9 @@ function addKatexSupport(md: MarkdownItInstance): void {
 
     return true;
   });
+}
 
+function addBlockMathRenderer(md: MarkdownItInstance): void {
   md.renderer.rules['math_block'] = (tokens, idx) => {
     const line = tokens[idx].map ? tokens[idx].map![0] : 0;
     return `<div class="katex-block code-line" data-line="${line}" data-math="${md.utils.escapeHtml(tokens[idx].content)}">${md.utils.escapeHtml(tokens[idx].content)}</div>\n`;

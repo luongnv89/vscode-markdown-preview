@@ -5,6 +5,10 @@ import { refreshToc } from './toc';
 import { refreshStats } from './statsBar';
 import type { PreviewConfig } from './types/messages';
 
+// Debounce for the theme observer: the toolbar's class swap arrives as two
+// mutations, so the diagram re-render waits for both to settle.
+export const THEME_CHANGE_DEBOUNCE = 50;
+
 let mermaidInitialized = false;
 let updateInProgress = false;
 let pendingUpdate: string | null = null;
@@ -278,7 +282,7 @@ export function watchThemeChanges(): void {
         });
         renderExcalidraw();
       }
-    }, 50);
+    }, THEME_CHANGE_DEBOUNCE);
   });
 
   themeObserver.observe(document.body, {
