@@ -33,6 +33,9 @@ jobs:
       - name: Lint
         run: npm run lint
 
+      - name: Check docs consistency
+        run: npm run check:docs
+
       - name: Type check (src)
         run: npx tsc --noEmit -p tsconfig.json
 
