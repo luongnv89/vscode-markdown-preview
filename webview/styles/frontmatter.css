@@ -87,3 +87,11 @@ details[open].frontmatter-card > .frontmatter-summary::before {
   background: var(--border-color);
   font-size: 0.9em;
 }
+
+/* Print and PDF export - black for readability */
+@media print {
+  .frontmatter-summary,
+  .frontmatter-key {
+    color: #000000;
+  }
+}
