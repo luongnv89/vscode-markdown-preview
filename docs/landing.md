@@ -6,7 +6,6 @@ license: MIT
 repository: https://github.com/luongnv89/vscode-markdown-preview
 marketplace: https://marketplace.visualstudio.com/items?itemName=luongnv89.markdown-preview-pro
 docs: https://github.com/luongnv89/vscode-markdown-preview/blob/main/docs/USER_GUIDE.md
-version: 0.9.0
 highlights:
   - Syntax highlighting
   - Mermaid diagrams
@@ -19,8 +18,6 @@ highlights:
 # Markdown Preview Pro
 
 A clean, minimal markdown preview for Visual Studio Code — built for developers who spend real time in their editor and care about how code blocks, diagrams, math, tables, and long technical docs actually render.
-
-> **Note:** This page is the exact output of generating a single Markdown file into a single standalone HTML file using this extension's own rendering/export pipeline.
 
 [Install from Marketplace](https://marketplace.visualstudio.com/items?itemName=luongnv89.markdown-preview-pro) · [View on GitHub](https://github.com/luongnv89/vscode-markdown-preview) · [Read the User Guide](https://github.com/luongnv89/vscode-markdown-preview/blob/main/docs/USER_GUIDE.md)
 
@@ -41,6 +38,8 @@ That is why the rendering showcase comes before installation.
 ## Rendering showcase
 
 This section intentionally demonstrates the different markdown elements and rich content types the extension renders.
+
+> **Note:** This page is the exact output of generating a single Markdown file into a single standalone HTML file using this extension's own rendering/export pipeline.
 
 ### TypeScript code block
 

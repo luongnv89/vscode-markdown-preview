@@ -42,6 +42,7 @@ jobs:
           rm -rf .site
           mkdir -p .site
           cp docs/index.html .site/index.html
+          cp -R docs/assets .site/assets
           cp docs/robots.txt .site/robots.txt
           cp docs/sitemap.xml .site/sitemap.xml
           cp docs/llms.txt .site/llms.txt

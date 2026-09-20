@@ -24,7 +24,14 @@ try {
   }
   throw err;
 }
-const { createMarkdownIt, parseFrontmatter, renderFrontmatterHtml, escapeHtml } = sharedCore;
+const { createMarkdownIt, parseFrontmatter, renderFrontmatterHtml, escapeHtml, detectVendorNeeds } =
+  sharedCore;
+
+// Generated assets the page links instead of inlining (issue #78): vendor
+// runtimes, the client-side render script, and the JSON-LD mirror. Emitted
+// under docs/ next to index.html so the Pages workflow deploys them together;
+// the directory is gitignored and rebuilt from scratch on every run.
+const assetsDir = path.join(repoRoot, 'docs', 'assets');
 
 // Mirrors the flags the extension renders the preview with (PreviewConfig):
 // typographer on, hard line breaks off, every renderer feature on.
@@ -73,16 +80,6 @@ function getImageMimeType(ext) {
   );
 }
 
-function getFontMimeType(ext) {
-  return (
-    {
-      '.woff2': 'font/woff2',
-      '.woff': 'font/woff',
-      '.ttf': 'font/ttf',
-    }[ext.toLowerCase()] || 'application/octet-stream'
-  );
-}
-
 async function embedImages(html, documentPath) {
   const imgRegex = /<img\s+[^>]*src=["']([^"']+)["'][^>]*>/g;
   const matches = [...html.matchAll(imgRegex)];
@@ -115,24 +112,6 @@ async function embedImages(html, documentPath) {
       (_m, prefix, quote) => `${prefix}${quote}${dataUri}${quote}`
     );
   });
-}
-
-async function embedFonts(css, fontsDir) {
-  const matches = [...css.matchAll(/url\((?:['"]?)(?:\.\/)?fonts\/([^'")\s]+)(?:['"]?)\)/g)];
-  let result = css;
-
-  for (const match of matches) {
-    const fontPath = path.join(fontsDir, match[1]);
-    try {
-      const data = await fs.readFile(fontPath);
-      const mime = getFontMimeType(path.extname(fontPath));
-      result = result.replace(match[0], `url(data:${mime};base64,${data.toString('base64')})`);
-    } catch {
-      // Keep original URL if font missing
-    }
-  }
-
-  return result;
 }
 
 function replaceThemeVariables(css) {
@@ -182,10 +161,12 @@ function warnMissingAsset(label, err) {
 
 // Reads the stylesheets the page inlines, in join order: vendor CSS is
 // optional garnish (warn-and-skip) while main.css is the core bundle
-// (warn-and-fail).
+// (warn-and-fail). katex.min.css is deliberately absent — when the document
+// uses math it is served as a separate cacheable file (assets/katex.min.css)
+// so its url(fonts/…) references resolve to the emitted fonts/ directory.
 async function readCssParts(vendorDir) {
   const parts = [];
-  for (const file of ['katex.min.css', 'github-dark.min.css']) {
+  for (const file of ['github-dark.min.css']) {
     try {
       parts.push(`/* ${file} */\n${await fs.readFile(path.join(vendorDir, file), 'utf8')}`);
     } catch (err) {
@@ -254,7 +235,6 @@ async function getCombinedCss() {
   const vendorDir = path.join(repoRoot, 'dist', 'webview', 'vendor');
   const parts = await readCssParts(vendorDir);
   let css = parts.join('\n\n');
-  css = await embedFonts(css, path.join(vendorDir, 'fonts'));
   css = replaceThemeVariables(css);
   css += LANDING_CSS;
   return css;
@@ -272,31 +252,63 @@ async function getFaviconDataUri() {
   }
 }
 
-// Reads the two vendor scripts the page inlines (KaTeX + Mermaid). Both are
-// optional garnish: an unreadable file warns and embeds nothing.
-async function loadVendorScripts(vendorDir) {
-  const katexJs = await fs.readFile(path.join(vendorDir, 'katex.min.js'), 'utf8').catch((err) => {
-    warnMissingAsset('katex.min.js', err);
-    return '';
-  });
-  const mermaidJs = await fs
-    .readFile(path.join(vendorDir, 'mermaid.min.js'), 'utf8')
-    .catch((err) => {
-      warnMissingAsset('mermaid.min.js', err);
-      return '';
-    });
-  return { katexJs, mermaidJs };
+// The vendor payloads the page links as separate cacheable files, selected by
+// the shared content probe (detectVendorNeeds — the same gate the preview and
+// export use). A landing document with no math ships neither KaTeX's script,
+// stylesheet nor fonts, and one with no diagrams drops mermaid's ~5.5 MB
+// bundle entirely (issue #78).
+function planVendorAssets(needs) {
+  return {
+    scripts: [needs.math ? 'katex.min.js' : '', needs.mermaid ? 'mermaid.min.js' : ''].filter(
+      Boolean
+    ),
+    styles: needs.math ? ['katex.min.css'] : [],
+    dirs: needs.math ? ['fonts'] : [],
+  };
 }
 
-// The values the <head> metadata derives from frontmatter, with the
-// published-site fallbacks for the fields the page does not set.
-function resolvePageMetadata(frontmatter) {
+// Writes docs/assets/: the page's own render script and the JSON-LD mirror
+// every <script src> must resolve to, then the vendor payloads the plan
+// selected. Each vendor copy warns-and-skips per the missing-asset rule, so a
+// broken dist/ build never emits a dangling <script src>/<link href>.
+async function emitLandingAssets(needs, jsonLd) {
+  await fs.rm(assetsDir, { recursive: true, force: true });
+  await fs.mkdir(assetsDir, { recursive: true });
+  await fs.writeFile(path.join(assetsDir, 'landing.js'), LANDING_SCRIPT, 'utf8');
+  await fs.writeFile(path.join(assetsDir, 'ld.json'), jsonLd, 'utf8');
+  const vendorDir = path.join(repoRoot, 'dist', 'webview', 'vendor');
+  const plan = planVendorAssets(needs);
+  const emitted = { scripts: [], styles: [] };
+  for (const file of [...plan.scripts, ...plan.styles]) {
+    try {
+      await fs.copyFile(path.join(vendorDir, file), path.join(assetsDir, file));
+      (file.endsWith('.css') ? emitted.styles : emitted.scripts).push(file);
+    } catch (err) {
+      warnMissingAsset(file, err);
+    }
+  }
+  for (const dir of plan.dirs) {
+    try {
+      await fs.cp(path.join(vendorDir, dir), path.join(assetsDir, dir), { recursive: true });
+    } catch (err) {
+      warnMissingAsset(`${dir}/`, err);
+    }
+  }
+  return emitted;
+}
+
+// The values the <head> metadata derives from frontmatter and the built
+// extension. The published version is package.json's, never the landing
+// frontmatter's — a hand-maintained `version:` key goes stale the day it is
+// written (issue #71), so pkgVersion wins and the frontmatter value is only a
+// fallback for callers that have no package to read.
+function resolvePageMetadata(frontmatter, pkgVersion) {
   return {
     siteUrl: 'https://luongnv.com/vscode-markdown-preview/',
     description:
       (frontmatter && frontmatter.subtitle) ||
       'Clean, minimal markdown preview for VS Code with syntax highlighting, Mermaid diagrams, KaTeX math, HTML/PDF export, and interactive features.',
-    version: (frontmatter && frontmatter.version) || '',
+    version: pkgVersion || (frontmatter && frontmatter.version) || '',
     repoUrl:
       (frontmatter && frontmatter.repository) ||
       'https://github.com/luongnv89/vscode-markdown-preview',
@@ -304,40 +316,46 @@ function resolvePageMetadata(frontmatter) {
   };
 }
 
-// The schema.org SoftwareApplication block. Every interpolation is
-// escapeHtml'd — title/description/version come from the landing frontmatter.
+// The schema.org SoftwareApplication payload — title/description come from
+// the landing frontmatter, the version from package.json. Returned as bare
+// JSON (no <script> wrapper): buildSeoMeta inlines it for crawlers while
+// emitLandingAssets mirrors it byte-for-byte to assets/ld.json, the file the
+// tag's src points at — a data block never fetches src, so crawlers keep the
+// inline copy and the page's "every script has a src" contract still holds
+// (issue #78). Emitted compact so `"softwareVersion":"X.Y.Z"` stays greppable
+// without whitespace assumptions. Escaping `<` keeps a literal "</script>"
+// inside a value from ending the data block early while staying valid JSON.
 function buildJsonLd(meta) {
-  return `<script type="application/ld+json">
-  {
-    "@context": "https://schema.org",
-    "@type": "SoftwareApplication",
-    "name": "${escapeHtml(meta.title)}",
-    "description": "${escapeHtml(meta.description)}",
-    "applicationCategory": "DeveloperApplication",
-    "operatingSystem": "Windows, macOS, Linux",
-    "softwareVersion": "${escapeHtml(meta.version)}",
-    "author": {
-      "@type": "Person",
-      "name": "luongnv89",
-      "url": "https://github.com/luongnv89"
+  return JSON.stringify({
+    '@context': 'https://schema.org',
+    '@type': 'SoftwareApplication',
+    name: meta.title,
+    description: meta.description,
+    applicationCategory: 'DeveloperApplication',
+    operatingSystem: 'Windows, macOS, Linux',
+    softwareVersion: meta.version,
+    author: {
+      '@type': 'Person',
+      name: 'luongnv89',
+      url: 'https://github.com/luongnv89',
     },
-    "url": "${escapeHtml(meta.siteUrl)}",
-    "downloadUrl": "${escapeHtml(meta.marketplaceUrl)}",
-    "codeRepository": "${escapeHtml(meta.repoUrl)}",
-    "license": "https://opensource.org/licenses/MIT",
-    "offers": {
-      "@type": "Offer",
-      "price": "0",
-      "priceCurrency": "USD"
+    url: meta.siteUrl,
+    downloadUrl: meta.marketplaceUrl,
+    codeRepository: meta.repoUrl,
+    license: 'https://opensource.org/licenses/MIT',
+    offers: {
+      '@type': 'Offer',
+      price: '0',
+      priceCurrency: 'USD',
     },
-    "image": "${escapeHtml(meta.repoUrl)}/raw/main/media/screenshot.png"
-  }
-  </script>`;
+    image: `${meta.repoUrl}/raw/main/media/screenshot.png`,
+  }).replace(/</g, '\\u003c');
 }
 
 // The SEO/OpenGraph/Twitter block for the page <head>. meta carries the
-// resolvePageMetadata() fields plus { title, faviconUri }.
-function buildSeoMeta(meta) {
+// resolvePageMetadata() fields plus { title, faviconUri }; jsonLd is the
+// buildJsonLd() payload, inlined inside a src-bearing data-block script.
+function buildSeoMeta(meta, jsonLd) {
   return `
   <meta name="description" content="${escapeHtml(meta.description)}">
   <meta name="author" content="luongnv89">
@@ -362,13 +380,16 @@ function buildSeoMeta(meta) {
   <meta name="twitter:image" content="${escapeHtml(meta.repoUrl)}/raw/main/media/screenshot.png">
 
   <!-- JSON-LD Structured Data -->
-  ${buildJsonLd(meta)}`;
+  <script type="application/ld+json" src="assets/ld.json">
+${jsonLd}
+  </script>`;
 }
 
-// The client-side script inlined into the page: theme toolbar with localStorage
-// persistence, copy buttons on code blocks, KaTeX rendering, Mermaid rendering.
-const RENDER_SCRIPT = `
-<script>
+// The client-side script shipped as assets/landing.js: theme toolbar with
+// localStorage persistence, copy buttons on code blocks, KaTeX rendering,
+// Mermaid rendering. Loaded with `defer` after the gated vendor scripts, so
+// their globals are defined when this IIFE runs.
+const LANDING_SCRIPT = `
 const COPY_ICON = '<svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="5" y="5" width="8" height="8" rx="1" stroke="currentColor" stroke-width="1.2"/><path d="M3 11V3C3 2.44772 3.44772 2 4 2H10" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>';
 const CHECK_ICON = '<svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M3 8.5L6.5 12L13 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 const SUN_ICON = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>';
@@ -507,19 +528,26 @@ async function renderMermaid(theme) {
   wrapCodeBlocks();
   await renderMermaid(initialTheme);
 })();
-</script>`;
+`;
 
-async function buildHtml(markdownHtml, title, documentPath, frontmatter) {
-  const vendorDir = path.join(repoRoot, 'dist', 'webview', 'vendor');
+// Every <script> in the page carries a src (issue #78): vendor runtimes are
+// cacheable files emitted only when the rendered markup uses them, the render
+// script is assets/landing.js, and even the JSON-LD data block names its
+// assets/ld.json mirror — total inline script text stays under a kilobyte.
+async function buildHtml(markdownHtml, title, documentPath, frontmatter, pkgVersion, needs) {
   const css = await getCombinedCss();
-  const { katexJs, mermaidJs } = await loadVendorScripts(vendorDir);
   const htmlWithEmbeddedImages = await embedImages(markdownHtml, documentPath);
   const faviconUri = await getFaviconDataUri();
-  const seoMeta = buildSeoMeta({
-    title,
-    faviconUri,
-    ...resolvePageMetadata(frontmatter),
-  });
+  const pageMeta = { title, faviconUri, ...resolvePageMetadata(frontmatter, pkgVersion) };
+  const jsonLd = buildJsonLd(pageMeta);
+  const seoMeta = buildSeoMeta(pageMeta, jsonLd);
+  const emitted = await emitLandingAssets(needs, jsonLd);
+  const vendorStyleLinks = emitted.styles
+    .map((file) => `  <link rel="stylesheet" href="assets/${file}">`)
+    .join('\n');
+  const vendorScriptTags = emitted.scripts
+    .map((file) => `  <script src="assets/${file}" defer></script>`)
+    .join('\n');
 
   return `<!DOCTYPE html>
 <html lang="en">
@@ -528,15 +556,15 @@ async function buildHtml(markdownHtml, title, documentPath, frontmatter) {
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>${escapeHtml(title)}</title>
 ${seoMeta}
+${vendorStyleLinks}
   <style>${css}</style>
-  <script>${katexJs}</script>
-  <script>${mermaidJs}</script>
+${vendorScriptTags}
+  <script src="assets/landing.js" defer></script>
 </head>
 <body class="preview-theme-dark">
   <div id="preview-content">
 ${htmlWithEmbeddedImages}
   </div>
-  ${RENDER_SCRIPT}
 </body>
 </html>`;
 }
@@ -549,7 +577,15 @@ async function main() {
   const renderedBody = md.render(body);
   const html = `${frontmatter ? renderFrontmatterHtml(frontmatter) : ''}\n${renderedBody}`;
   const title = (frontmatter && frontmatter.title) || pkg.displayName || pkg.name;
-  let standalone = await buildHtml(html, title, landingPath, frontmatter);
+  // The shared content probe gates which vendor runtimes the page links —
+  // the same markup the browser will render, so a feature the document does
+  // not use is neither emitted nor referenced.
+  const needs = detectVendorNeeds(html, {
+    enableKatex: LANDING_CONFIG.enableKatex,
+    enableMermaid: LANDING_CONFIG.enableMermaid,
+    enableExcalidraw: LANDING_CONFIG.enableExcalidraw,
+  });
+  let standalone = await buildHtml(html, title, landingPath, frontmatter, pkg.version, needs);
   // Normalize whitespace to pass pre-commit hooks (trailing whitespace, final newline)
   standalone = standalone.replace(/[^\S\n]+$/gm, '').replace(/\n*$/, '\n');
   await fs.writeFile(outputPath, standalone, 'utf8');
@@ -559,10 +595,11 @@ async function main() {
 }
 
 // Exported for tests (src/test/suite/buildDeps.test.ts,
-// src/test/suite/sharedEngine.test.ts) — the landing generator renders through
-// the compiled shared engine, which must keep producing checkbox markup
-// without markdown-it-task-lists.
-module.exports = { createLandingRenderer };
+// src/test/suite/sharedEngine.test.ts, src/test/suite/landingPage.test.ts) —
+// the landing generator renders through the compiled shared engine, which
+// must keep producing checkbox markup without markdown-it-task-lists, and the
+// asset plan pins the content gate's mapping without a second full build.
+module.exports = { createLandingRenderer, planVendorAssets, generateLanding: main };
 
 if (require.main === module) {
   main().catch((error) => {
