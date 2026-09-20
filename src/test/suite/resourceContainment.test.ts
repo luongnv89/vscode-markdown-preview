@@ -208,3 +208,36 @@ suite('webview localResourceRoots (#28)', () => {
     }
   });
 });
+
+suite('export image embedding replaces the matched tag (#30)', () => {
+  test('a repeated image src embeds every tag and leaves prose mentions untouched', async () => {
+    const docDir = makeTempDir('mpp-doc-');
+    fs.writeFileSync(path.join(docDir, 'x.png'), PNG_BYTES);
+
+    const warnings: string[] = [];
+    const builder = new StandaloneHtmlBuilder(vscode.Uri.file(repoRoot), (m) => warnings.push(m));
+    const docUri = vscode.Uri.file(path.join(docDir, 'guide.md'));
+
+    // The same path appears in prose and in two <img> tags — in the second
+    // tag it is also the alt text. Only the two src attributes may be
+    // rewritten; a textual String.replace needle hits the first occurrence
+    // anywhere in the document instead.
+    const html = await (
+      builder as unknown as {
+        embedImages(h: string, u: vscode.Uri, roots?: string[]): Promise<string>;
+      }
+    ).embedImages(
+      '<p>see x.png for the diagram</p>' +
+        '<img src="x.png" alt="first">' +
+        '<img alt="x.png" src="x.png">',
+      docUri,
+      [docDir]
+    );
+
+    const embedded = html.match(/src="data:image\/png;base64,/g) || [];
+    assert.strictEqual(embedded.length, 2, `expected both <img> tags embedded: ${html}`);
+    assert.ok(html.includes('see x.png for the diagram'), `prose mention was rewritten: ${html}`);
+    assert.ok(html.includes('alt="x.png"'), `alt attribute was rewritten: ${html}`);
+    assert.ok(!html.includes('src="x.png"'), `an <img> tag kept its file src: ${html}`);
+  });
+});
