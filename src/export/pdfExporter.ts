@@ -1,3 +1,4 @@
+import type { CancellationToken } from 'vscode';
 import { findChromePath, ChromeNotFoundError } from './browserFinder';
 
 export { ChromeNotFoundError };
@@ -66,17 +67,49 @@ async function closeBrowser(browser: any): Promise<void> {
   }
 }
 
+/**
+ * Raised when a CancellationToken fires mid-export. Closing the browser makes
+ * the in-flight puppeteer call reject; callers should treat this (or any
+ * error observed while `token.isCancellationRequested`) as a user abort, not
+ * an export failure.
+ */
+export class ExportCancelledError extends Error {
+  constructor() {
+    super('Export cancelled');
+    this.name = 'ExportCancelledError';
+  }
+}
+
+function throwIfCancelled(token?: CancellationToken): void {
+  if (token?.isCancellationRequested) {
+    throw new ExportCancelledError();
+  }
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function onCancelClose(token: CancellationToken | undefined, browser: any) {
+  // Aborting the browser makes the in-flight page operation reject promptly
+  // instead of running a long render to completion after the user cancelled.
+  return token?.onCancellationRequested(() => {
+    void closeBrowser(browser);
+  });
+}
+
 export async function generatePdf(
   html: string,
   outputPath: string,
-  options?: PdfOptions
+  options?: PdfOptions,
+  token?: CancellationToken
 ): Promise<void> {
   const opts = { ...DEFAULT_PDF_OPTIONS, ...options };
   const browser = await launchBrowser();
+  const cancelSub = onCancelClose(token, browser);
 
   try {
+    throwIfCancelled(token);
     const page = await browser.newPage();
     await loadAndRender(page, html);
+    throwIfCancelled(token);
 
     await page.pdf({
       path: outputPath,
@@ -86,6 +119,7 @@ export async function generatePdf(
       preferCSSPageSize: false,
     });
   } finally {
+    cancelSub?.dispose();
     await closeBrowser(browser);
   }
 }
@@ -95,12 +129,15 @@ export async function generatePdf(
  * This allows Mermaid diagrams and KaTeX math to be rendered client-side
  * and then captured as static HTML for standalone export.
  */
-export async function renderInBrowser(html: string): Promise<string> {
+export async function renderInBrowser(html: string, token?: CancellationToken): Promise<string> {
   const browser = await launchBrowser();
+  const cancelSub = onCancelClose(token, browser);
 
   try {
+    throwIfCancelled(token);
     const page = await browser.newPage();
     await loadAndRender(page, html);
+    throwIfCancelled(token);
 
     // Extract the rendered content (with scripts removed)
     const renderedHtml = await page.evaluate(() => {
@@ -110,6 +147,7 @@ export async function renderInBrowser(html: string): Promise<string> {
 
     return renderedHtml;
   } finally {
+    cancelSub?.dispose();
     await closeBrowser(browser);
   }
 }
