@@ -110,10 +110,9 @@ function loadVendor(key: VendorKey, spec: VendorSpec): Promise<void> {
   script.dataset.vendor = key;
   const wait = waitForScript(script).then(() => {
     if (!spec.isReady()) {
-      // A failed injected tag is dead weight: left in the DOM it would be
-      // mistaken for a shipped tag on the next ensure and suppress every
-      // retry until the 30 s timeout. Drop it so a later update can inject
-      // a fresh one.
+      // A failed injected tag is dead weight — left in the DOM the next
+      // ensure finds it settled and replaces it anyway. Dropping it here
+      // keeps the managed set to live elements only.
       script.remove();
     }
   });
