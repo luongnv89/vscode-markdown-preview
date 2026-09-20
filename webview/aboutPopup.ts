@@ -1,6 +1,30 @@
 import { infoIcon } from './icons';
 import { createButton } from './domUtils';
 
+export function createAboutButton(toolbar: HTMLElement): HTMLButtonElement {
+  let aboutPopup: HTMLDivElement | null = null;
+
+  function dismissAbout() {
+    if (aboutPopup) {
+      aboutPopup.remove();
+      aboutPopup = null;
+    }
+  }
+
+  const aboutButton = createButton(infoIcon, 'About', () => {
+    if (aboutPopup) {
+      dismissAbout();
+      return;
+    }
+    aboutPopup = buildAboutPopup();
+    toolbar.appendChild(aboutPopup);
+  });
+
+  watchOutsideClicks(aboutButton, () => aboutPopup, dismissAbout);
+
+  return aboutButton;
+}
+
 // One labelled row of the popup: <span class="about-label">Label:</span>
 // followed by the caller-supplied value nodes, DOM-built like everything else
 // here so dataset values are never parsed as markup.
@@ -49,36 +73,21 @@ function buildAboutPopup(): HTMLDivElement {
   return popup;
 }
 
-export function createAboutButton(toolbar: HTMLElement): HTMLButtonElement {
-  let aboutPopup: HTMLDivElement | null = null;
-
-  function dismissAbout() {
-    if (aboutPopup) {
-      aboutPopup.remove();
-      aboutPopup = null;
-    }
-  }
-
-  const aboutButton = createButton(infoIcon, 'About', () => {
-    if (aboutPopup) {
-      dismissAbout();
-      return;
-    }
-    aboutPopup = buildAboutPopup();
-    toolbar.appendChild(aboutPopup);
-  });
-
-  // Dismiss popup on click outside
+// Dismiss popup on click outside
+function watchOutsideClicks(
+  aboutButton: HTMLElement,
+  getPopup: () => HTMLDivElement | null,
+  dismiss: () => void
+): void {
   document.addEventListener('click', (e) => {
+    const popup = getPopup();
     if (
-      aboutPopup &&
-      !aboutPopup.contains(e.target as Node) &&
+      popup &&
+      !popup.contains(e.target as Node) &&
       e.target !== aboutButton &&
       !aboutButton.contains(e.target as Node)
     ) {
-      dismissAbout();
+      dismiss();
     }
   });
-
-  return aboutButton;
 }
