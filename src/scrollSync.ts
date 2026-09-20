@@ -1,5 +1,4 @@
 import * as vscode from 'vscode';
-import { PreviewConfig } from './types/messages';
 
 export class ScrollSync {
   private scrollSyncLock = false;
