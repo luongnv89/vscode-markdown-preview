@@ -119,6 +119,10 @@ async function renderMermaid(): Promise<void> {
       // 'strict': labels are sanitized and `click` JS directives are never
       // bound — diagram text comes straight from the untrusted document.
       securityLevel: 'strict',
+      // Mermaid 12 changed its defaults to the ELK layout engine and the
+      // `neo` look — pin dagre + classic to keep the pre-v12 rendering.
+      layout: 'dagre',
+      look: 'classic',
       fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif',
     });
 
