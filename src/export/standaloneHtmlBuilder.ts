@@ -4,7 +4,7 @@ import * as path from 'path';
 import { sanitizeExportHtml } from './htmlSanitizer';
 import { escapeHtml } from '../utils/htmlEscape';
 import { getNonce, isPathInsideAny } from '../utils/uri';
-import { PreviewConfig } from '../types/messages';
+import { detectVendorNeeds, VendorFeatureFlags, VendorNeeds } from '../utils/vendorNeeds';
 
 // Per-export CSP for the standalone document: only the extension's own nonced
 // scripts may run, and no network loads other than images are permitted.
@@ -121,36 +121,18 @@ interface VendorScriptContents {
 // Feature flags that can force a renderer off even when its placeholder
 // markup is present — a disabled engine emits no placeholders upstream
 // (markdownCore.ts), so the flag check is defense in depth, not the gate.
-type ExportFeatureFlags = Partial<
-  Pick<PreviewConfig, 'enableKatex' | 'enableMermaid' | 'enableExcalidraw'>
->;
+type ExportFeatureFlags = VendorFeatureFlags;
 
 // Which client-side runtimes the exported document actually uses. Each
 // renderer's vendor bundle (~26 MB combined) is read from disk and inlined
 // only when the document carries its placeholder markup; KaTeX additionally
 // gates its stylesheet and the base64 font embedding (~1.4 MB of output).
-interface ExportAssetNeeds {
-  math: boolean;
-  mermaid: boolean;
-  excalidraw: boolean;
-}
+type ExportAssetNeeds = VendorNeeds;
 
 // Detection runs on the sanitized markup — post-DOMPurify — so it counts
-// exactly the placeholders the render script will find. The match requires a
-// class attribute (`class="…katex-block…"`), so prose merely mentioning a
-// class name cannot trigger an embed; the classes are the same selectors the
-// render script queries (`.katex-inline[data-math]`, `.mermaid-block`,
-// `.excalidraw-block`).
-function detectExportAssetNeeds(
-  sanitizedHtml: string,
-  features: Required<ExportFeatureFlags>
-): ExportAssetNeeds {
-  return {
-    math: features.enableKatex && /class="[^"]*\bkatex-(?:inline|block)\b/.test(sanitizedHtml),
-    mermaid: features.enableMermaid && /class="[^"]*\bmermaid-block\b/.test(sanitizedHtml),
-    excalidraw: features.enableExcalidraw && /class="[^"]*\bexcalidraw-block\b/.test(sanitizedHtml),
-  };
-}
+// exactly the placeholders the render script will find (see the call site in
+// buildForBrowser; the shared detectVendorNeeds requires a class attribute,
+// so prose merely mentioning a class name cannot trigger an embed).
 
 // A runtime the document does not reference is not embedded at all — its
 // fences rendered as plain code blocks, or no such fences exist.
@@ -222,7 +204,7 @@ export class StandaloneHtmlBuilder {
     // Content gating happens on the sanitized markup: it is exactly what the
     // headless browser will render, so a placeholder that would not survive
     // sanitization never triggers an asset embed.
-    const needs = detectExportAssetNeeds(sanitizedHtml, flags);
+    const needs = detectVendorNeeds(sanitizedHtml, flags);
 
     const css = await this.getCombinedCss(needs.math);
     const vendorJs = await this.readVendorScripts(needs);

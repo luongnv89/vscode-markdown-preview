@@ -81,21 +81,23 @@ suite('feature flags enableMermaid / enableExcalidraw (#32)', () => {
 
   suite('preview document vendor payload', () => {
     test('webview HTML omits mermaid/excalidraw vendor scripts when disabled', () => {
-      const html = buildWebviewHtml(
-        STUB_WEBVIEW,
-        vscode.Uri.file(repoRoot),
-        ABOUT_INFO,
-        false,
-        false,
-        false
-      );
-      assert.ok(!html.includes('mermaid.min.js'), 'mermaid.min.js still referenced');
+      const html = buildWebviewHtml(STUB_WEBVIEW, vscode.Uri.file(repoRoot), ABOUT_INFO, false, {
+        enableMermaid: false,
+        enableExcalidraw: false,
+      });
+      // A disabled feature ships no loading tag — the lazy-load data-vendor-*
+      // URI attributes stay (they never fetch; #72 needs them if the flag is
+      // toggled on later), so assert on the script/link tags, not substrings.
       assert.ok(
-        !html.includes('excalidraw-utils.min.js'),
-        'excalidraw-utils.min.js still referenced'
+        !/<script[^>]*mermaid\.min\.js/.test(html),
+        'mermaid.min.js script tag still emitted'
       );
-      assert.ok(html.includes('katex.min.js'), 'katex.min.js missing');
-      assert.ok(html.includes('main.js'), 'main.js missing');
+      assert.ok(
+        !/<script[^>]*excalidraw-utils\.min\.js/.test(html),
+        'excalidraw-utils.min.js script tag still emitted'
+      );
+      assert.ok(/<script[^>]*katex\.min\.js/.test(html), 'katex.min.js missing');
+      assert.ok(/<script[^>]*main\.js/.test(html), 'main.js missing');
       // script-src stays nonce-only — a shorter script list needs no CSP change.
       const csp = html.match(/Content-Security-Policy"\s+content="([^"]+)"/);
       assert.ok(csp && /script-src 'nonce-[^']+'/.test(csp[1]), `CSP weakened: ${csp && csp[1]}`);

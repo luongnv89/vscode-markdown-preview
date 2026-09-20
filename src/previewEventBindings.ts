@@ -19,7 +19,7 @@ export interface PreviewEventHost {
   readonly currentResourceRoots: readonly vscode.Uri[];
   checkboxToggleInProgress: boolean;
   getTitle(document: vscode.TextDocument): string;
-  getWebviewHtml(webview: vscode.Webview): string;
+  getWebviewHtml(webview: vscode.Webview, document?: vscode.TextDocument): string;
   updatePreview(document: vscode.TextDocument): void;
   debouncedUpdate(document: vscode.TextDocument): void;
   recreatePanel(document: vscode.TextDocument): void;
@@ -128,14 +128,16 @@ function bindConfigurationChanges(host: PreviewEventHost, disposables: vscode.Di
         host.engine.updateConfig(host.config);
         const documentShapeChanged =
           host.config.allowRemoteImages !== previous.allowRemoteImages ||
+          host.config.enableKatex !== previous.enableKatex ||
           host.config.enableMermaid !== previous.enableMermaid ||
           host.config.enableExcalidraw !== previous.enableExcalidraw;
         const panel = host.panel;
         if (panel && documentShapeChanged) {
           // img-src lives in the CSP meta and the vendor <script> set is
           // baked into the webview document, so these opt-ins/outs only take
-          // effect on a fresh document.
-          panel.webview.html = host.getWebviewHtml(panel.webview);
+          // effect on a fresh document. The rebuilt HTML re-detects vendor
+          // needs from the active document under the new flags.
+          panel.webview.html = host.getWebviewHtml(panel.webview, host.activeDocument);
         }
         const document = host.activeDocument;
         if (document) {
