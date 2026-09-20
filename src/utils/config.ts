@@ -12,5 +12,6 @@ export function getPreviewConfig(): PreviewConfig {
     lineBreaks: config.get('lineBreaks', false),
     typographer: config.get('typographer', true),
     showFrontmatter: config.get<'card' | 'none'>('showFrontmatter', 'card'),
+    allowRemoteImages: config.get('allowRemoteImages', false),
   };
 }

@@ -6,7 +6,7 @@ import { MarkdownEngine } from './markdownEngine';
 import { ScrollSync } from './scrollSync';
 import { toggleCheckbox } from './checkboxHandler';
 import { getPreviewConfig } from './utils/config';
-import { getNonce } from './utils/uri';
+import { buildWebviewHtml, PreviewAboutInfo } from './utils/webviewHtml';
 import { WebviewMessage, PreviewConfig } from './types/messages';
 
 export class PreviewManager {
@@ -20,7 +20,7 @@ export class PreviewManager {
   private currentResourceRoots: vscode.Uri[] = [];
   private lastViewColumn: vscode.ViewColumn = vscode.ViewColumn.Beside;
   private checkboxToggleInProgress = false;
-  private readonly aboutInfo: { version: string; publisher: string; repo: string; commit: string };
+  private readonly aboutInfo: PreviewAboutInfo;
 
   constructor(private readonly extensionUri: vscode.Uri) {
     // Read about info from package.json using fs (webpack-safe)
@@ -209,8 +209,14 @@ export class PreviewManager {
     this.disposables.push(
       vscode.workspace.onDidChangeConfiguration((event) => {
         if (event.affectsConfiguration('markdownPreviewPro')) {
+          const previousAllowRemoteImages = this.config.allowRemoteImages;
           this.config = getPreviewConfig();
           this.engine.updateConfig(this.config);
+          if (this.panel && this.config.allowRemoteImages !== previousAllowRemoteImages) {
+            // img-src lives in the CSP meta baked into the webview document, so
+            // the opt-in only takes effect on a fresh document.
+            this.panel.webview.html = this.getWebviewHtml(this.panel.webview);
+          }
           if (this.activeDocument) {
             this.updatePreview(this.activeDocument);
           }
@@ -327,48 +333,17 @@ export class PreviewManager {
   }
 
   private getWebviewHtml(webview: vscode.Webview): string {
-    const nonce = getNonce();
-
-    const vendorUri = vscode.Uri.joinPath(this.extensionUri, 'dist', 'webview', 'vendor');
-    const mainScript = webview.asWebviewUri(
-      vscode.Uri.joinPath(this.extensionUri, 'dist', 'webview', 'main.js')
+    // CSP and <body data-*> metadata live in buildWebviewHtml: nonce-only
+    // script-src (no 'unsafe-eval' — Mermaid 11.x strict doesn't need it),
+    // img-src restricted to webview resources + data: unless the documented
+    // markdownPreviewPro.allowRemoteImages opt-in is enabled, and all four
+    // data-* values attribute-escaped on write.
+    return buildWebviewHtml(
+      webview,
+      this.extensionUri,
+      this.aboutInfo,
+      this.config.allowRemoteImages
     );
-    const mainStyle = webview.asWebviewUri(
-      vscode.Uri.joinPath(this.extensionUri, 'dist', 'webview', 'main.css')
-    );
-    const katexStyle = webview.asWebviewUri(vscode.Uri.joinPath(vendorUri, 'katex.min.css'));
-    const katexScript = webview.asWebviewUri(vscode.Uri.joinPath(vendorUri, 'katex.min.js'));
-    const mermaidScript = webview.asWebviewUri(vscode.Uri.joinPath(vendorUri, 'mermaid.min.js'));
-    const excalidrawScript = webview.asWebviewUri(
-      vscode.Uri.joinPath(vendorUri, 'excalidraw-utils.min.js')
-    );
-
-    return `<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta http-equiv="Content-Security-Policy"
-    content="default-src 'none';
-      script-src 'nonce-${nonce}' 'unsafe-eval';
-      style-src ${webview.cspSource} 'unsafe-inline';
-      img-src ${webview.cspSource} https: data:;
-      font-src ${webview.cspSource};
-      connect-src ${webview.cspSource};
-      worker-src 'none';
-      frame-src 'none';">
-  <link rel="stylesheet" href="${katexStyle}">
-  <link rel="stylesheet" href="${mainStyle}">
-  <title>Markdown Preview Pro</title>
-</head>
-<body data-version="${this.aboutInfo.version}" data-commit="${this.aboutInfo.commit}" data-publisher="${this.aboutInfo.publisher}" data-repo="${this.aboutInfo.repo}">
-  <div id="preview-content"></div>
-  <script nonce="${nonce}" src="${katexScript}"></script>
-  <script nonce="${nonce}" src="${mermaidScript}"></script>
-  <script nonce="${nonce}" src="${excalidrawScript}"></script>
-  <script nonce="${nonce}" src="${mainScript}"></script>
-</body>
-</html>`;
   }
 
   private disposeListeners(): void {

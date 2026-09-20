@@ -168,6 +168,11 @@
             "Hide frontmatter from the preview"
           ],
           "description": "How to display YAML frontmatter in the preview"
+        },
+        "markdownPreviewPro.allowRemoteImages": {
+          "type": "boolean",
+          "default": false,
+          "description": "Allow remote (https:) images in the preview. Off by default so a document cannot load remote images (which would leak that the preview was opened and the viewer's IP). Enable only if you need remote images — mirrors the remote-content opt-in of VS Code's built-in markdown preview."
         }
       }
     }
