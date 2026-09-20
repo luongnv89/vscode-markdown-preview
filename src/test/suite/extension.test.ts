@@ -66,4 +66,50 @@ suite('Extension Test Suite', () => {
       (vscode.window as Record<string, unknown>).showErrorMessage = originalShowErrorMessage;
     }
   });
+
+  // Regression test for issue #76: activation used to run
+  // execSync('git rev-parse --short HEAD') in the PreviewManager constructor to
+  // fill the About popup — a spawn that always fails on marketplace installs.
+  // The SHA is now baked in at build time and the metadata collected lazily, so
+  // activate() must never reach for a child process.
+  test('activate() spawns no child process (#76)', () => {
+    const extension = vscode.extensions.getExtension('luongnv89.markdown-preview-pro');
+    assert.ok(extension, 'Expected extension luongnv89.markdown-preview-pro to be installed');
+
+    const childProcess = require('child_process') as Record<string, unknown>;
+    const spawned: string[] = [];
+    const spawners = ['execSync', 'exec', 'execFile', 'execFileSync', 'spawn', 'spawnSync', 'fork'];
+    const originals = new Map<string, unknown>();
+    for (const name of spawners) {
+      originals.set(name, childProcess[name]);
+      childProcess[name] = () => {
+        spawned.push(name);
+        throw new Error(`unexpected child process during activate(): ${name}`);
+      };
+    }
+
+    const originalRegisterCommand = vscode.commands.registerCommand;
+    (vscode.commands as Record<string, unknown>).registerCommand = () => ({
+      dispose: () => undefined,
+    });
+
+    try {
+      const fakeContext = {
+        subscriptions: [] as vscode.Disposable[],
+        extensionUri: extension.extensionUri,
+      } as unknown as vscode.ExtensionContext;
+
+      activate(fakeContext);
+      assert.deepStrictEqual(
+        spawned,
+        [],
+        `activate() spawned child processes: ${spawned.join(', ')}`
+      );
+    } finally {
+      for (const name of spawners) {
+        childProcess[name] = originals.get(name);
+      }
+      (vscode.commands as Record<string, unknown>).registerCommand = originalRegisterCommand;
+    }
+  });
 });

@@ -23,13 +23,15 @@ export class PreviewManager implements PreviewMessageContext, PreviewEventHost {
   public activeDocument: vscode.TextDocument | undefined;
   public currentResourceRoots: vscode.Uri[] = [];
   public checkboxToggleInProgress = false;
-  private readonly aboutInfo: PreviewAboutInfo;
+  // Resolved lazily on the first webview document build (issue #76): collecting
+  // it in the constructor put a package.json read on every activation to fill a
+  // popup that may never open.
+  private aboutInfo: PreviewAboutInfo | undefined;
   private updateTimeout: NodeJS.Timeout | undefined;
   private disposables: vscode.Disposable[] = [];
   private lastViewColumn: vscode.ViewColumn = vscode.ViewColumn.Beside;
 
   constructor(private readonly extensionUri: vscode.Uri) {
-    this.aboutInfo = collectAboutInfo(extensionUri);
     this.config = getPreviewConfig();
     this.engine = new MarkdownEngine(this.config);
     this.scrollSync = new ScrollSync();
@@ -161,6 +163,7 @@ export class PreviewManager implements PreviewMessageContext, PreviewEventHost {
     // The vendor payload is content-gated on the document's rendered markup
     // (issue #72) inside buildPreviewWebviewHtml; CSP details live in
     // buildWebviewHtml.
+    this.aboutInfo ??= collectAboutInfo(this.extensionUri);
     return buildPreviewWebviewHtml(
       webview,
       this.extensionUri,

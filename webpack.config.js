@@ -2,8 +2,21 @@
 'use strict';
 
 const path = require('path');
+const webpack = require('webpack');
+const { execSync } = require('child_process');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const CopyPlugin = require('copy-webpack-plugin');
+
+// Resolved once per build, here in the Node context — the extension bundle
+// itself never spawns git at runtime (issue #76): a marketplace install dir is
+// not a repo, so a runtime `git rev-parse` would always fail. Builds run in a
+// checkout (or CI), where the SHA names exactly the commit being packaged.
+let gitCommit = '';
+try {
+  gitCommit = execSync('git rev-parse --short HEAD', { encoding: 'utf8' }).trim();
+} catch {
+  // No git / not a checkout — the About popup degrades to an empty commit.
+}
 
 /** @type {import('webpack').Configuration} */
 const extensionConfig = {
@@ -29,7 +42,12 @@ const extensionConfig = {
   // dist/ and are require()'d on first export, instead of inflating
   // dist/extension.js — the activation-time bundle (issue #73). Synchronous
   // imports still land in the single entry chunk.
-  plugins: [],
+  plugins: [
+    // Bakes the build-time commit SHA into src/utils/aboutInfo.ts (issue #76).
+    new webpack.DefinePlugin({
+      __GIT_COMMIT__: JSON.stringify(gitCommit),
+    }),
+  ],
   resolve: {
     extensions: ['.ts', '.js'],
   },
