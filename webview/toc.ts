@@ -33,7 +33,7 @@ interface TocEntry {
 
 // One <li><a class="toc-hN"> per heading, appended to tocList; ensures each
 // heading has an id so the link target exists.
-function buildTocEntries(headings: NodeListOf<HTMLElement>): TocEntry[] {
+function buildTocEntries(headings: readonly HTMLElement[]): TocEntry[] {
   const entries: TocEntry[] = [];
 
   headings.forEach((heading, i) => {
@@ -91,7 +91,7 @@ function createTocObserver(entries: TocEntry[]): IntersectionObserver {
   );
 }
 
-let lastHeadingSignature = '';
+let lastHeadings: HTMLElement[] = [];
 
 export function refreshToc(): void {
   if (!tocList) return;
@@ -99,24 +99,19 @@ export function refreshToc(): void {
   const container = document.getElementById('preview-content');
   if (!container) return;
 
-  const headings = container.querySelectorAll<HTMLElement>('h1, h2, h3, h4, h5, h6');
+  const headings = Array.from(container.querySelectorAll<HTMLElement>('h1, h2, h3, h4, h5, h6'));
 
-  // Rebuild only when the heading set itself changed — an unrelated edit
-  // must not tear down the observer and rebuild the <li> list (issue #77).
-  // The signature covers what domDiff can change under the same visible
-  // heading: the tag, the data-line position, and the inner markup — so a
-  // heading re-created with identical text (an edited link target, code→em)
-  // still refreshes the click targets instead of leaving a link bound to a
-  // detached node. The element's own attributes stay out of it: the engine
-  // only varies data-line, and the id is assigned by buildTocEntries itself —
-  // including it would trigger a spurious rebuild right after assignment.
-  const signature = Array.from(headings)
-    .map((h) => `${h.tagName}:${h.getAttribute('data-line') ?? ''}:${h.innerHTML}`)
-    .join('|');
-  if (signature === lastHeadingSignature) {
+  // Rebuild only when the heading node set changed — an unrelated edit keeps
+  // the same nodes (domDiff keeps identical blocks), so the observer and the
+  // <li> list survive. Element identity is the precise predicate: a heading
+  // re-created under identical markup — an edited link target, or a replaced
+  // ancestor like a blockquote — is a different node, so the click targets
+  // and observed elements are refreshed instead of staying bound to a
+  // detached node (issue #77).
+  if (headings.length === lastHeadings.length && headings.every((h, i) => h === lastHeadings[i])) {
     return;
   }
-  lastHeadingSignature = signature;
+  lastHeadings = headings;
 
   tocList.innerHTML = '';
 

@@ -419,6 +419,32 @@ suite('incremental preview update patching (#77)', () => {
     );
   });
 
+  test('a heading inside a replaced blockquote rebuilds its TOC entry', async () => {
+    const { document, window } = makeDom('<div id="preview-content"></div>');
+    stubScrollTo(window);
+    const load = makeLoader(document, window);
+    load<TocModule>('toc.ts').initToc();
+    const mod = load<RendererModule>('renderer.ts');
+    const head = '<h2 class="code-line" data-line="0">x</h2>';
+    const quote = (text: string) =>
+      `<blockquote><p class="code-line" data-line="2">${text}</p>${head}</blockquote>`;
+
+    await mod.updateContent(quote('one'));
+    const first = document.querySelector('.toc-sidebar a')!;
+    assert.ok(first, 'no TOC entry after first render');
+
+    // The blockquote is replaced wholesale, so the heading arrives as a new
+    // node even though its tag, data-line and markup are all unchanged.
+    await mod.updateContent(quote('two'));
+
+    const retargeted = document.querySelector('.toc-sidebar a')!;
+    assert.notStrictEqual(
+      retargeted,
+      first,
+      'heading inside a replaced blockquote kept a stale TOC entry'
+    );
+  });
+
   test('a stray container child is swept on the next update', async () => {
     const { document, window } = makeDom('<div id="preview-content"></div>');
     stubScrollTo(window);
