@@ -27,8 +27,11 @@ export class ExportManager {
   }
 
   async exportToHtml(uri?: vscode.Uri): Promise<void> {
-    await this.executeExport(uri, 'html', async (browserHtml, outputPath) => {
-      const renderedHtml = await renderInBrowser(browserHtml);
+    await this.executeExport(uri, 'html', async (browserHtml, outputPath, token) => {
+      const renderedHtml = await renderInBrowser(browserHtml, token);
+      if (token.isCancellationRequested) {
+        return;
+      }
       await vscode.workspace.fs.writeFile(
         vscode.Uri.file(outputPath),
         Buffer.from(renderedHtml, 'utf-8')
@@ -37,36 +40,55 @@ export class ExportManager {
   }
 
   async exportToPdf(uri?: vscode.Uri): Promise<void> {
-    await this.executeExport(uri, 'pdf', async (browserHtml, outputPath) => {
-      await generatePdf(browserHtml, outputPath);
+    await this.executeExport(uri, 'pdf', async (browserHtml, outputPath, token) => {
+      await generatePdf(browserHtml, outputPath, undefined, token);
     });
   }
 
   private async executeExport(
     uri: vscode.Uri | undefined,
-    format: string,
-    exportFn: (browserHtml: string, outputPath: string) => Promise<void>
+    format: 'html' | 'pdf',
+    exportFn: (
+      browserHtml: string,
+      outputPath: string,
+      token: vscode.CancellationToken
+    ) => Promise<void>
   ): Promise<void> {
     const document = await this.getDocument(uri);
     if (!document) {
       return;
     }
 
-    const outputPath = this.getOutputPath(document.uri, format);
+    // Resolve the destination before doing any work: the save dialog pre-fills
+    // `<basename>.<ext>` beside the source and natively confirms before an
+    // existing file is overwritten. Cancelling aborts the export silently.
+    const outputUri = await this.resolveOutputUri(document, format);
+    if (!outputUri) {
+      return;
+    }
+    const outputPath = outputUri.fsPath;
 
+    let cancelled = false;
     try {
       await vscode.window.withProgress(
         {
           location: vscode.ProgressLocation.Notification,
           title: `Exporting to ${format.toUpperCase()}`,
-          cancellable: false,
+          cancellable: true,
         },
-        async (progress) => {
+        async (progress, token) => {
+          token.onCancellationRequested(() => {
+            cancelled = true;
+          });
+
           progress.report({ message: 'Rendering markdown...' });
           const config = getPreviewConfig();
           this.engine.updateConfig(config);
           this.engine.setExportContext(document.uri);
           const result = this.engine.render(document.getText());
+          if (token.isCancellationRequested) {
+            return;
+          }
 
           progress.report({ message: 'Building standalone HTML...' });
           const title = path.basename(document.uri.fsPath, '.md');
@@ -75,13 +97,23 @@ export class ExportManager {
             title,
             document.uri
           );
+          if (token.isCancellationRequested) {
+            return;
+          }
 
           progress.report({ message: `Generating ${format.toUpperCase()}...` });
-          await exportFn(browserHtml, outputPath);
+          await exportFn(browserHtml, outputPath, token);
         }
       );
     } catch (error) {
+      if (cancelled) {
+        return; // user cancelled mid-export — abort without an error popup
+      }
       this.handleExportError(error, format.toUpperCase());
+      return;
+    }
+
+    if (cancelled) {
       return;
     }
 
@@ -93,6 +125,26 @@ export class ExportManager {
     if (choice === openAction) {
       vscode.env.openExternal(vscode.Uri.file(outputPath));
     }
+  }
+
+  /**
+   * Ask the user where the export should be written. The dialog is pre-filled
+   * with `<basename>.<ext>` next to the source document; the OS save dialog
+   * itself asks for confirmation when the chosen file already exists.
+   */
+  protected async resolveOutputUri(
+    document: vscode.TextDocument,
+    format: 'html' | 'pdf'
+  ): Promise<vscode.Uri | undefined> {
+    const defaultUri = vscode.Uri.file(this.getOutputPath(document.uri, format));
+    const filters: { [name: string]: string[] } =
+      format === 'pdf' ? { 'PDF files': ['pdf'] } : { 'HTML files': ['html', 'htm'] };
+    return vscode.window.showSaveDialog({
+      defaultUri,
+      filters,
+      saveLabel: 'Export',
+      title: `Export to ${format.toUpperCase()}`,
+    });
   }
 
   private async getDocument(uri?: vscode.Uri): Promise<vscode.TextDocument | undefined> {
