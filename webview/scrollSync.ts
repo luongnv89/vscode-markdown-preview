@@ -1,3 +1,11 @@
+// Throttle for preview -> editor scroll reporting: bursts of scroll events are
+// coalesced into a single revealLine message to the host.
+export const SCROLL_REPORT_THROTTLE = 50;
+
+// Guard window after a programmatic scroll during which the scroll listener
+// stays muted, so the echo is not reported back as a user scroll.
+export const PROGRAMMATIC_SCROLL_LOCK = 300;
+
 let isScrollingProgrammatically = false;
 let scrollLockTimeout: number | undefined;
 let scrollThrottleTimeout: number | undefined;
@@ -22,7 +30,7 @@ export function initScrollSync(vscode: VsCodeApi): void {
           source: 'preview',
         });
       }
-    }, 50);
+    }, SCROLL_REPORT_THROTTLE);
   });
 }
 
@@ -67,7 +75,7 @@ export function scrollToLine(line: number): void {
 
   scrollLockTimeout = window.setTimeout(() => {
     isScrollingProgrammatically = false;
-  }, 300);
+  }, PROGRAMMATIC_SCROLL_LOCK);
 }
 
 function getLineAtScrollPosition(): number {

@@ -1,5 +1,9 @@
 import * as vscode from 'vscode';
 
+// How long the scroll-sync lock stays engaged after a sync event, so an echoed
+// scroll does not immediately retrigger a sync in the opposite direction.
+export const SCROLL_SYNC_LOCK_TIMEOUT = 300;
+
 export class ScrollSync {
   private scrollSyncLock = false;
   private lockTimeout: NodeJS.Timeout | undefined;
@@ -15,7 +19,7 @@ export class ScrollSync {
     }
     this.lockTimeout = setTimeout(() => {
       this.scrollSyncLock = false;
-    }, 300);
+    }, SCROLL_SYNC_LOCK_TIMEOUT);
   }
 
   public getEditorVisibleLine(editor: vscode.TextEditor): number {
