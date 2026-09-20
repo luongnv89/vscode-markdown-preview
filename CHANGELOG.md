@@ -1,6 +1,11 @@
 # Changelog
 
-## Unreleased
+All notable changes to this project will be documented in this file.
+
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [Unreleased]
 
 - Perf: the generated landing page (`docs/index.html`) drops from ~7.8 MB to ~515 KB — vendor runtimes (KaTeX, Mermaid) and the KaTeX stylesheet/fonts are emitted as separate cacheable files under `docs/assets/` instead of being inlined, gated on the shared `detectVendorNeeds` content probe so a page with no math or diagrams ships neither runtime; the client-side render script and JSON-LD are external too, leaving every `<script>` element `src`-backed with under 1 KB of inline script text (#78)
 - Fix the landing page publishing a stale version — its JSON-LD `softwareVersion` now reads `package.json` at build time instead of a hardcoded frontmatter key (dropped from `docs/landing.md`), and the self-generation note moved from ahead of the screenshot to beside the rendering showcase where it reads as evidence (#71)
@@ -10,13 +15,27 @@
 - Security: stop the HTML/PDF export pipeline executing document JavaScript — rendered markdown is now sanitized with DOMPurify before it reaches the headless browser, the export document carries a per-export nonce Content-Security-Policy (no `unsafe-inline` in `script-src`), and Chromium's renderer sandbox is no longer disabled during export
 - Security: harden the preview webview — Mermaid now runs at `securityLevel: 'strict'` (sanitized labels, no `click` JS directives) in both preview and export rendering, the preview CSP dropped `'unsafe-eval'` from `script-src` (verified unnecessary for Mermaid 11.x), `<body data-*>` extension metadata is attribute-escaped on write and the About popup renders it with `textContent`, and `img-src` is restricted to webview resources + `data:` unless the new `markdownPreviewPro.allowRemoteImages` opt-in (default `false`) is enabled
 
-## 0.9.4
+## [0.9.4] - 2026-05-19
 
 - Fix PDF export title and header visibility — change from light gray to bold black text
 - Improve heading contrast in PDF exports with @media print styles
 - Achieve WCAG AAA contrast compliance (21:1 ratio) for PDF export titles and headers
 
-## 0.9.0
+## [0.9.3] - 2026-04-09
+
+- Fix syntax highlighting and diagrams (Mermaid, Excalidraw) drifting out of sync with the preview theme toggle — light/dark highlight.js color rules now follow the `preview-theme-*` body class, the initial theme is detected from the VS Code body class instead of always defaulting to light, and diagram re-renders survive the DOM replacement via a `data-source` attribute on wrapper divs
+- Fix inline-code background leaking into fenced code blocks
+- Drop `github-dark.min.css` from the standalone export stylesheet — syntax highlighting now comes from the shared `code.css` token rules
+
+## [0.9.2] - 2026-04-08
+
+- Resolve all npm audit vulnerabilities — mermaid 10.6.1 → 11.14.0 (lodash-es High, dompurify Medium), puppeteer-core 24.37.3 → 24.40.0 (basic-ftp Critical), yaml 2.8.2 → 2.8.3 (stack overflow Medium), copy-webpack-plugin 13 → 14 (serialize-javascript High), and a `yauzl` override for CVE-2026-31988 transitive via puppeteer-core
+
+## [0.9.1] - 2026-03-17
+
+- Fix exporting from the preview toolbar — the Export PDF/HTML buttons reached no document because `activeTextEditor` is undefined while the webview holds focus; the tracked `activeDocument` URI is now passed to the export command
+
+## [0.9.0] - 2026-03-17
 
 - Add Excalidraw diagram preview support — render `excalidraw` code blocks as interactive SVG diagrams in the preview panel
 - New `@excalidraw/utils` vendor library for client-side Excalidraw-to-SVG conversion
@@ -24,7 +43,7 @@
 - Excalidraw diagrams automatically adapt to dark/light theme with re-rendering on theme change
 - Full export support — Excalidraw diagrams render in HTML and PDF exports
 
-## 0.8.2
+## [0.8.2] - 2026-03-16
 
 - Add favicon, OpenGraph, Twitter Card, and JSON-LD structured data to landing page
 - Add `robots.txt`, `sitemap.xml`, and `llms.txt` for SEO and AI crawler support
@@ -32,14 +51,14 @@
 - Add landing page link to README and `homepage` field to `package.json`
 - Fix landing page generator whitespace normalization for CI compatibility
 
-## 0.8.1
+## [0.8.1] - 2026-03-16
 
 - Fix export timeout for documents with Mermaid diagrams — switch from `networkidle0` to `domcontentloaded` strategy for headless browser rendering
 - Fix progress notification staying visible after export completes — move success message outside progress callback
 - Increase page load timeout from 30s to 60s and render completion timeout from 15s to 30s for complex documents
 - Add landing page with dark/light mode toggle and GitHub Pages deployment
 
-## 0.8.0
+## [0.8.0] - 2026-03-09
 
 - Add YAML frontmatter support — parse frontmatter between `---` delimiters and display as a styled, collapsible metadata card at the top of the preview
 - Frontmatter card renders key-value pairs in a clean table with clickable URLs, inline badge/image rendering, and array values as tags
@@ -48,7 +67,7 @@
 - New `showFrontmatter` setting (`card` | `none`) to control frontmatter display (default: `card`)
 - Add `yaml` package dependency for frontmatter parsing
 
-## 0.7.0
+## [0.7.0] - 2026-03-05
 
 - Add Table of Contents (TOC) sidebar — collapsible left panel listing all headings, click to scroll, highlights active section as you scroll
 - Add Word Count & Reading Stats bar — fixed bottom bar showing word count, character count, and estimated reading time (200 wpm)
@@ -56,18 +75,18 @@
 - Three new toolbar buttons: TOC toggle (list icon), Stats toggle (bar-chart icon), Presentation mode (play icon)
 - Toolbar now groups buttons with a visual separator between feature toggles and export actions
 
-## 0.6.1
+## [0.6.1] - 2026-03-05
 
 - Default preview theme is now light, independent of VS Code theme
 - Rewrite README for VS Code Marketplace — focus on installation and usage
 
-## 0.6.0
+## [0.6.0] - 2026-02-20
 
 - Add About button to preview toolbar with version, commit hash, maintainer, and repository link
 - Clicking About toggles an info popup; clicking outside or clicking again dismisses it
 - Repository link opens in external browser
 
-## 0.5.0
+## [0.5.0] - 2026-02-20
 
 - Add floating toolbar to preview with dark/light theme toggle, Export PDF, and Export HTML buttons
 - Toolbar appears at top-right corner, semi-transparent until hover
@@ -75,7 +94,7 @@
 - Mermaid diagrams respect toolbar theme override when re-rendering
 - Toolbar is hidden in print preview
 
-## 0.4.0
+## [0.4.0] - 2026-02-18
 
 - Fix local image rendering (SVG, PNG, etc.) in webview preview
 - Expand `localResourceRoots` to include filesystem root, matching VS Code built-in preview behavior
@@ -83,14 +102,14 @@
 - Handle `file:` URIs and absolute file paths in image resolution
 - Automatically recreate preview panel when switching to documents in uncovered directories
 
-## 0.3.0
+## [0.3.0] - 2026-02-17
 
 - Add export to HTML and PDF
 
-## 0.2.0
+## [0.2.0] - 2026-02-17
 
 - Add right-click context menu for markdown preview
 
-## 0.1.0
+## [0.1.0] - 2026-02-17
 
 - Initial release

@@ -195,6 +195,7 @@
     "watch": "webpack --watch",
     "package": "webpack --mode production --devtool hidden-source-map",
     "build:landing": "node scripts/generate-landing.cjs",
+    "check:docs": "node scripts/check-docs.cjs",
     "lint": "oxlint src/ webview/",
     "format": "prettier --write .",
     "format:check": "prettier --check .",

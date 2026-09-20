@@ -60,6 +60,8 @@ graph LR
     W -->|toggleCheckbox| E
     W -->|navigateToLine| E
     W -->|openLink| E
+    W -->|exportToPdf| E
+    W -->|exportToHtml| E
 ```
 
 #### `ready`
@@ -115,6 +117,26 @@ Sent when a user clicks an external link (`http://` or `https://`).
 interface OpenLinkMessage {
   type: 'openLink';
   href: string; // Full URL to open
+}
+```
+
+#### `exportToPdf`
+
+Sent when the user clicks the **Export PDF** toolbar button in the preview. The extension runs the `markdownPreviewPro.exportToPdf` command for the tracked document.
+
+```typescript
+interface ExportToPdfMessage {
+  type: 'exportToPdf';
+}
+```
+
+#### `exportToHtml`
+
+Sent when the user clicks the **Export HTML** toolbar button in the preview. The extension runs the `markdownPreviewPro.exportToHtml` command for the tracked document.
+
+```typescript
+interface ExportToHtmlMessage {
+  type: 'exportToHtml';
 }
 ```
 
