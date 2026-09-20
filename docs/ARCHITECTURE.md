@@ -153,7 +153,7 @@ Runs in an isolated browser context (iframe) managed by VS Code.
 | `webview/presentation.ts`         | Presentation-mode overlay — `<hr>` slide breaks, keyboard navigation                                                                                  |
 | `webview/scrollSync.ts`           | Preview-side scroll tracking; throttled `revealLine` reporting with an echo guard                                                                     |
 | `webview/copyButton.ts`           | Copy-to-clipboard buttons on code blocks                                                                                                              |
-| `webview/statsBar.ts`             | Word/line stats bar                                                                                                                                   |
+| `webview/statsBar.ts`             | Word/character counts and reading-time estimate bar                                                                                                   |
 | `webview/blockHighlighter.ts`     | Highlights the topmost visible block on scroll via `IntersectionObserver`                                                                             |
 | `webview/checkboxHandler.ts`      | Captures checkbox clicks, sends `toggleCheckbox` to the extension host                                                                                |
 | `webview/navigationHandler.ts`    | Link clicks (internal navigation, external URLs) and double-click → `navigateToLine` source navigation                                                |
