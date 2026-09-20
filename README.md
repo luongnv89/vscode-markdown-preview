@@ -109,8 +109,8 @@ A floating toolbar in the top-right corner of the preview provides quick access 
 - **TOC toggle** — show or hide the Table of Contents sidebar
 - **Stats toggle** — show or hide the word count and reading stats bar
 - **Theme toggle** — switch between light and dark preview independently from your VS Code theme
-- **Export to HTML** — generate a standalone HTML file with all diagrams and math fully rendered
-- **Export to PDF** — export to PDF using Chrome/Chromium (must be installed on your system)
+- **Export to HTML** — generate a standalone HTML file with all diagrams and math fully rendered; a save dialog asks where to write the file (existing files are never overwritten silently) and the export can be cancelled from the progress notification
+- **Export to PDF** — export to PDF using Chrome/Chromium (must be installed on your system); same save dialog and cancellable progress as HTML export
 - **Presentation mode** — enter slide presentation mode
 - **About** — view extension version and links
 
