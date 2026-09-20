@@ -103,10 +103,15 @@ export function refreshToc(): void {
 
   // Rebuild only when the heading set itself changed — an unrelated edit
   // must not tear down the observer and rebuild the <li> list (issue #77).
-  // data-line joins the signature so a heading whose source line moved (and
-  // therefore whose node was replaced) still refreshes the click targets.
+  // The signature covers what domDiff can change under the same visible
+  // heading: the tag, the data-line position, and the inner markup — so a
+  // heading re-created with identical text (an edited link target, code→em)
+  // still refreshes the click targets instead of leaving a link bound to a
+  // detached node. The element's own attributes stay out of it: the engine
+  // only varies data-line, and the id is assigned by buildTocEntries itself —
+  // including it would trigger a spurious rebuild right after assignment.
   const signature = Array.from(headings)
-    .map((h) => `${h.tagName}:${h.getAttribute('data-line') ?? ''}:${h.textContent}`)
+    .map((h) => `${h.tagName}:${h.getAttribute('data-line') ?? ''}:${h.innerHTML}`)
     .join('|');
   if (signature === lastHeadingSignature) {
     return;

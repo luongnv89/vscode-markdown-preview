@@ -247,16 +247,15 @@ function sweepUntracked(container: HTMLElement, kept: Element[], added: Element[
   }
 }
 
-// A kept list block's checkboxes can drift from the source of truth: a click
+// A kept block's checkboxes can drift from the source of truth: a click
 // flips the `checked` property, never the attribute, so when the document
 // text says the box is still unchecked (a toggle whose edit did not land)
 // the live node disagrees with a fresh render. Re-sync kept inputs to their
-// attribute state — the same thing a full rebuild would have produced.
+// attribute state — the same thing a full rebuild would have produced. Every
+// kept block is scanned: a task list nested inside a blockquote is a kept
+// child of the <blockquote>, not a top-level <ul>.
 function resyncKeptCheckboxes(kept: Element[]): void {
   for (const el of kept) {
-    if (el.tagName !== 'UL' && el.tagName !== 'OL') {
-      continue;
-    }
     el.querySelectorAll('input[type="checkbox"]').forEach((input) => {
       (input as HTMLInputElement).checked = input.hasAttribute('checked');
     });

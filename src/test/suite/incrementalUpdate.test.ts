@@ -306,6 +306,29 @@ suite('incremental preview update patching (#77)', () => {
     );
   });
 
+  test('a kept blockquote task list re-syncs checkbox state to the source', async () => {
+    const { document, window } = makeDom('<div id="preview-content"></div>');
+    stubScrollTo(window);
+    const load = makeLoader(document, window);
+    const mod = load<RendererModule>('renderer.ts');
+    const quote =
+      '<blockquote><ul class="code-line" data-line="0"><li data-line="0">' +
+      '<input type="checkbox" data-line="0"> task</li></ul></blockquote>';
+
+    await mod.updateContent(quote + para(2, 'x'));
+    const box = document.querySelector('input[type="checkbox"]')!;
+    box.checked = true; // a user click flips the property, never the attribute
+
+    await mod.updateContent(quote + para(2, 'y'));
+
+    const after = document.querySelector('input[type="checkbox"]')!;
+    assert.strictEqual(
+      after.checked,
+      false,
+      'kept nested checkbox stayed checked although the source still says unchecked'
+    );
+  });
+
   test('a kept code block keeps its copy-button wrapper', async () => {
     const { document, window } = makeDom('<div id="preview-content"></div>');
     stubScrollTo(window);
@@ -368,6 +391,32 @@ suite('incremental preview update patching (#77)', () => {
     const retitled = document.querySelector('.toc-sidebar a')!;
     assert.notStrictEqual(retitled, first, 'changed heading did not rebuild the TOC');
     assert.strictEqual(retitled.textContent, 'Retitled');
+  });
+
+  test('a heading whose markup changed rebuilds its TOC entry', async () => {
+    const { document, window } = makeDom('<div id="preview-content"></div>');
+    stubScrollTo(window);
+    const load = makeLoader(document, window);
+    load<TocModule>('toc.ts').initToc();
+    const mod = load<RendererModule>('renderer.ts');
+    const head1 = '<h2 class="code-line" data-line="0"><a href="u1">x</a></h2>';
+    const head2 = '<h2 class="code-line" data-line="0"><a href="u2">x</a></h2>';
+
+    await mod.updateContent(head1 + para(2, 'a'));
+    const first = document.querySelector('.toc-sidebar a')!;
+    assert.ok(first, 'no TOC entry after first render');
+
+    // Same tag, data-line and textContent — only the inner markup changed —
+    // so the heading node is replaced while a text-level signature matches.
+    // The TOC must not keep a click target bound to the detached node.
+    await mod.updateContent(head2 + para(2, 'a'));
+
+    const retargeted = document.querySelector('.toc-sidebar a')!;
+    assert.notStrictEqual(
+      retargeted,
+      first,
+      'replaced heading kept a TOC entry bound to the detached node'
+    );
   });
 
   test('a stray container child is swept on the next update', async () => {
