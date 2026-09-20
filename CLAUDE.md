@@ -18,7 +18,7 @@
   - `npx tsc --noEmit -p tsconfig.json` (extension host, `src/`)
   - `npx tsc --noEmit -p tsconfig.webview.json` (webview, `webview/`)
 - Test: `npm test` — the `pretest` hook builds the extension (`webpack`) and compiles `src/test/` to `out/test/` via `tsconfig.test.json` (imported `src/` modules are loose-compiled under `out/` too), then `out/test/runTest.js` launches an Extension Development Host through `@vscode/test-electron` and runs the Mocha suite in `src/test/suite/`. Baseline pass rate: **35/35** — this is the recorded baseline every subsequent task asserts against.
-- Coverage: `npm run coverage` — same build + Electron run as `npm test`, wrapped by `c8` (config: `.c8rc.json`; scope: `src/**` minus `src/test/**`; output: `coverage/`, gitignored). Recorded line-coverage baseline: **9.75%** — measurement before improvement; every subsequent task asserts against it.
+- Coverage: `npm run coverage` — same build + Electron run as `npm test`, wrapped by `c8` (config: `.c8rc.json`; scope: `src/**` minus `src/test/**`; output: `coverage/`, gitignored). Recorded line coverage: **87.06%** — raised from the 9.75% pre-improvement baseline; `.c8rc.json` enforces `check-coverage` with `lines: 87`, so `npm run coverage` (and the CI step running it) fails if line coverage regresses below the measured figure.
 - Debug: `F5` in VS Code launches the Extension Development Host (`.vscode/launch.json`).
 
 ## Layout
