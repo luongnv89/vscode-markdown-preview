@@ -53,6 +53,48 @@ const extensionConfig = {
 };
 
 /** @type {import('webpack').Configuration} */
+// The vscode-free shared markdown pipeline, emitted as a plain CommonJS module
+// so scripts/generate-landing.cjs (run by bare Node) renders through the same
+// engine the extension bundles. Runtime deps stay external — the generator
+// resolves them from node_modules like any other Node script.
+const sharedCoreConfig = {
+  target: 'node',
+  mode: 'none',
+  entry: './src/markdownCore.ts',
+  output: {
+    path: path.resolve(__dirname, 'dist'),
+    filename: 'markdownCore.js',
+    libraryTarget: 'commonjs2',
+  },
+  externals: {
+    'markdown-it': 'commonjs markdown-it',
+    'highlight.js': 'commonjs highlight.js',
+    yaml: 'commonjs yaml',
+  },
+  resolve: {
+    extensions: ['.ts', '.js'],
+  },
+  module: {
+    rules: [
+      {
+        test: /\.ts$/,
+        exclude: /node_modules/,
+        use: [
+          {
+            loader: 'esbuild-loader',
+            options: {
+              loader: 'ts',
+              target: 'es2020',
+            },
+          },
+        ],
+      },
+    ],
+  },
+  devtool: 'nosources-source-map',
+};
+
+/** @type {import('webpack').Configuration} */
 const webviewConfig = {
   target: 'web',
   mode: 'none',
@@ -108,4 +150,4 @@ const webviewConfig = {
   devtool: 'nosources-source-map',
 };
 
-module.exports = [extensionConfig, webviewConfig];
+module.exports = [extensionConfig, sharedCoreConfig, webviewConfig];

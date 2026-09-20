@@ -41,15 +41,16 @@ graph LR
 
 Runs in Node.js within VS Code's extension host process.
 
-| File                 | Responsibility                                                |
-| -------------------- | ------------------------------------------------------------- |
-| `extension.ts`       | Entry point, registers commands                               |
-| `previewManager.ts`  | Creates/manages webview panels, handles lifecycle             |
-| `markdownEngine.ts`  | Configures markdown-it with plugins, renders markdown to HTML |
-| `checkboxHandler.ts` | Syncs checkbox state changes back to the source document      |
-| `scrollSync.ts`      | Calculates scroll positions from editor cursor                |
-| `utils/config.ts`    | Reads VS Code configuration settings                          |
-| `utils/uri.ts`       | Resolves local image and resource URIs                        |
+| File                 | Responsibility                                                                                                       |
+| -------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| `extension.ts`       | Entry point, registers commands                                                                                      |
+| `previewManager.ts`  | Creates/manages webview panels, handles lifecycle                                                                    |
+| `markdownEngine.ts`  | Renders markdown to HTML; adds the vscode seam (image URI resolution, frontmatter) over the shared core              |
+| `markdownCore.ts`    | vscode-free shared markdown-it pipeline — also compiled to `dist/markdownCore.js` for `scripts/generate-landing.cjs` |
+| `checkboxHandler.ts` | Syncs checkbox state changes back to the source document                                                             |
+| `scrollSync.ts`      | Calculates scroll positions from editor cursor                                                                       |
+| `utils/config.ts`    | Reads VS Code configuration settings                                                                                 |
+| `utils/uri.ts`       | Resolves local image and resource URIs                                                                               |
 
 ## Webview (`webview/`)
 
@@ -135,11 +136,12 @@ User clicks checkbox in webview
 
 ## Build System
 
-Webpack bundles two separate entry points:
+Webpack bundles three entry points:
 
 ```mermaid
 graph TD
     SRC[src/extension.ts] -->|Webpack| DIST1[dist/extension.js<br/>CommonJS / Node.js]
+    CORE[src/markdownCore.ts] -->|Webpack| DIST0[dist/markdownCore.js<br/>CommonJS / Node.js]
     WEB[webview/main.ts] -->|Webpack| DIST2[dist/webview/main.js<br/>Browser bundle]
     CSS[webview/styles/*.css] -->|MiniCssExtract| DIST3[dist/webview/main.css]
     VENDOR[node_modules] -->|CopyWebpackPlugin| DIST4[dist/webview/vendor/<br/>katex, mermaid, hljs]
@@ -147,8 +149,9 @@ graph TD
 ```
 
 1. **Extension** (`src/extension.ts` → `dist/extension.js`) - CommonJS for Node.js
-2. **Webview** (`webview/main.ts` → `dist/webview/main.js`) - Browser bundle with CSS
-3. **Vendor files** - KaTeX, Mermaid, and highlight.js are copied to `dist/webview/vendor/`; `@excalidraw/utils` (ESM-only since 0.1.4) is bundled there by webpack from a thin wrapper that exposes `window.ExcalidrawUtils`
+2. **Shared engine** (`src/markdownCore.ts` → `dist/markdownCore.js`) - CommonJS for Node.js; `require()`d by `scripts/generate-landing.cjs` so the landing page renders through the same pipeline
+3. **Webview** (`webview/main.ts` → `dist/webview/main.js`) - Browser bundle with CSS
+4. **Vendor files** - KaTeX, Mermaid, and highlight.js are copied to `dist/webview/vendor/`; `@excalidraw/utils` (ESM-only since 0.1.4) is bundled there by webpack from a thin wrapper that exposes `window.ExcalidrawUtils`
 
 CSS files are extracted via `mini-css-extract-plugin` into `dist/webview/main.css`.
 
