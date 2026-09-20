@@ -5,6 +5,15 @@ import { PreviewConfig } from './types/messages';
 import { resolveImageUri } from './utils/uri';
 import { parseFrontmatter, renderFrontmatterHtml } from './utils/frontmatter';
 
+// Matches a complete raw <img ...> tag: the attribute run accepts quoted
+// values, so a '>' inside quotes does not end the match early the way a
+// [^>] attribute run would.
+const RAW_HTML_IMAGE_TAG_PATTERN = /<img\b(?:[^>"']|"[^"]*"|'[^']*')*>/gi;
+
+// Matches a quoted src attribute inside an already-isolated tag; the leading
+// boundary keeps lookalike attributes (data-src, srcset) from matching.
+const RAW_HTML_IMAGE_SRC_PATTERN = /(^|[\s/])(src\s*=\s*)(["'])(.*?)\3/i;
+
 export interface RenderResult {
   html: string;
 }
@@ -294,6 +303,34 @@ export class MarkdownEngine {
 
       return defaultImageRender(tokens, idx, options, env, self);
     };
+
+    // Raw-HTML image tags bypass the image rule above: they arrive as
+    // html_block/html_inline tokens emitted verbatim. Rewriting at this
+    // boundary sees document structure — code tokens (fence, code_block,
+    // code_inline) never reach these rules — and the tag pattern reads
+    // quoted attributes, so a '>' inside a value no longer truncates the
+    // match the way the old post-render regex did.
+    for (const tokenType of ['html_block', 'html_inline']) {
+      const defaultRender =
+        md.renderer.rules[tokenType] ||
+        ((tokens: any, idx: any, options: any, env: any, self: any) =>
+          self.renderToken(tokens, idx, options));
+
+      md.renderer.rules[tokenType] = (tokens, idx, options, env, self) =>
+        this.rewriteRawHtmlImages(defaultRender(tokens, idx, options, env, self));
+    }
+  }
+
+  // Rewrites the src attribute of every complete image tag in a raw-HTML
+  // fragment through resolveUri. Quoted attribute values may contain '>'.
+  private rewriteRawHtmlImages(html: string): string {
+    return html.replace(RAW_HTML_IMAGE_TAG_PATTERN, (tag) =>
+      tag.replace(
+        RAW_HTML_IMAGE_SRC_PATTERN,
+        (_match, boundary, name, quote, src) =>
+          `${boundary}${name}${quote}${this.resolveUri(src)}${quote}`
+      )
+    );
   }
 
   private resolveUri(src: string): string {
@@ -328,27 +365,16 @@ export class MarkdownEngine {
       body = result.body;
       linesConsumed = result.linesConsumed;
       if (result.frontmatter) {
-        frontmatterHtml = renderFrontmatterHtml(result.frontmatter);
+        // Badge paths resolve at construction — the card markup never goes
+        // through the markdown-it renderer rules.
+        frontmatterHtml = renderFrontmatterHtml(result.frontmatter, (src) => this.resolveUri(src));
       }
     }
 
     // The frontmatter offset is applied to token maps during the token pass
     // (see addLineNumbers), so no data-line rewrite of the rendered HTML — and
     // no accidental renumbering of literal data-line text — is needed here.
-    let html = this.md.render(body, { lineOffset: linesConsumed });
-
-    // Prepend frontmatter card
-    html = frontmatterHtml + html;
-
-    // Post-process: resolve image src attributes in raw HTML blocks/inlines
-    // that bypass the markdown-it image renderer rule (e.g. <img src="...">).
-    html = html.replace(
-      /(<img\s[^>]*?\bsrc\s*=\s*)(["'])(.*?)\2/gi,
-      (_match, prefix, quote, src) => {
-        const resolved = this.resolveUri(src);
-        return `${prefix}${quote}${resolved}${quote}`;
-      }
-    );
+    const html = frontmatterHtml + this.md.render(body, { lineOffset: linesConsumed });
 
     return { html };
   }

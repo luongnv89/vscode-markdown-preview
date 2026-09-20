@@ -24,10 +24,10 @@ function isImageUrl(value: string): boolean {
   return /\.(png|svg|jpg|jpeg|gif|webp)(\?.*)?$/i.test(value) || /shields\.io/.test(value);
 }
 
-function renderValue(value: unknown): string {
+function renderValue(value: unknown, resolveSrc: (src: string) => string): string {
   if (typeof value === 'string') {
     if (isImageUrl(value)) {
-      return `<img src="${escapeHtml(value)}" alt="badge" class="frontmatter-badge">`;
+      return `<img src="${escapeHtml(resolveSrc(value))}" alt="badge" class="frontmatter-badge">`;
     }
     if (isUrl(value)) {
       return `<a href="${escapeHtml(value)}" class="frontmatter-link">${escapeHtml(value)}</a>`;
@@ -39,7 +39,7 @@ function renderValue(value: unknown): string {
   }
   if (Array.isArray(value)) {
     return value
-      .map((item) => `<span class="frontmatter-tag">${renderValue(item)}</span>`)
+      .map((item) => `<span class="frontmatter-tag">${renderValue(item, resolveSrc)}</span>`)
       .join(' ');
   }
   if (typeof value === 'object' && value !== null) {
@@ -80,14 +80,17 @@ export function parseFrontmatter(content: string): FrontmatterResult {
   }
 }
 
-export function renderFrontmatterHtml(data: Record<string, unknown>): string {
+export function renderFrontmatterHtml(
+  data: Record<string, unknown>,
+  resolveSrc: (src: string) => string = (src) => src
+): string {
   const title = typeof data.title === 'string' ? escapeHtml(data.title) : 'Metadata';
 
   let rows = '';
   for (const [key, value] of Object.entries(data)) {
     rows += `<tr>
       <td class="frontmatter-key">${escapeHtml(key)}</td>
-      <td class="frontmatter-value">${renderValue(value)}</td>
+      <td class="frontmatter-value">${renderValue(value, resolveSrc)}</td>
     </tr>\n`;
   }
 
