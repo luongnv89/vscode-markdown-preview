@@ -1,4 +1,6 @@
 import * as assert from 'assert';
+import { MarkdownEngine } from '../../markdownEngine';
+import { PreviewConfig } from '../../types/messages';
 import { parseFrontmatter } from '../../utils/frontmatter';
 
 suite('parseFrontmatter', () => {
@@ -81,5 +83,72 @@ suite('parseFrontmatter', () => {
     assert.strictEqual(result.frontmatter, null);
     assert.strictEqual(result.body, content);
     assert.strictEqual(result.linesConsumed, 0);
+  });
+});
+
+// Regression tests for issue #34: the frontmatter line offset must be applied
+// in the token pass, not by rewriting every data-line attribute in the rendered
+// HTML — which also renumbered user-authored literals and rescanned the whole
+// document on every render.
+suite('MarkdownEngine frontmatter line offset (#34)', () => {
+  const CARD_CONFIG: PreviewConfig = {
+    scrollSync: true,
+    enableMermaid: true,
+    enableKatex: true,
+    enableCheckboxes: true,
+    enableExcalidraw: true,
+    lineBreaks: false,
+    typographer: false,
+    showFrontmatter: 'card',
+    allowRemoteImages: false,
+  };
+
+  test('offsets block element data-line by the consumed frontmatter line count', () => {
+    const engine = new MarkdownEngine(CARD_CONFIG);
+    // '---\ntitle: T\n---\n' consumes 3 source lines; the heading is body line 0,
+    // the paragraph body line 2 — so source lines are 3 and 5.
+    const { html } = engine.render('---\ntitle: T\n---\n# Heading\n\nPara.\n');
+    assert.ok(html.includes('<h1 data-line="3"'), `heading line not offset: ${html}`);
+    assert.ok(html.includes('<p data-line="5"'), `paragraph line not offset: ${html}`);
+  });
+
+  test('offsets task-list checkbox data-line by the consumed count', () => {
+    const engine = new MarkdownEngine(CARD_CONFIG);
+    const { html } = engine.render('---\ntitle: T\n---\n- [ ] task\n');
+    assert.ok(
+      html.includes('<input type="checkbox" data-line="3"'),
+      `checkbox line not offset: ${html}`
+    );
+  });
+
+  test('leaves a literal data-line attribute inside a code block unchanged', () => {
+    const engine = new MarkdownEngine(CARD_CONFIG);
+    const doc = '---\ntitle: T\n---\n# H\n\n```\n<p data-line="12">x</p>\n```\n';
+    const { html } = engine.render(doc);
+    // Fence content is escaped, so the literal survives as &quot; — it must not
+    // be renumbered to 15.
+    assert.ok(
+      html.includes('data-line=&quot;12&quot;'),
+      `literal data-line in code block changed: ${html}`
+    );
+    assert.ok(
+      !html.includes('data-line=&quot;15&quot;'),
+      `escaped literal was renumbered: ${html}`
+    );
+  });
+
+  test('leaves a literal data-line attribute in raw HTML unchanged', () => {
+    const engine = new MarkdownEngine(CARD_CONFIG);
+    // html:true passes raw HTML through verbatim; the post-render regex used to
+    // rewrite this user-authored attribute to data-line="15".
+    const doc = '---\ntitle: T\n---\n# H\n\n<div data-line="12">literal</div>\n';
+    const { html } = engine.render(doc);
+    assert.ok(html.includes('<div data-line="12">'), `literal data-line renumbered: ${html}`);
+  });
+
+  test('applies no offset when the document has no frontmatter', () => {
+    const engine = new MarkdownEngine(CARD_CONFIG);
+    const { html } = engine.render('# Heading\n');
+    assert.ok(html.includes('data-line="0"'), `unexpected offset: ${html}`);
   });
 });

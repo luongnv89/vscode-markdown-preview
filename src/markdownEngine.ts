@@ -72,6 +72,23 @@ export class MarkdownEngine {
   }
 
   private addLineNumbers(md: MarkdownIt): void {
+    // Shift token source maps by the number of frontmatter lines stripped
+    // before rendering, so every data-line attribute below already carries the
+    // offset — no post-render rewrite of the emitted HTML is needed. Runs right
+    // after the block parser so the task-list and math rules (and every other
+    // map reader) see source-document line numbers.
+    md.core.ruler.after('block', 'frontmatter-line-offset', (state) => {
+      const offset = (state.env && state.env.lineOffset) || 0;
+      if (offset === 0) {
+        return;
+      }
+      for (const token of state.tokens) {
+        if (token.map) {
+          token.map = [token.map[0] + offset, token.map[1] + offset];
+        }
+      }
+    });
+
     // Add data-line to block-level opening tokens
     const blockTokens = [
       'paragraph_open',
@@ -315,14 +332,10 @@ export class MarkdownEngine {
       }
     }
 
-    let html = this.md.render(body);
-
-    // Adjust data-line attributes to account for stripped frontmatter lines
-    if (linesConsumed > 0) {
-      html = html.replace(/data-line="(\d+)"/g, (_, line) => {
-        return `data-line="${parseInt(line) + linesConsumed}"`;
-      });
-    }
+    // The frontmatter offset is applied to token maps during the token pass
+    // (see addLineNumbers), so no data-line rewrite of the rendered HTML — and
+    // no accidental renumbering of literal data-line text — is needed here.
+    let html = this.md.render(body, { lineOffset: linesConsumed });
 
     // Prepend frontmatter card
     html = frontmatterHtml + html;
