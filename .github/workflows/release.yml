@@ -1,0 +1,106 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      VSCE_PAT: ${{ secrets.VSCE_PAT }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - name: Setup Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Verify tag matches package version
+        run: |
+          tag_version="${GITHUB_REF_NAME#v}"
+          package_version="$(node -p "require('./package.json').version")"
+          if [ "${tag_version%%-*}" != "$package_version" ]; then
+            echo "::error::Tag $GITHUB_REF_NAME does not match package.json version $package_version — bump the version or fix the tag"
+            exit 1
+          fi
+
+      # npm test launches a real VS Code (Electron) instance via
+      # @vscode/test-electron — xvfb provides the headless display on Linux.
+      - name: Run tests
+        run: xvfb-run -a npm test
+
+      - name: Build extension
+        run: npm run package
+
+      - name: Package extension
+        run: |
+          args=(--no-dependencies)
+          case "$GITHUB_REF_NAME" in *-*) args+=(--pre-release);; esac
+          npx @vscode/vsce package "${args[@]}"
+
+      # Pulls the "## [x.y.z]" section matching the tag's base version out of
+      # CHANGELOG.md (e.g. v0.9.5-rc1 → [0.9.5]); a tag with no matching section
+      # (typical for -rc dry runs) falls back to [Unreleased], then to
+      # GitHub-generated notes.
+      - name: Extract release notes from CHANGELOG
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          extract() {
+            awk -v ver="$1" '
+              index($0, "## [" ver "]") == 1 { found = 1; print; next }
+              found && /^## / { exit }
+              found { print }
+            ' CHANGELOG.md
+          }
+          extract "${version%%-*}" > release-notes.md
+          if [ ! -s release-notes.md ]; then
+            extract "Unreleased" > release-notes.md
+            if [ -s release-notes.md ]; then
+              echo "::notice::No CHANGELOG.md section matches this tag — using [Unreleased]"
+            fi
+          fi
+          if [ ! -s release-notes.md ]; then
+            rm -f release-notes.md
+            echo "::warning::No CHANGELOG.md section matches this tag — falling back to generated notes"
+          fi
+
+      - name: Create GitHub release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          args=(--title "$GITHUB_REF_NAME")
+          case "$GITHUB_REF_NAME" in *-*) args+=(--prerelease);; esac
+          if [ -f release-notes.md ]; then
+            args+=(--notes-file release-notes.md)
+          else
+            args+=(--generate-notes)
+          fi
+          gh release create "$GITHUB_REF_NAME" ./*.vsix "${args[@]}"
+
+      - name: Note marketplace publish skip
+        if: ${{ env.VSCE_PAT == '' }}
+        run: echo "::notice::VSCE_PAT secret is not set — skipping VS Code Marketplace publish"
+
+      - name: Publish to VS Code Marketplace
+        if: ${{ env.VSCE_PAT != '' }}
+        run: |
+          args=(-i ./*.vsix)
+          case "$GITHUB_REF_NAME" in *-*) args+=(--pre-release);; esac
+          npx @vscode/vsce publish "${args[@]}"
