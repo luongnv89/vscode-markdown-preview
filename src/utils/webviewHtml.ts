@@ -61,38 +61,14 @@ export function buildWebviewHtml(
   enableExcalidraw = true
 ): string {
   const nonce = getNonce();
-
-  const vendorUri = vscode.Uri.joinPath(extensionUri, 'dist', 'webview', 'vendor');
-  const mainScript = webview.asWebviewUri(
-    vscode.Uri.joinPath(extensionUri, 'dist', 'webview', 'main.js')
-  );
-  const mainStyle = webview.asWebviewUri(
-    vscode.Uri.joinPath(extensionUri, 'dist', 'webview', 'main.css')
-  );
-  const katexStyle = webview.asWebviewUri(vscode.Uri.joinPath(vendorUri, 'katex.min.css'));
-  const katexScript = webview.asWebviewUri(vscode.Uri.joinPath(vendorUri, 'katex.min.js'));
-  const mermaidScript = webview.asWebviewUri(vscode.Uri.joinPath(vendorUri, 'mermaid.min.js'));
-  const excalidrawScript = webview.asWebviewUri(
-    vscode.Uri.joinPath(vendorUri, 'excalidraw-utils.min.js')
-  );
+  const assetUris = resolveWebviewAssetUris(webview, extensionUri);
+  const { katexStyle, mainStyle } = assetUris;
 
   const imgSrc = allowRemoteImages
     ? `img-src ${webview.cspSource} https: data:`
     : `img-src ${webview.cspSource} data:`;
 
-  // Emit a vendor <script> only for enabled features — a disabled diagram
-  // engine never needs its multi-MB runtime in the preview document.
-  const scriptUris = [katexScript];
-  if (enableMermaid) {
-    scriptUris.push(mermaidScript);
-  }
-  if (enableExcalidraw) {
-    scriptUris.push(excalidrawScript);
-  }
-  scriptUris.push(mainScript);
-  const scriptTags = scriptUris
-    .map((src) => `  <script nonce="${nonce}" src="${src}"></script>`)
-    .join('\n');
+  const scriptTags = buildScriptTags(nonce, assetUris, enableMermaid, enableExcalidraw);
 
   return `<!DOCTYPE html>
 <html lang="en">
@@ -117,4 +93,60 @@ export function buildWebviewHtml(
 ${scriptTags}
 </body>
 </html>`;
+}
+
+/**
+ * The webview URIs the document template interpolates — bundle assets plus the
+ * per-feature vendor runtimes.
+ */
+interface WebviewAssetUris {
+  mainScript: vscode.Uri;
+  mainStyle: vscode.Uri;
+  katexStyle: vscode.Uri;
+  katexScript: vscode.Uri;
+  mermaidScript: vscode.Uri;
+  excalidrawScript: vscode.Uri;
+}
+
+function resolveWebviewAssetUris(
+  webview: WebviewResourceSource,
+  extensionUri: vscode.Uri
+): WebviewAssetUris {
+  const vendorUri = vscode.Uri.joinPath(extensionUri, 'dist', 'webview', 'vendor');
+  return {
+    mainScript: webview.asWebviewUri(
+      vscode.Uri.joinPath(extensionUri, 'dist', 'webview', 'main.js')
+    ),
+    mainStyle: webview.asWebviewUri(
+      vscode.Uri.joinPath(extensionUri, 'dist', 'webview', 'main.css')
+    ),
+    katexStyle: webview.asWebviewUri(vscode.Uri.joinPath(vendorUri, 'katex.min.css')),
+    katexScript: webview.asWebviewUri(vscode.Uri.joinPath(vendorUri, 'katex.min.js')),
+    mermaidScript: webview.asWebviewUri(vscode.Uri.joinPath(vendorUri, 'mermaid.min.js')),
+    excalidrawScript: webview.asWebviewUri(
+      vscode.Uri.joinPath(vendorUri, 'excalidraw-utils.min.js')
+    ),
+  };
+}
+
+/**
+ * Emit a vendor <script> only for enabled features — a disabled diagram
+ * engine never needs its multi-MB runtime in the preview document. KaTeX is
+ * unconditional, the main bundle last.
+ */
+function buildScriptTags(
+  nonce: string,
+  uris: WebviewAssetUris,
+  enableMermaid: boolean,
+  enableExcalidraw: boolean
+): string {
+  const scriptUris = [uris.katexScript];
+  if (enableMermaid) {
+    scriptUris.push(uris.mermaidScript);
+  }
+  if (enableExcalidraw) {
+    scriptUris.push(uris.excalidrawScript);
+  }
+  scriptUris.push(uris.mainScript);
+  return scriptUris.map((src) => `  <script nonce="${nonce}" src="${src}"></script>`).join('\n');
 }

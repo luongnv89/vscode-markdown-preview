@@ -2,19 +2,17 @@ let overlay: HTMLElement | null = null;
 let slides: HTMLElement[] = [];
 let currentSlide = 0;
 
-export function enterPresentation(): void {
-  const container = document.getElementById('preview-content');
-  if (!container) return;
-
-  // Split content by <hr> elements into slides
-  slides = [];
+// Split content by <hr> elements into slide groups (cloned, so the live
+// preview DOM is untouched).
+function collectSlides(container: HTMLElement): HTMLElement[] {
+  const groups: HTMLElement[] = [];
   let currentGroup = document.createElement('div');
 
   const children = Array.from(container.cloneNode(true).childNodes);
   for (const node of children) {
     if (node instanceof HTMLHRElement) {
       if (currentGroup.childNodes.length > 0) {
-        slides.push(currentGroup);
+        groups.push(currentGroup);
       }
       currentGroup = document.createElement('div');
     } else {
@@ -22,16 +20,15 @@ export function enterPresentation(): void {
     }
   }
   if (currentGroup.childNodes.length > 0) {
-    slides.push(currentGroup);
+    groups.push(currentGroup);
   }
+  return groups;
+}
 
-  if (slides.length === 0) return;
-
-  currentSlide = 0;
-
-  // Create overlay
-  overlay = document.createElement('div');
-  overlay.className = 'presentation-overlay';
+// The presentation chrome: exit button, slide container, counter, nav hint.
+function buildOverlay(): HTMLElement {
+  const overlayEl = document.createElement('div');
+  overlayEl.className = 'presentation-overlay';
 
   // Exit button
   const exitBtn = document.createElement('button');
@@ -39,26 +36,38 @@ export function enterPresentation(): void {
   exitBtn.innerHTML = '&times;';
   exitBtn.title = 'Exit presentation (Esc)';
   exitBtn.addEventListener('click', exitPresentation);
-  overlay.appendChild(exitBtn);
+  overlayEl.appendChild(exitBtn);
 
   // Slide container
   const slideContainer = document.createElement('div');
   slideContainer.className = 'presentation-slide';
   slideContainer.id = 'presentation-slide-container';
-  overlay.appendChild(slideContainer);
+  overlayEl.appendChild(slideContainer);
 
   // Counter
   const counter = document.createElement('div');
   counter.className = 'presentation-counter';
   counter.id = 'presentation-counter';
-  overlay.appendChild(counter);
+  overlayEl.appendChild(counter);
 
   // Nav hint
   const hint = document.createElement('div');
   hint.className = 'presentation-nav-hint';
   hint.textContent = '\u2190 \u2192 arrows \u00b7 Esc to exit';
-  overlay.appendChild(hint);
+  overlayEl.appendChild(hint);
 
+  return overlayEl;
+}
+
+export function enterPresentation(): void {
+  const container = document.getElementById('preview-content');
+  if (!container) return;
+
+  slides = collectSlides(container);
+  if (slides.length === 0) return;
+
+  currentSlide = 0;
+  overlay = buildOverlay();
   document.body.appendChild(overlay);
   document.addEventListener('keydown', handlePresentationKey);
 

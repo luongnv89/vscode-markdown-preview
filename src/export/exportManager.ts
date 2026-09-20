@@ -68,6 +68,25 @@ export class ExportManager {
     }
     const outputPath = outputUri.fsPath;
 
+    const completed = await this.exportWithProgress(document, format, outputPath, exportFn);
+    if (completed) {
+      await this.notifyExportComplete(format, outputPath);
+    }
+  }
+
+  // Runs the export inside a cancellable progress notification. Returns false
+  // when the export did not complete — a user cancel (no error popup) or a
+  // thrown error (reported via handleExportError) both swallow the announce.
+  private async exportWithProgress(
+    document: vscode.TextDocument,
+    format: 'html' | 'pdf',
+    outputPath: string,
+    exportFn: (
+      browserHtml: string,
+      outputPath: string,
+      token: vscode.CancellationToken
+    ) => Promise<void>
+  ): Promise<boolean> {
     let cancelled = false;
     try {
       await vscode.window.withProgress(
@@ -80,44 +99,59 @@ export class ExportManager {
           token.onCancellationRequested(() => {
             cancelled = true;
           });
-
-          progress.report({ message: 'Rendering markdown...' });
-          const config = getPreviewConfig();
-          this.engine.updateConfig(config);
-          this.engine.setExportContext(document.uri);
-          const result = this.engine.render(document.getText());
-          if (token.isCancellationRequested) {
-            return;
-          }
-
-          progress.report({ message: 'Building standalone HTML...' });
-          const title = path.basename(document.uri.fsPath, '.md');
-          const browserHtml = await this.htmlBuilder.buildForBrowser(
-            result.html,
-            title,
-            document.uri,
-            config
-          );
-          if (token.isCancellationRequested) {
-            return;
-          }
-
-          progress.report({ message: `Generating ${format.toUpperCase()}...` });
-          await exportFn(browserHtml, outputPath, token);
+          await this.renderAndExport(document, format, outputPath, exportFn, progress, token);
         }
       );
     } catch (error) {
-      if (cancelled) {
-        return; // user cancelled mid-export — abort without an error popup
+      if (!cancelled) {
+        this.handleExportError(error, format.toUpperCase());
       }
-      this.handleExportError(error, format.toUpperCase());
+      return false;
+    }
+    return !cancelled;
+  }
+
+  // The withProgress body: render markdown, build the standalone document,
+  // then hand off to the format-specific writer. Bail out quietly whenever
+  // the cancellation token trips between steps.
+  private async renderAndExport(
+    document: vscode.TextDocument,
+    format: 'html' | 'pdf',
+    outputPath: string,
+    exportFn: (
+      browserHtml: string,
+      outputPath: string,
+      token: vscode.CancellationToken
+    ) => Promise<void>,
+    progress: vscode.Progress<{ message?: string; increment?: number }>,
+    token: vscode.CancellationToken
+  ): Promise<void> {
+    progress.report({ message: 'Rendering markdown...' });
+    const config = getPreviewConfig();
+    this.engine.updateConfig(config);
+    this.engine.setExportContext(document.uri);
+    const result = this.engine.render(document.getText());
+    if (token.isCancellationRequested) {
       return;
     }
 
-    if (cancelled) {
+    progress.report({ message: 'Building standalone HTML...' });
+    const title = path.basename(document.uri.fsPath, '.md');
+    const browserHtml = await this.htmlBuilder.buildForBrowser(
+      result.html,
+      title,
+      document.uri,
+      config
+    );
+    if (token.isCancellationRequested) {
       return;
     }
 
+    progress.report({ message: `Generating ${format.toUpperCase()}...` });
+    await exportFn(browserHtml, outputPath, token);
+  }
+
+  private async notifyExportComplete(format: 'html' | 'pdf', outputPath: string): Promise<void> {
     const openAction = 'Open File';
     const choice = await vscode.window.showInformationMessage(
       `${format.toUpperCase()} exported to ${path.basename(outputPath)}`,

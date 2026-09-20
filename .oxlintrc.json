@@ -2,6 +2,12 @@
   "$schema": "./node_modules/oxlint/configuration_schema.json",
   "rules": {
     "typescript/no-explicit-any": "error",
+    "max-lines-per-function": [
+      "error",
+      {
+        "max": 50
+      }
+    ],
     "no-unused-vars": [
       "warn",
       {
@@ -11,6 +17,14 @@
       }
     ]
   },
+  "overrides": [
+    {
+      "files": ["src/test/**"],
+      "rules": {
+        "max-lines-per-function": "off"
+      }
+    }
+  ],
   "ignorePatterns": [
     "dist/",
     "out/",

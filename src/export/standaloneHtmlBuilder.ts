@@ -6,94 +6,30 @@ import { escapeHtml } from '../utils/htmlEscape';
 import { getNonce, isPathInsideAny } from '../utils/uri';
 import { PreviewConfig } from '../types/messages';
 
-export class StandaloneHtmlBuilder {
-  constructor(
-    private readonly extensionUri: vscode.Uri,
-    // The user-visible warning channel for refused assets — injectable so tests
-    // can observe it; production wiring is vscode.window.showWarningMessage.
-    private readonly warn: (message: string) => void = (message) => {
-      void vscode.window.showWarningMessage(message);
-    }
-  ) {}
+// Per-export CSP for the standalone document: only the extension's own nonced
+// scripts may run, and no network loads other than images are permitted.
+function buildExportContentSecurityPolicy(nonce: string): string {
+  return [
+    "default-src 'none'",
+    `script-src 'nonce-${nonce}'`,
+    "style-src 'unsafe-inline'",
+    'img-src data: file: https: http:',
+    'font-src data:',
+    "connect-src 'none'",
+    "media-src 'none'",
+    "object-src 'none'",
+    "frame-src 'none'",
+    "worker-src 'none'",
+    "base-uri 'none'",
+    "form-action 'none'",
+  ].join('; ');
+}
 
-  /**
-   * Build HTML with vendor scripts for Puppeteer rendering.
-   * This includes mermaid.js and katex.js so the headless browser can render them.
-   * `features` carries the markdownPreviewPro.enable* flags: a disabled diagram
-   * engine emits no diagram blocks, so its vendor runtime is neither read from
-   * disk nor embedded in the exported document.
-   *
-   * The rendered markdown is sanitized BEFORE it is embedded: the markdown
-   * engine renders with `html: true`, so raw author markup (scripts, event
-   * handlers, iframes) would otherwise reach the headless browser and execute
-   * during `page.setContent`. A per-export nonce CSP is defense in depth on
-   * top: only the extension's own nonced scripts may run, and no network
-   * loads other than images are permitted.
-   */
-  async buildForBrowser(
-    markdownHtml: string,
-    title: string,
-    documentUri: vscode.Uri,
-    features?: Pick<PreviewConfig, 'enableMermaid' | 'enableExcalidraw'>
-  ): Promise<string> {
-    const nonce = getNonce();
-    const enableMermaid = features?.enableMermaid ?? true;
-    const enableExcalidraw = features?.enableExcalidraw ?? true;
-    const contentSecurityPolicy = [
-      "default-src 'none'",
-      `script-src 'nonce-${nonce}'`,
-      "style-src 'unsafe-inline'",
-      'img-src data: file: https: http:',
-      'font-src data:',
-      "connect-src 'none'",
-      "media-src 'none'",
-      "object-src 'none'",
-      "frame-src 'none'",
-      "worker-src 'none'",
-      "base-uri 'none'",
-      "form-action 'none'",
-    ].join('; ');
-
-    const css = await this.getCombinedCss();
-    // Embed local images as data: URIs first (a trusted transform of our own),
-    // then sanitize: DOMPurify keeps data: image URIs but strips file-system
-    // paths (and would drop Windows-style C:\... srcs), so embedding before
-    // sanitizing preserves images across platforms.
-    const htmlWithEmbeddedImages = await this.embedImages(markdownHtml, documentUri);
-    const sanitizedHtml = await sanitizeExportHtml(htmlWithEmbeddedImages);
-    const vendorDir = path.join(this.extensionUri.fsPath, 'dist', 'webview', 'vendor');
-    const katexJsPath = path.join(vendorDir, 'katex.min.js');
-    const mermaidJsPath = path.join(vendorDir, 'mermaid.min.js');
-
-    const excalidrawJsPath = path.join(vendorDir, 'excalidraw-utils.min.js');
-
-    let katexJs = '';
-    let mermaidJs = '';
-    let excalidrawJs = '';
-    try {
-      katexJs = await fs.readFile(katexJsPath, 'utf-8');
-    } catch {
-      // KaTeX not available
-    }
-    if (enableMermaid) {
-      try {
-        mermaidJs = await fs.readFile(mermaidJsPath, 'utf-8');
-      } catch {
-        // Mermaid not available
-      }
-    }
-    if (enableExcalidraw) {
-      try {
-        excalidrawJs = await fs.readFile(excalidrawJsPath, 'utf-8');
-      } catch {
-        // Excalidraw not available
-      }
-    }
-
-    // Script that renders Mermaid and KaTeX client-side, then signals completion.
-    // Nonced so the document CSP allows it while blocking any markup-borne script.
-    const renderScript = `
-<script nonce="${nonce}">
+// Everything after the `<script nonce="...">` line of the render script —
+// hoisted out of buildForBrowser so the giant client-side template lives as a
+// module constant. Concatenated at the call site, so the emitted markup is
+// byte-identical to the former inline literal.
+const EXPORT_RENDER_SCRIPT_BODY = `
 (async function() {
   // Render KaTeX
   if (typeof katex !== 'undefined') {
@@ -170,15 +106,80 @@ export class StandaloneHtmlBuilder {
 })();
 </script>`;
 
-    // A disabled engine's vendor runtime is not embedded at all — its diagram
-    // fences rendered as plain code blocks upstream, so nothing references it.
-    const vendorScripts = [
-      `  <script nonce="${nonce}">${katexJs}</script>`,
-      enableMermaid ? `  <script nonce="${nonce}">${mermaidJs}</script>` : '',
-      enableExcalidraw ? `  <script nonce="${nonce}">${excalidrawJs}</script>` : '',
-    ]
-      .filter(Boolean)
-      .join('\n');
+// Script that renders Mermaid and KaTeX client-side, then signals completion.
+// Nonced so the document CSP allows it while blocking any markup-borne script.
+function buildRenderScript(nonce: string): string {
+  return `\n<script nonce="${nonce}">${EXPORT_RENDER_SCRIPT_BODY}`;
+}
+
+interface VendorScriptContents {
+  katexJs: string;
+  mermaidJs: string;
+  excalidrawJs: string;
+}
+
+// A disabled engine's vendor runtime is not embedded at all — its diagram
+// fences rendered as plain code blocks upstream, so nothing references it.
+function buildVendorScriptTags(
+  nonce: string,
+  scripts: VendorScriptContents,
+  enableMermaid: boolean,
+  enableExcalidraw: boolean
+): string {
+  return [
+    `  <script nonce="${nonce}">${scripts.katexJs}</script>`,
+    enableMermaid ? `  <script nonce="${nonce}">${scripts.mermaidJs}</script>` : '',
+    enableExcalidraw ? `  <script nonce="${nonce}">${scripts.excalidrawJs}</script>` : '',
+  ]
+    .filter(Boolean)
+    .join('\n');
+}
+
+export class StandaloneHtmlBuilder {
+  constructor(
+    private readonly extensionUri: vscode.Uri,
+    // The user-visible warning channel for refused assets — injectable so tests
+    // can observe it; production wiring is vscode.window.showWarningMessage.
+    private readonly warn: (message: string) => void = (message) => {
+      void vscode.window.showWarningMessage(message);
+    }
+  ) {}
+
+  /**
+   * Build HTML with vendor scripts for Puppeteer rendering.
+   * This includes mermaid.js and katex.js so the headless browser can render them.
+   * `features` carries the markdownPreviewPro.enable* flags: a disabled diagram
+   * engine emits no diagram blocks, so its vendor runtime is neither read from
+   * disk nor embedded in the exported document.
+   *
+   * The rendered markdown is sanitized BEFORE it is embedded: the markdown
+   * engine renders with `html: true`, so raw author markup (scripts, event
+   * handlers, iframes) would otherwise reach the headless browser and execute
+   * during `page.setContent`. A per-export nonce CSP is defense in depth on
+   * top: only the extension's own nonced scripts may run, and no network
+   * loads other than images are permitted.
+   */
+  async buildForBrowser(
+    markdownHtml: string,
+    title: string,
+    documentUri: vscode.Uri,
+    features?: Pick<PreviewConfig, 'enableMermaid' | 'enableExcalidraw'>
+  ): Promise<string> {
+    const nonce = getNonce();
+    const enableMermaid = features?.enableMermaid ?? true;
+    const enableExcalidraw = features?.enableExcalidraw ?? true;
+    const contentSecurityPolicy = buildExportContentSecurityPolicy(nonce);
+
+    const css = await this.getCombinedCss();
+    // Embed local images as data: URIs first (a trusted transform of our own),
+    // then sanitize: DOMPurify keeps data: image URIs but strips file-system
+    // paths (and would drop Windows-style C:\... srcs), so embedding before
+    // sanitizing preserves images across platforms.
+    const htmlWithEmbeddedImages = await this.embedImages(markdownHtml, documentUri);
+    const sanitizedHtml = await sanitizeExportHtml(htmlWithEmbeddedImages);
+    const vendorJs = await this.readVendorScripts(enableMermaid, enableExcalidraw);
+    const renderScript = buildRenderScript(nonce);
+    const vendorScripts = buildVendorScriptTags(nonce, vendorJs, enableMermaid, enableExcalidraw);
 
     return `<!DOCTYPE html>
 <html lang="en">
@@ -199,6 +200,39 @@ ${sanitizedHtml}
   ${renderScript}
 </body>
 </html>`;
+  }
+
+  // Read the vendor runtimes the export embeds — a disabled diagram engine is
+  // skipped entirely, and every read failure degrades to an empty string so
+  // the export still completes without that runtime.
+  private async readVendorScripts(
+    enableMermaid: boolean,
+    enableExcalidraw: boolean
+  ): Promise<VendorScriptContents> {
+    const vendorDir = path.join(this.extensionUri.fsPath, 'dist', 'webview', 'vendor');
+    let katexJs = '';
+    let mermaidJs = '';
+    let excalidrawJs = '';
+    try {
+      katexJs = await fs.readFile(path.join(vendorDir, 'katex.min.js'), 'utf-8');
+    } catch {
+      // KaTeX not available
+    }
+    if (enableMermaid) {
+      try {
+        mermaidJs = await fs.readFile(path.join(vendorDir, 'mermaid.min.js'), 'utf-8');
+      } catch {
+        // Mermaid not available
+      }
+    }
+    if (enableExcalidraw) {
+      try {
+        excalidrawJs = await fs.readFile(path.join(vendorDir, 'excalidraw-utils.min.js'), 'utf-8');
+      } catch {
+        // Excalidraw not available
+      }
+    }
+    return { katexJs, mermaidJs, excalidrawJs };
   }
 
   private async getCombinedCss(): Promise<string> {
@@ -332,13 +366,36 @@ ${sanitizedHtml}
     const roots = allowedRoots ?? this.getImageResourceRoots(documentUri);
     const imgRegex = /<img\s+[^>]*src=["']([^"']+)["'][^>]*>/g;
     const matches = [...html.matchAll(imgRegex)];
-    const refused: string[] = [];
 
-    // Resolve each matched tag's image to a data URI first, keyed by the tag's
-    // offset in the document. The src string alone is not a safe String.replace
-    // needle: it can repeat across tags or appear in prose, and the first
-    // textual occurrence is not necessarily the tag that produced it.
+    const { dataUriByOffset, refused } = await this.collectImageDataUris(matches, docDir, roots);
+
+    // Single pass: each matched tag rewrites only its own src attribute.
+    const result = html.replace(imgRegex, (tag: string, _src: string, offset: number) => {
+      const dataUri = dataUriByOffset.get(offset);
+      if (dataUri === undefined) {
+        return tag;
+      }
+      return tag.replace(
+        /(\ssrc=)(["'])[^"']*\2/,
+        (_m: string, prefix: string, quote: string) => `${prefix}${quote}${dataUri}${quote}`
+      );
+    });
+
+    this.warnAboutRefusedImages(refused);
+    return result;
+  }
+
+  // Resolve each matched tag's image to a data URI first, keyed by the tag's
+  // offset in the document. The src string alone is not a safe String.replace
+  // needle: it can repeat across tags or appear in prose, and the first
+  // textual occurrence is not necessarily the tag that produced it.
+  private async collectImageDataUris(
+    matches: RegExpMatchArray[],
+    docDir: string,
+    roots: string[]
+  ): Promise<{ dataUriByOffset: Map<number, string>; refused: string[] }> {
     const dataUriByOffset = new Map<number, string>();
+    const refused: string[] = [];
     for (const match of matches) {
       const src = match[1];
 
@@ -347,15 +404,7 @@ ${sanitizedHtml}
         continue;
       }
 
-      // Resolve to actual file path
-      let filePath: string;
-      if (src.startsWith('https://file+.vscode-resource.vscode-cdn.net/')) {
-        filePath = decodeURIComponent(
-          src.replace('https://file+.vscode-resource.vscode-cdn.net', '')
-        );
-      } else {
-        filePath = path.resolve(docDir, src);
-      }
+      const filePath = this.resolveImageFilePath(src, docDir);
 
       // Prevent path traversal outside the document directory and workspace —
       // a real containment check, not a startsWith prefix match that admits
@@ -375,30 +424,29 @@ ${sanitizedHtml}
         // Image not found, leave original src
       }
     }
+    return { dataUriByOffset, refused };
+  }
 
-    // Single pass: each matched tag rewrites only its own src attribute.
-    const result = html.replace(imgRegex, (tag: string, _src: string, offset: number) => {
-      const dataUri = dataUriByOffset.get(offset);
-      if (dataUri === undefined) {
-        return tag;
-      }
-      return tag.replace(
-        /(\ssrc=)(["'])[^"']*\2/,
-        (_m: string, prefix: string, quote: string) => `${prefix}${quote}${dataUri}${quote}`
-      );
-    });
-
-    if (refused.length > 0) {
-      const shown = refused.slice(0, 3);
-      const remainder = refused.length - shown.length;
-      this.warn(
-        `Markdown Preview Pro: skipped ${refused.length} image(s) outside the ` +
-          `document/workspace folders: ${shown.join(', ')}` +
-          `${remainder > 0 ? ` and ${remainder} more` : ''}`
-      );
+  // Decode the CDN-rewritten resource scheme, otherwise resolve against the
+  // document's own directory.
+  private resolveImageFilePath(src: string, docDir: string): string {
+    if (src.startsWith('https://file+.vscode-resource.vscode-cdn.net/')) {
+      return decodeURIComponent(src.replace('https://file+.vscode-resource.vscode-cdn.net', ''));
     }
+    return path.resolve(docDir, src);
+  }
 
-    return result;
+  private warnAboutRefusedImages(refused: string[]): void {
+    if (refused.length === 0) {
+      return;
+    }
+    const shown = refused.slice(0, 3);
+    const remainder = refused.length - shown.length;
+    this.warn(
+      `Markdown Preview Pro: skipped ${refused.length} image(s) outside the ` +
+        `document/workspace folders: ${shown.join(', ')}` +
+        `${remainder > 0 ? ` and ${remainder} more` : ''}`
+    );
   }
 
   private getFontMimeType(ext: string): string {
