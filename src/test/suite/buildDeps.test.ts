@@ -109,10 +109,10 @@ suite('build-deps wave (#50, #51, #52)', () => {
   });
 
   test('landing generator renders "- [ ]"/"- [x]" as checkbox inputs (#52)', () => {
-    const { createMarkdownEngine } = require(
+    const { createLandingRenderer } = require(
       path.join(repoRoot, 'scripts', 'generate-landing.cjs')
-    ) as { createMarkdownEngine: () => { render: (s: string) => string } };
-    const html = createMarkdownEngine().render(TASK_LIST_MD);
+    ) as { createLandingRenderer: () => { render: (s: string) => string } };
+    const html = createLandingRenderer().render(TASK_LIST_MD);
     assertTaskListCheckboxes(html, 'generate-landing.cjs');
   });
 });

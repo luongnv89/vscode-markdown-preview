@@ -77,6 +77,8 @@ npx tsc --noEmit -p tsconfig.webview.json  # webview (webview/)
 
 `build:landing` runs `scripts/generate-landing.cjs`, which renders `docs/landing.md` into the generated file `docs/index.html`. The file is **gitignored** — a fresh checkout does not contain it, and CI never compares it against the commit. The Pages workflow regenerates it on every deploy, so running the command locally is always safe and its output is never committed.
 
+The generator renders through the shared engine: webpack emits `dist/markdownCore.js` (the CommonJS build of `src/markdownCore.ts`, the vscode-free pipeline `src/markdownEngine.ts` delegates to) and the script `require()`s it. `npm run compile`/`package` must therefore run first — on a fresh checkout `dist/` does not exist and the script fails fast with a message saying so.
+
 ## Debugging Tips
 
 ### Extension Host Logs

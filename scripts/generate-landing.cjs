@@ -1,12 +1,42 @@
 const fs = require('node:fs/promises');
 const path = require('node:path');
-const MarkdownIt = require('markdown-it');
-const hljs = require('highlight.js');
-const YAML = require('yaml');
 
 const repoRoot = path.resolve(__dirname, '..');
 const landingPath = path.join(repoRoot, 'docs', 'landing.md');
 const outputPath = path.join(repoRoot, 'docs', 'index.html');
+
+// The markdown pipeline and the frontmatter helpers are the compiled shared
+// engine (src/markdownCore.ts → dist/markdownCore.js) — the same module the
+// extension bundles — so the landing page can never drift away from preview
+// rendering again. The artifact is a build output: `npm run compile` first.
+let sharedCore;
+try {
+  sharedCore = require(path.join(repoRoot, 'dist', 'markdownCore.js'));
+} catch {
+  throw new Error(
+    'dist/markdownCore.js not found — run `npm run compile` before `npm run build:landing`'
+  );
+}
+const { createMarkdownIt, parseFrontmatter, renderFrontmatterHtml } = sharedCore;
+
+// Mirrors the flags the extension renders the preview with (PreviewConfig):
+// typographer on, hard line breaks off, every renderer feature on.
+const LANDING_CONFIG = {
+  typographer: true,
+  lineBreaks: false,
+  enableMermaid: true,
+  enableExcalidraw: true,
+  enableCheckboxes: true,
+  enableKatex: true,
+};
+
+function createLandingRenderer() {
+  return createMarkdownIt(LANDING_CONFIG, {
+    // Landing-only decoration: markdown images get a styled class; srcs stay
+    // untouched here because embedImages() rewrites them to data URIs later.
+    decorateImageToken: (token) => token.attrJoin('class', 'preview-image'),
+  });
+}
 
 function escapeHtml(str) {
   return String(str)
@@ -14,74 +44,6 @@ function escapeHtml(str) {
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;');
-}
-
-function parseFrontmatter(content) {
-  const match = content.match(/^---\n([\s\S]*?)\n---\n?/);
-  if (!match) {
-    return { frontmatter: null, body: content };
-  }
-  try {
-    return {
-      frontmatter: YAML.parse(match[1]) || null,
-      body: content.slice(match[0].length),
-    };
-  } catch {
-    return { frontmatter: null, body: content.slice(match[0].length) };
-  }
-}
-
-function isUrl(value) {
-  return /^https?:\/\//.test(value);
-}
-
-function isImageUrl(value) {
-  return /\.(png|svg|jpg|jpeg|gif|webp)(\?.*)?$/i.test(value) || /shields\.io/.test(value);
-}
-
-function renderFrontmatterValue(value) {
-  if (typeof value === 'string') {
-    if (isImageUrl(value)) {
-      return `<img src="${escapeHtml(value)}" alt="badge" class="frontmatter-badge">`;
-    }
-    if (isUrl(value)) {
-      return `<a href="${escapeHtml(value)}" class="frontmatter-link">${escapeHtml(value)}</a>`;
-    }
-    return escapeHtml(value);
-  }
-  if (typeof value === 'boolean' || typeof value === 'number') {
-    return `<code>${escapeHtml(value)}</code>`;
-  }
-  if (Array.isArray(value)) {
-    return value
-      .map((item) => `<span class="frontmatter-tag">${renderFrontmatterValue(item)}</span>`)
-      .join(' ');
-  }
-  if (typeof value === 'object' && value !== null) {
-    return `<code>${escapeHtml(JSON.stringify(value, null, 2))}</code>`;
-  }
-  return escapeHtml(String(value));
-}
-
-function renderFrontmatterHtml(data) {
-  const title = typeof data.title === 'string' ? escapeHtml(data.title) : 'Metadata';
-  const rows = Object.entries(data)
-    .map(
-      ([key, value]) => `<tr>
-  <td class="frontmatter-key">${escapeHtml(key)}</td>
-  <td class="frontmatter-value">${renderFrontmatterValue(value)}</td>
-</tr>`
-    )
-    .join('\n');
-
-  return `<details open class="frontmatter-card">
-<summary class="frontmatter-summary">${title}</summary>
-<table class="frontmatter-table">
-  <tbody>
-${rows}
-  </tbody>
-</table>
-</details>`;
 }
 
 function resolveImageUri(src, documentPath) {
@@ -205,158 +167,6 @@ function replaceThemeVariables(css) {
     .join('\n');
 
   return `:root {\n${root}\n}\n\n${css}`;
-}
-
-function createMarkdownEngine() {
-  const md = new MarkdownIt({
-    html: true,
-    linkify: true,
-    typographer: true,
-    breaks: false,
-    highlight: (str, lang) => {
-      if (lang && lang !== 'mermaid' && hljs.getLanguage(lang)) {
-        try {
-          const result = hljs.highlight(str, { language: lang, ignoreIllegals: true });
-          return `<pre class="hljs code-block" data-lang="${lang}"><code>${result.value}</code></pre>`;
-        } catch {
-          // ignore
-        }
-      }
-      if (lang === 'mermaid') {
-        return `<div class="mermaid-block" data-processed="false"><pre class="mermaid">${md.utils.escapeHtml(str)}</pre></div>`;
-      }
-      return `<pre class="hljs code-block"><code>${md.utils.escapeHtml(str)}</code></pre>`;
-    },
-  });
-
-  const blockTokens = [
-    'paragraph_open',
-    'heading_open',
-    'blockquote_open',
-    'bullet_list_open',
-    'ordered_list_open',
-    'table_open',
-    'hr',
-    'html_block',
-  ];
-
-  for (const tokenType of blockTokens) {
-    const defaultRender =
-      md.renderer.rules[tokenType] ||
-      ((tokens, idx, options, env, self) => self.renderToken(tokens, idx, options));
-    md.renderer.rules[tokenType] = (tokens, idx, options, env, self) => {
-      const token = tokens[idx];
-      if (token.map && token.map.length >= 1) {
-        token.attrSet('data-line', String(token.map[0]));
-        token.attrJoin('class', 'code-line');
-      }
-      return defaultRender(tokens, idx, options, env, self);
-    };
-  }
-
-  const defaultListItemRender =
-    md.renderer.rules.list_item_open ||
-    ((tokens, idx, options, env, self) => self.renderToken(tokens, idx, options));
-  md.renderer.rules.list_item_open = (tokens, idx, options, env, self) => {
-    const token = tokens[idx];
-    if (token.map && token.map.length >= 1) {
-      token.attrSet('data-line', String(token.map[0]));
-    }
-    return defaultListItemRender(tokens, idx, options, env, self);
-  };
-
-  md.core.ruler.after('inline', 'task-lists', (state) => {
-    const tokens = state.tokens;
-    for (let i = 0; i < tokens.length; i++) {
-      if (tokens[i].type !== 'inline') continue;
-      const content = tokens[i].content;
-      if (i >= 2 && tokens[i - 2].type === 'list_item_open') {
-        const checkboxMatch = content.match(/^\[([ xX])\]\s*/);
-        if (checkboxMatch) {
-          const checked = checkboxMatch[1] !== ' ';
-          const listItemToken = tokens[i - 2];
-          listItemToken.attrJoin('class', 'task-list-item');
-          const checkedAttr = checked ? ' checked' : '';
-          const line = listItemToken.map ? String(listItemToken.map[0]) : '0';
-          tokens[i].content = content.replace(/^\[([ xX])\]\s*/, '');
-          const children = tokens[i].children || [];
-          tokens[i].children = children;
-          const checkboxToken = new state.Token('html_inline', '', 0);
-          checkboxToken.content = `<input type="checkbox" data-line="${line}"${checkedAttr}> `;
-          if (children.length > 0 && children[0].type === 'text') {
-            children[0].content = children[0].content.replace(/^\[([ xX])\]\s*/, '');
-          }
-          children.unshift(checkboxToken);
-        }
-      }
-    }
-  });
-
-  md.inline.ruler.after('escape', 'math_inline', (state, silent) => {
-    if (state.src[state.pos] !== '$' || state.src[state.pos + 1] === '$') return false;
-    const start = state.pos + 1;
-    let end = start;
-    while (end < state.posMax) {
-      if (state.src[end] === '$' && state.src[end - 1] !== '\\') break;
-      end++;
-    }
-    if (end >= state.posMax) return false;
-    if (!silent) {
-      const token = state.push('math_inline', 'math', 0);
-      token.content = state.src.slice(start, end);
-      token.markup = '$';
-    }
-    state.pos = end + 1;
-    return true;
-  });
-
-  md.renderer.rules.math_inline = (tokens, idx) =>
-    `<span class="katex-inline" data-math="${md.utils.escapeHtml(tokens[idx].content)}">${md.utils.escapeHtml(tokens[idx].content)}</span>`;
-
-  md.block.ruler.after('blockquote', 'math_block', (state, startLine, endLine, silent) => {
-    const startPos = state.bMarks[startLine] + state.tShift[startLine];
-    const maxPos = state.eMarks[startLine];
-    if (startPos + 2 > maxPos) return false;
-    if (state.src.slice(startPos, startPos + 2) !== '$$') return false;
-    if (silent) return true;
-
-    let nextLine = startLine;
-    let hasEnding = false;
-    while (nextLine < endLine) {
-      nextLine++;
-      if (nextLine >= endLine) break;
-      const lineStartPos = state.bMarks[nextLine] + state.tShift[nextLine];
-      const lineMaxPos = state.eMarks[nextLine];
-      if (lineStartPos < lineMaxPos && state.src.slice(lineStartPos, lineStartPos + 2) === '$$') {
-        hasEnding = true;
-        break;
-      }
-    }
-    if (!hasEnding) return false;
-    state.line = nextLine + 1;
-    const token = state.push('math_block', 'div', 0);
-    token.block = true;
-    token.content = state.getLines(startLine + 1, nextLine, state.tShift[startLine], true).trim();
-    token.map = [startLine, nextLine + 1];
-    token.markup = '$$';
-    return true;
-  });
-
-  md.renderer.rules.math_block = (tokens, idx) => {
-    const line = tokens[idx].map ? tokens[idx].map[0] : 0;
-    return `<div class="katex-block code-line" data-line="${line}" data-math="${md.utils.escapeHtml(tokens[idx].content)}">${md.utils.escapeHtml(tokens[idx].content)}</div>\n`;
-  };
-
-  const defaultImageRender =
-    md.renderer.rules.image ||
-    ((tokens, idx, options, env, self) => self.renderToken(tokens, idx, options));
-  md.renderer.rules.image = (tokens, idx, options, env, self) => {
-    const token = tokens[idx];
-    token.attrJoin('class', 'preview-image');
-    return defaultImageRender(tokens, idx, options, env, self);
-  };
-
-  return md;
 }
 
 async function getCombinedCss() {
@@ -668,7 +478,7 @@ async function main() {
   const pkg = JSON.parse(await fs.readFile(path.join(repoRoot, 'package.json'), 'utf8'));
   const raw = await fs.readFile(landingPath, 'utf8');
   const { frontmatter, body } = parseFrontmatter(raw);
-  const md = createMarkdownEngine();
+  const md = createLandingRenderer();
   const renderedBody = md.render(body);
   const html = `${frontmatter ? renderFrontmatterHtml(frontmatter) : ''}\n${renderedBody}`;
   const title = (frontmatter && frontmatter.title) || pkg.displayName || pkg.name;
@@ -681,10 +491,11 @@ async function main() {
   );
 }
 
-// Exported for tests (src/test/suite/buildDeps.test.ts) — the landing
-// generator's engine must keep producing checkbox markup without
-// markdown-it-task-lists.
-module.exports = { createMarkdownEngine };
+// Exported for tests (src/test/suite/buildDeps.test.ts,
+// src/test/suite/sharedEngine.test.ts) — the landing generator renders through
+// the compiled shared engine, which must keep producing checkbox markup
+// without markdown-it-task-lists.
+module.exports = { createLandingRenderer };
 
 if (require.main === module) {
   main().catch((error) => {
