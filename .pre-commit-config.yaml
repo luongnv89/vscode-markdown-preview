@@ -18,9 +18,9 @@ repos:
         files: \.(ts|json|css|md)$
         exclude: ^(package-lock\.json|dist/)
 
-      - id: eslint
-        name: eslint
-        entry: npx eslint --fix
+      - id: oxlint
+        name: oxlint
+        entry: npx oxlint --fix
         language: system
         files: \.(ts)$
         exclude: ^(dist/|node_modules/)

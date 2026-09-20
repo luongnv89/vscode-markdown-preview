@@ -12,7 +12,7 @@
 - Install: `npm ci` — Node 24 (the CI pin, also in `.nvmrc`; `engines.node` declares `>=24.0.0`) or newer LTS; no `.env.example` exists.
 - Dev build: `npm run compile` — one-time Webpack build into `dist/` (`npm run watch` for rebuild-on-change).
 - Production build: `npm run package` — optimized bundle with hidden source maps.
-- Lint: `npm run lint` — ESLint over `src/` and `webview/`.
+- Lint: `npm run lint` — oxlint over `src/` and `webview/` (config `.oxlintrc.json`).
 - Format gate: `npm run format:check` — Prettier check, same as CI.
 - Typecheck — run **both**, CI does:
   - `npx tsc --noEmit -p tsconfig.json` (extension host, `src/`)
@@ -38,7 +38,7 @@
 ## Conventions
 
 - Webpack emits two bundles: `dist/extension.js` (CommonJS/Node) and `dist/webview/main.js` + `main.css`; vendor assets are copied to `dist/webview/vendor/`.
-- Prettier and ESLint are the style authority — never hand-tune formatting they enforce.
+- Prettier and oxlint are the style authority — never hand-tune formatting they enforce.
 
 ## Done when
 

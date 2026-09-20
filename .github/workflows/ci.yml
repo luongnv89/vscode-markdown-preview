@@ -31,7 +31,7 @@ jobs:
         run: npx prettier --check .
 
       - name: Lint
-        run: npx eslint src/ webview/
+        run: npm run lint
 
       - name: Type check (src)
         run: npx tsc --noEmit -p tsconfig.json
