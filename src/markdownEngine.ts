@@ -48,9 +48,27 @@ export class MarkdownEngine {
     this.webview = undefined;
   }
 
+  // The PreviewConfig fields createMarkdownIt actually consumes. Rebuilding the
+  // engine on any other change (scrollSync, showFrontmatter, allowRemoteImages)
+  // would redo the full plugin/ruler/renderer setup for nothing (issue #76) —
+  // the export path calls updateConfig unconditionally before every export.
+  private static readonly ENGINE_CONFIG_KEYS = [
+    'typographer',
+    'lineBreaks',
+    'enableMermaid',
+    'enableExcalidraw',
+    'enableCheckboxes',
+    'enableKatex',
+  ] as const;
+
   public updateConfig(config: PreviewConfig): void {
+    const rebuild = MarkdownEngine.ENGINE_CONFIG_KEYS.some(
+      (key) => this.config[key] !== config[key]
+    );
     this.config = config;
-    this.md = this.createEngine(config);
+    if (rebuild) {
+      this.md = this.createEngine(config);
+    }
   }
 
   public render(content: string): RenderResult {

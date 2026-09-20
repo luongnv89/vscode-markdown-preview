@@ -53,7 +53,7 @@ Runs in Node.js within VS Code's extension host process.
 | `scrollSync.ts`           | Calculates scroll positions from editor cursor                                                                       |
 | `utils/config.ts`         | Reads VS Code configuration settings                                                                                 |
 | `utils/uri.ts`            | Resolves local image and resource URIs                                                                               |
-| `utils/aboutInfo.ts`      | Collects the About-popup metadata (package.json version/publisher/repo + git short SHA)                              |
+| `utils/aboutInfo.ts`      | Collects the About-popup metadata lazily at first preview (package.json version/publisher/repo + build-time git SHA) |
 | `utils/webviewHtml.ts`    | Builds the webview HTML document (CSP meta, nonce, feature-flagged vendor scripts)                                   |
 
 ## Webview (`webview/`)
