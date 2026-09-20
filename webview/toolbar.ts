@@ -49,6 +49,9 @@ function createThemeButton(vscode: VsCodeApi, initial: PreviewTheme): HTMLButton
       const label = currentTheme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme';
       themeButton.title = label;
       themeButton.setAttribute('aria-label', label);
+      // Keep the CSS hover/focus tooltip (attr(data-label)) in sync — it would
+      // otherwise keep announcing the pre-toggle action.
+      themeButton.dataset.label = label;
       themeButton.setAttribute('aria-pressed', String(currentTheme === 'dark'));
     }
   );

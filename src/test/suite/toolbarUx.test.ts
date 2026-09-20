@@ -363,6 +363,11 @@ suite('preview toolbar UX (#66, #67, #69)', () => {
       assert.ok(document.body.classList.contains('preview-theme-light'));
       assert.strictEqual(themeButton.getAttribute('aria-pressed'), 'false');
       assert.strictEqual(themeButton.getAttribute('aria-label'), 'Switch to dark theme');
+      assert.strictEqual(
+        themeButton.dataset.label,
+        'Switch to dark theme',
+        'hover tooltip still announces the pre-toggle action'
+      );
 
       // The write must merge — a scrollPosition stored by main.ts survives.
       vscode.state = { ...vscode.state, scrollPosition: 42 };
