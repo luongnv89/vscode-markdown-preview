@@ -606,7 +606,7 @@ function ensureThemeToolbar(initialTheme) {
 
 async function renderMermaid(theme) {
   if (typeof mermaid === 'undefined') return;
-  mermaid.initialize({ startOnLoad: false, theme: theme === 'dark' ? 'dark' : 'default', securityLevel: 'loose' });
+  mermaid.initialize({ startOnLoad: false, theme: theme === 'dark' ? 'dark' : 'default', securityLevel: 'strict', layout: 'dagre', look: 'classic' });
   var blocks = document.querySelectorAll('.mermaid-block');
   for (var i = 0; i < blocks.length; i++) {
     var block = blocks[i];

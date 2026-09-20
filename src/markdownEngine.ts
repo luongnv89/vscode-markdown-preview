@@ -5,6 +5,11 @@ import { PreviewConfig } from './types/messages';
 import { resolveImageUri } from './utils/uri';
 import { parseFrontmatter, renderFrontmatterHtml } from './utils/frontmatter';
 
+// markdown-it 15 bundles its own declarations (@types/markdown-it removed):
+// the default export is a callable whose instance type is not named
+// `MarkdownIt`, so annotate via InstanceType rather than the namespace.
+type MarkdownItInstance = InstanceType<typeof MarkdownIt>;
+
 // Matches a complete raw <img ...> tag: the attribute run accepts quoted
 // values, so a '>' inside quotes does not end the match early the way a
 // [^>] attribute run would.
@@ -19,7 +24,7 @@ export interface RenderResult {
 }
 
 export class MarkdownEngine {
-  private md: MarkdownIt;
+  private md: MarkdownItInstance;
   private config: PreviewConfig;
   private documentUri: vscode.Uri | undefined;
   private webview: vscode.Webview | undefined;
@@ -29,7 +34,7 @@ export class MarkdownEngine {
     this.md = this.createEngine(config);
   }
 
-  private createEngine(config: PreviewConfig): MarkdownIt {
+  private createEngine(config: PreviewConfig): MarkdownItInstance {
     const md = new MarkdownIt({
       html: true,
       linkify: true,
@@ -80,14 +85,16 @@ export class MarkdownEngine {
     return md;
   }
 
-  private addLineNumbers(md: MarkdownIt): void {
+  private addLineNumbers(md: MarkdownItInstance): void {
     // Shift token source maps by the number of frontmatter lines stripped
     // before rendering, so every data-line attribute below already carries the
     // offset — no post-render rewrite of the emitted HTML is needed. Runs right
     // after the block parser so the task-list and math rules (and every other
     // map reader) see source-document line numbers.
     md.core.ruler.after('block', 'frontmatter-line-offset', (state) => {
-      const offset = (state.env && state.env.lineOffset) || 0;
+      // env is typed `unknown` under markdown-it 15's bundled declarations —
+      // only a numeric lineOffset participates in the shift.
+      const offset = typeof state.env?.lineOffset === 'number' ? state.env.lineOffset : 0;
       if (offset === 0) {
         return;
       }
@@ -141,7 +148,7 @@ export class MarkdownEngine {
     };
   }
 
-  private addTaskListSupport(md: MarkdownIt): void {
+  private addTaskListSupport(md: MarkdownItInstance): void {
     // Transform task list items: - [ ] and - [x]
     md.core.ruler.after('inline', 'task-lists', (state) => {
       const tokens = state.tokens;
@@ -183,7 +190,7 @@ export class MarkdownEngine {
     });
   }
 
-  private addKatexSupport(md: MarkdownIt): void {
+  private addKatexSupport(md: MarkdownItInstance): void {
     // Inline math: $...$
     md.inline.ruler.after('escape', 'math_inline', (state, silent) => {
       if (state.src[state.pos] !== '$') {
@@ -276,7 +283,7 @@ export class MarkdownEngine {
     };
   }
 
-  private addImageSupport(md: MarkdownIt): void {
+  private addImageSupport(md: MarkdownItInstance): void {
     const defaultImageRender =
       md.renderer.rules.image ||
       ((tokens: any, idx: any, options: any, env: any, self: any) =>
@@ -284,7 +291,10 @@ export class MarkdownEngine {
 
     md.renderer.rules.image = (tokens, idx, options, env, self) => {
       const token = tokens[idx];
-      const src = token.attrGet('src') || '';
+      // attrGet is `string | number | null` under the bundled declarations;
+      // an image src is always a string in practice.
+      const srcAttr = token.attrGet('src');
+      const src = typeof srcAttr === 'string' ? srcAttr : '';
       const alt = token.content || '';
 
       // Handle excalidraw files

@@ -3,3 +3,7 @@ node_modules/
 *.vsix
 package-lock.json
 docs/index.html
+# Golden-test fixtures are byte-exact inputs/outputs — never reformatted.
+src/test/fixtures/
+# issue-resolver tooling state — gitignored via .git/info/exclude, not tracked.
+.gitissue/
