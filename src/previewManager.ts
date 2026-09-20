@@ -334,10 +334,10 @@ export class PreviewManager {
 
   private getWebviewHtml(webview: vscode.Webview): string {
     // CSP and <body data-*> metadata live in buildWebviewHtml: nonce-only
-    // script-src (no 'unsafe-eval' — Mermaid 11.x strict doesn't need it),
-    // img-src restricted to webview resources + data: unless the documented
-    // markdownPreviewPro.allowRemoteImages opt-in is enabled, and all four
-    // data-* values attribute-escaped on write.
+    // script-src (Mermaid 11.x renders without eval — verified in headless
+    // Chromium), img-src restricted to webview resources + data: unless the
+    // documented markdownPreviewPro.allowRemoteImages opt-in is enabled, and
+    // all four data-* values attribute-escaped on write.
     return buildWebviewHtml(
       webview,
       this.extensionUri,
