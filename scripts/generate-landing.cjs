@@ -12,10 +12,17 @@ const outputPath = path.join(repoRoot, 'docs', 'index.html');
 let sharedCore;
 try {
   sharedCore = require(path.join(repoRoot, 'dist', 'markdownCore.js'));
-} catch {
-  throw new Error(
-    'dist/markdownCore.js not found — run `npm run compile` before `npm run build:landing`'
-  );
+} catch (err) {
+  // Only translate the "artifact not built" failure — a present-but-broken
+  // bundle (or missing node_modules) rethrows its own, more accurate error.
+  const missingArtifact =
+    err && err.code === 'MODULE_NOT_FOUND' && String(err.message).includes('markdownCore');
+  if (missingArtifact) {
+    throw new Error(
+      'dist/markdownCore.js not found — run `npm run compile` before `npm run build:landing`'
+    );
+  }
+  throw err;
 }
 const { createMarkdownIt, parseFrontmatter, renderFrontmatterHtml } = sharedCore;
 
