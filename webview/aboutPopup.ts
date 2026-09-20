@@ -8,6 +8,7 @@ export function createAboutButton(toolbar: HTMLElement): HTMLButtonElement {
     if (aboutPopup) {
       aboutPopup.remove();
       aboutPopup = null;
+      aboutButton.setAttribute('aria-expanded', 'false');
     }
   }
 
@@ -18,7 +19,9 @@ export function createAboutButton(toolbar: HTMLElement): HTMLButtonElement {
     }
     aboutPopup = buildAboutPopup();
     toolbar.appendChild(aboutPopup);
+    aboutButton.setAttribute('aria-expanded', 'true');
   });
+  aboutButton.setAttribute('aria-expanded', 'false');
 
   watchOutsideClicks(aboutButton, () => aboutPopup, dismissAbout);
 

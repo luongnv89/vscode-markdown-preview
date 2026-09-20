@@ -9,6 +9,9 @@ interface VsCodeApi {
 // The only state the webview persists between reloads (see main.ts).
 interface WebviewPersistedState {
   scrollPosition?: number;
+  // Manual preview-theme override chosen with the toolbar toggle (see
+  // toolbar.ts). Undefined means "follow the VS Code theme".
+  theme?: 'light' | 'dark';
 }
 
 declare function acquireVsCodeApi(): VsCodeApi;

@@ -68,7 +68,9 @@ document.addEventListener('scroll', () => {
     clearTimeout(saveStateTimeout);
   }
   saveStateTimeout = window.setTimeout(() => {
-    vscode.setState({ scrollPosition: window.scrollY });
+    // Merge — the toolbar persists a manual theme override on the same state
+    // object, and setState replaces it wholesale.
+    vscode.setState({ ...vscode.getState(), scrollPosition: window.scrollY });
   }, 200);
 });
 

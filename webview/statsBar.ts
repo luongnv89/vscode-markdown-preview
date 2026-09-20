@@ -10,12 +10,14 @@ export function initStatsBar(): void {
 
 export function setStatsToggleButton(button: HTMLButtonElement): void {
   toggleButton = button;
+  toggleButton.setAttribute('aria-pressed', 'true');
 }
 
 export function toggleStats(): void {
   if (!bar) return;
   const isHidden = bar.classList.toggle('stats-hidden');
   toggleButton?.classList.toggle('stats-toggle-active', !isHidden);
+  toggleButton?.setAttribute('aria-pressed', String(!isHidden));
 }
 
 export function refreshStats(): void {

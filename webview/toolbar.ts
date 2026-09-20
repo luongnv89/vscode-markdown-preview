@@ -4,68 +4,106 @@ import { enterPresentation } from './presentation';
 import { isDarkTheme } from './theme';
 import { createButton, createSeparator } from './domUtils';
 import { createAboutButton } from './aboutPopup';
-import { sunIcon, moonIcon, pdfIcon, htmlIcon, listIcon, barChartIcon, playIcon } from './icons';
+import {
+  sunIcon,
+  moonIcon,
+  pdfIcon,
+  htmlIcon,
+  listIcon,
+  barChartIcon,
+  presentationIcon,
+} from './icons';
 
-function createThemeButton(initialTheme: 'light' | 'dark'): HTMLButtonElement {
-  let currentTheme = initialTheme;
+type PreviewTheme = 'light' | 'dark';
+
+function applyTheme(theme: PreviewTheme): void {
+  document.body.classList.toggle('preview-theme-dark', theme === 'dark');
+  document.body.classList.toggle('preview-theme-light', theme === 'light');
+}
+
+// The manual toggle's choice survives panel reloads via vscode.setState —
+// merged so the scroll position main.ts persists is never clobbered.
+function persistTheme(vscode: VsCodeApi, theme: PreviewTheme): void {
+  vscode.setState({ ...vscode.getState(), theme });
+}
+
+// A persisted manual choice wins; otherwise follow the VS Code theme.
+function initialTheme(vscode: VsCodeApi): PreviewTheme {
+  const persisted = vscode.getState()?.theme;
+  if (persisted === 'dark' || persisted === 'light') {
+    return persisted;
+  }
+  return isDarkTheme() ? 'dark' : 'light';
+}
+
+function createThemeButton(vscode: VsCodeApi, initial: PreviewTheme): HTMLButtonElement {
+  let currentTheme = initial;
   const themeButton = createButton(
     currentTheme === 'dark' ? sunIcon : moonIcon,
     currentTheme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme',
     () => {
-      if (currentTheme === 'dark') {
-        document.body.classList.remove('preview-theme-dark');
-        document.body.classList.add('preview-theme-light');
-        currentTheme = 'light';
-        themeButton.innerHTML = moonIcon;
-        themeButton.title = 'Switch to dark theme';
-      } else {
-        document.body.classList.remove('preview-theme-light');
-        document.body.classList.add('preview-theme-dark');
-        currentTheme = 'dark';
-        themeButton.innerHTML = sunIcon;
-        themeButton.title = 'Switch to light theme';
-      }
+      currentTheme = currentTheme === 'dark' ? 'light' : 'dark';
+      applyTheme(currentTheme);
+      persistTheme(vscode, currentTheme);
+      themeButton.innerHTML = currentTheme === 'dark' ? sunIcon : moonIcon;
+      const label = currentTheme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme';
+      themeButton.title = label;
+      themeButton.setAttribute('aria-label', label);
+      themeButton.setAttribute('aria-pressed', String(currentTheme === 'dark'));
     }
   );
+  themeButton.setAttribute('aria-pressed', String(currentTheme === 'dark'));
   return themeButton;
+}
+
+function createExportButtons(vscode: VsCodeApi): {
+  pdfButton: HTMLButtonElement;
+  htmlButton: HTMLButtonElement;
+} {
+  const pdfButton = createButton(
+    pdfIcon,
+    'Export to PDF',
+    () => {
+      vscode.postMessage({ type: 'exportToPdf' });
+    },
+    'PDF'
+  );
+  const htmlButton = createButton(
+    htmlIcon,
+    'Export to HTML',
+    () => {
+      vscode.postMessage({ type: 'exportToHtml' });
+    },
+    'HTML'
+  );
+  return { pdfButton, htmlButton };
 }
 
 export function initToolbar(vscode: VsCodeApi): void {
   const toolbar = document.createElement('div');
   toolbar.className = 'preview-toolbar';
 
-  const currentTheme = isDarkTheme() ? 'dark' : 'light';
+  const startTheme = initialTheme(vscode);
+  applyTheme(startTheme);
 
-  // Apply initial theme based on VS Code theme
-  document.body.classList.add(
-    currentTheme === 'dark' ? 'preview-theme-dark' : 'preview-theme-light'
-  );
-
-  const themeButton = createThemeButton(currentTheme);
-  const pdfButton = createButton(pdfIcon, 'Export to PDF', () => {
-    vscode.postMessage({ type: 'exportToPdf' });
-  });
-  const htmlButton = createButton(htmlIcon, 'Export to HTML', () => {
-    vscode.postMessage({ type: 'exportToHtml' });
-  });
-  const aboutButton = createAboutButton(toolbar);
-
-  // TOC toggle button
   const tocButton = createButton(listIcon, 'Toggle Table of Contents', toggleToc);
   setTocToggleButton(tocButton);
 
-  // Stats toggle button
   const statsButton = createButton(barChartIcon, 'Toggle reading stats', toggleStats);
   statsButton.classList.add('stats-toggle-active');
   setStatsToggleButton(statsButton);
 
-  // Presentation button
-  const presentationButton = createButton(playIcon, 'Presentation mode', enterPresentation);
+  const themeButton = createThemeButton(vscode, startTheme);
+  const { pdfButton, htmlButton } = createExportButtons(vscode);
+  const presentationButton = createButton(presentationIcon, 'Presentation mode', enterPresentation);
+  const aboutButton = createAboutButton(toolbar);
 
   toolbar.appendChild(tocButton);
   toolbar.appendChild(statsButton);
   toolbar.appendChild(createSeparator());
   toolbar.appendChild(themeButton);
+  // A separator leads the export group so the two export actions read as a unit.
+  toolbar.appendChild(createSeparator());
   toolbar.appendChild(pdfButton);
   toolbar.appendChild(htmlButton);
   toolbar.appendChild(presentationButton);
