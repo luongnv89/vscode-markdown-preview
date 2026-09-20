@@ -187,7 +187,7 @@ async function renderExcalidraw(): Promise<void> {
         data: {
           elements: data.elements,
           appState: {
-            ...(data.appState || {}),
+            ...data.appState,
             exportWithDarkMode: isDark,
             viewBackgroundColor: isDark ? '#1e1e1e' : '#ffffff',
           },
