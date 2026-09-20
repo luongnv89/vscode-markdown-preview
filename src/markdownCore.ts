@@ -1,4 +1,5 @@
 import MarkdownIt from 'markdown-it';
+import type { RendererRule, Token } from 'markdown-it';
 import hljs from 'highlight.js';
 
 // Shared markdown-it rendering pipeline for Markdown Preview Pro. This module
@@ -30,7 +31,7 @@ export interface MarkdownCoreConfig {
 // them to data URIs afterwards) and adds its own preview-image class.
 export interface MarkdownCoreHooks {
   resolveImageSrc?: (src: string) => string;
-  decorateImageToken?: (token: any) => void;
+  decorateImageToken?: (token: Token) => void;
 }
 
 // Matches a complete raw <img ...> tag: the attribute run accepts quoted
@@ -129,10 +130,9 @@ function addLineNumbers(md: MarkdownItInstance): void {
   ];
 
   for (const tokenType of blockTokens) {
-    const defaultRender =
+    const defaultRender: RendererRule =
       md.renderer.rules[tokenType] ||
-      ((tokens: any, idx: any, options: any, env: any, self: any) =>
-        self.renderToken(tokens, idx, options));
+      ((tokens, idx, options, env, self) => self.renderToken(tokens, idx, options));
 
     md.renderer.rules[tokenType] = (tokens, idx, options, env, self) => {
       const token = tokens[idx];
@@ -145,10 +145,9 @@ function addLineNumbers(md: MarkdownItInstance): void {
   }
 
   // Special handling for list items (for checkbox support)
-  const defaultListItemRender =
+  const defaultListItemRender: RendererRule =
     md.renderer.rules['list_item_open'] ||
-    ((tokens: any, idx: any, options: any, env: any, self: any) =>
-      self.renderToken(tokens, idx, options));
+    ((tokens, idx, options, env, self) => self.renderToken(tokens, idx, options));
 
   md.renderer.rules['list_item_open'] = (tokens, idx, options, env, self) => {
     const token = tokens[idx];
@@ -297,12 +296,11 @@ function addKatexSupport(md: MarkdownItInstance): void {
 function addImageSupport(
   md: MarkdownItInstance,
   resolveImageSrc: (src: string) => string,
-  decorateImageToken?: (token: any) => void
+  decorateImageToken?: (token: Token) => void
 ): void {
-  const defaultImageRender =
+  const defaultImageRender: RendererRule =
     md.renderer.rules.image ||
-    ((tokens: any, idx: any, options: any, env: any, self: any) =>
-      self.renderToken(tokens, idx, options));
+    ((tokens, idx, options, env, self) => self.renderToken(tokens, idx, options));
 
   md.renderer.rules.image = (tokens, idx, options, env, self) => {
     const token = tokens[idx];
@@ -339,10 +337,9 @@ function addImageSupport(
   // quoted attributes, so a '>' inside a value no longer truncates the
   // match the way the old post-render regex did.
   for (const tokenType of ['html_block', 'html_inline']) {
-    const defaultRender =
+    const defaultRender: RendererRule =
       md.renderer.rules[tokenType] ||
-      ((tokens: any, idx: any, options: any, env: any, self: any) =>
-        self.renderToken(tokens, idx, options));
+      ((tokens, idx, options, env, self) => self.renderToken(tokens, idx, options));
 
     md.renderer.rules[tokenType] = (tokens, idx, options, env, self) =>
       rewriteRawHtmlImages(defaultRender(tokens, idx, options, env, self), resolveImageSrc);

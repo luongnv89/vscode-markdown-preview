@@ -113,7 +113,7 @@ export class PreviewManager {
     this.updatePreview(document);
   }
 
-  private setupEventListeners(document: vscode.TextDocument): void {
+  private setupEventListeners(_document: vscode.TextDocument): void {
     this.disposeListeners();
 
     // Handle messages from webview

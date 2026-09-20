@@ -101,7 +101,7 @@ async function renderMermaid(): Promise<void> {
   }
 
   // Access mermaid from global scope (loaded via script tag)
-  const mermaid = (window as any).mermaid;
+  const mermaid = window.mermaid;
   if (!mermaid) {
     console.warn('Mermaid library not available on window');
     return;
@@ -159,7 +159,7 @@ async function renderExcalidraw(): Promise<void> {
     return;
   }
 
-  const ExcalidrawUtils = (window as any).ExcalidrawUtils;
+  const ExcalidrawUtils = window.ExcalidrawUtils;
   if (!ExcalidrawUtils || !ExcalidrawUtils.exportToSvg) {
     console.warn('ExcalidrawUtils library not available on window');
     return;
@@ -210,7 +210,7 @@ async function renderExcalidraw(): Promise<void> {
 }
 
 function renderKatex(): void {
-  const katex = (window as any).katex;
+  const katex = window.katex;
   if (!katex) {
     return;
   }
@@ -223,7 +223,7 @@ function renderKatex(): void {
       return;
     }
     try {
-      katex.render(math, el, { throwOnError: false, displayMode: false });
+      katex.render(math, el as HTMLElement, { throwOnError: false, displayMode: false });
     } catch {
       // Leave the raw text as fallback
     }
@@ -237,7 +237,7 @@ function renderKatex(): void {
       return;
     }
     try {
-      katex.render(math, el, { throwOnError: false, displayMode: true });
+      katex.render(math, el as HTMLElement, { throwOnError: false, displayMode: true });
     } catch {
       // Leave the raw text as fallback
     }

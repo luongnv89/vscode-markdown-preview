@@ -1,4 +1,8 @@
 import type { CancellationToken } from 'vscode';
+// Type-only import: puppeteer-core is still lazy-loaded at runtime inside
+// launchBrowser — this import is erased at compile time and adds nothing to
+// the activation path.
+import type { Browser, Page } from 'puppeteer-core';
 import { findChromePath, ChromeNotFoundError } from './browserFinder';
 
 export { ChromeNotFoundError };
@@ -29,8 +33,7 @@ const FINAL_RENDER_DELAY = 500;
  */
 export const CHROME_LAUNCH_ARGS = ['--disable-gpu'];
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export async function launchBrowser(): Promise<any> {
+export async function launchBrowser(): Promise<Browser> {
   const chromePath = findChromePath();
   // Dynamic import to lazy-load puppeteer-core and avoid slowing extension activation
   const puppeteer = await import('puppeteer-core');
@@ -41,8 +44,7 @@ export async function launchBrowser(): Promise<any> {
   });
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-async function loadAndRender(page: any, html: string): Promise<void> {
+async function loadAndRender(page: Page, html: string): Promise<void> {
   await page.setContent(html, { waitUntil: 'domcontentloaded', timeout: PAGE_LOAD_TIMEOUT });
 
   // Wait for Mermaid/KaTeX rendering to complete
@@ -58,8 +60,7 @@ async function loadAndRender(page: any, html: string): Promise<void> {
   await new Promise((resolve) => setTimeout(resolve, FINAL_RENDER_DELAY));
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-async function closeBrowser(browser: any): Promise<void> {
+async function closeBrowser(browser: Browser): Promise<void> {
   try {
     await browser.close();
   } catch {
@@ -86,8 +87,7 @@ function throwIfCancelled(token?: CancellationToken): void {
   }
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function onCancelClose(token: CancellationToken | undefined, browser: any) {
+function onCancelClose(token: CancellationToken | undefined, browser: Browser) {
   // Aborting the browser makes the in-flight page operation reject promptly
   // instead of running a long render to completion after the user cancelled.
   return token?.onCancellationRequested(() => {
