@@ -243,10 +243,10 @@ Resolves image `src` attributes:
 
 ### `scrollSync.ts`
 
-| Function                 | Description                                                                   |
-| ------------------------ | ----------------------------------------------------------------------------- |
-| `initScrollSync(vscode)` | Attaches scroll listener that posts `revealLine` messages (throttled to 50ms) |
-| `scrollToLine(line)`     | Finds the DOM element with matching `data-line` attribute and scrolls to it   |
+| Function                 | Description                                                                                                                         |
+| ------------------------ | ----------------------------------------------------------------------------------------------------------------------------------- |
+| `initScrollSync(vscode)` | Attaches scroll listener that posts `revealLine` messages (throttled to 50ms)                                                       |
+| `scrollToLine(line)`     | Finds the DOM element with matching `data-line` attribute and scrolls to it. Used by editor→preview sync and by TOC heading clicks. |
 
 ### `copyButton.ts`
 

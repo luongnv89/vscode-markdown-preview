@@ -148,8 +148,8 @@ Runs in an isolated browser context (iframe) managed by VS Code.
 | `webview/aboutPopup.ts`           | About popup; renders the extension metadata via `textContent` only                                                                                    |
 | `webview/domUtils.ts`             | Shared DOM helpers (`createButton`, …)                                                                                                                |
 | `webview/icons.ts`                | Inline SVG icon set for the toolbar                                                                                                                   |
-| `webview/theme.ts`                | Theme detection plus the persisted light/dark override                                                                                                |
-| `webview/toc.ts`                  | Table-of-contents sidebar built from the rendered headings                                                                                            |
+| `webview/theme.ts`                | Theme detection: follow the VS Code host theme until the toolbar pins a persisted light/dark overlay                                                  |
+| `webview/toc.ts`                  | Table-of-contents sidebar built from the rendered headings; entry clicks call `scrollToLine`                                                          |
 | `webview/presentation.ts`         | Presentation-mode overlay — `<hr>` slide breaks, keyboard navigation                                                                                  |
 | `webview/scrollSync.ts`           | Preview-side scroll tracking; throttled `revealLine` reporting with an echo guard                                                                     |
 | `webview/copyButton.ts`           | Copy-to-clipboard buttons on code blocks                                                                                                              |

@@ -23,7 +23,7 @@ The `Release` workflow (`.github/workflows/release.yml`) runs on every pushed
 `v*` tag and:
 
 1. Verifies the tag's version matches `package.json` (the pre-release suffix is
-   ignored, so `v0.9.5-rc1` still validates against `0.9.5`).
+   ignored, so `v0.9.6-rc1` still validates against `0.9.6`).
 2. Runs the full test suite (`xvfb-run -a npm test`).
 3. Builds and packages the `.vsix`.
 4. Extracts the `## [x.y.z]` section matching the tag's base version from
@@ -38,8 +38,8 @@ To cut a release:
 # Bump the version and update CHANGELOG.md first
 npm version patch   # or minor / major — then commit and merge to main
 
-git tag v0.9.5
-git push origin v0.9.5
+git tag v0.9.6
+git push origin v0.9.6
 ```
 
 The workflow fails fast when the tag does not match `package.json`, and warns

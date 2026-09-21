@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.9.6] - 2026-09-21
+
 - Fix: the preview follows the VS Code color theme (including GitHub Dark) until the toolbar toggle pins an explicit overlay — chrome and highlight.js no longer freeze a Primer/light palette over live editor tokens, and switching the host theme drops a stale overlay (#4)
 - Fix: clicking a Table of Contents entry now scrolls to that heading instead of jumping to the document header — TOC navigation uses the same programmatic `scrollToLine` path as editor↔preview sync, so scroll-sync cannot override an in-flight jump (#6)
 
