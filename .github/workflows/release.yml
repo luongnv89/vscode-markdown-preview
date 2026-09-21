@@ -56,7 +56,7 @@ jobs:
           npx @vscode/vsce package "${args[@]}"
 
       # Pulls the "## [x.y.z]" section matching the tag's base version out of
-      # CHANGELOG.md (e.g. v0.9.5-rc1 → [0.9.5]); a tag with no matching section
+      # CHANGELOG.md (e.g. v0.9.6-rc1 → [0.9.6]); a tag with no matching section
       # (typical for -rc dry runs) falls back to [Unreleased], then to
       # GitHub-generated notes.
       - name: Extract release notes from CHANGELOG
