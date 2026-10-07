@@ -41,7 +41,7 @@ code --install-extension luongnv89.markdown-preview-pro
 | Table of Contents         | Collapsible sidebar listing all headings with scroll-to and active section highlight                                  |
 | Word Count & Stats        | Bottom bar showing word count, character count, and estimated reading time                                            |
 | Presentation Mode         | Splits content by `---` into slides with keyboard navigation                                                          |
-| Theme Toggle              | Pins an explicit light/dark overlay; with no pin, the preview follows the VS Code color theme                         |
+| Theme Toggle              | Switches the preview between light (default) and dark; your choice is remembered                                      |
 | Export to HTML            | Standalone HTML file with diagrams and math fully rendered                                                            |
 | Export to PDF             | PDF export using Chrome/Chromium                                                                                      |
 | YAML Frontmatter          | Parse and display frontmatter as a styled, collapsible metadata card                                                  |
@@ -50,7 +50,7 @@ code --install-extension luongnv89.markdown-preview-pro
 
 ### Syntax Highlighting
 
-Code blocks are highlighted with highlight.js. Colors follow the VS Code editor theme (including GitHub Dark) unless you pin light or dark from the preview toolbar. A one-click copy button appears on every code block.
+Code blocks are highlighted with highlight.js. The preview defaults to the light theme; switch to dark from the preview toolbar. A one-click copy button appears on every code block.
 
 ### Mermaid Diagrams
 
@@ -108,7 +108,7 @@ A floating toolbar in the top-right corner of the preview provides quick access 
 
 - **TOC toggle** — show or hide the Table of Contents sidebar
 - **Stats toggle** — show or hide the word count and reading stats bar
-- **Theme toggle** — pin an explicit light or dark overlay; with no pin, the preview follows the VS Code color theme
+- **Theme toggle** — the preview defaults to light; switch to dark from the toolbar and the choice is remembered
 - **Export to HTML** — generate a standalone HTML file with all diagrams and math fully rendered; a save dialog asks where to write the file (existing files are never overwritten silently) and the export can be cancelled from the progress notification
 - **Export to PDF** — export to PDF using Chrome/Chromium (must be installed on your system); same save dialog and cancellable progress as HTML export
 - **Presentation mode** — enter slide presentation mode
