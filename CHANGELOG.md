@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.9.7] - 2026-10-07
+
+- Includes the 0.9.6 fixes below (TOC click navigation, host theme following), which were never tagged or published on their own
+- Change: the preview now opens in the light theme by default regardless of the VS Code color theme — the toolbar toggle still switches to dark and that explicit choice is persisted across reloads. The 0.9.6 follow-host behavior is no longer the default
+
 ## [0.9.6] - 2026-09-21
 
 - Fix: the preview follows the VS Code color theme (including GitHub Dark) until the toolbar toggle pins an explicit overlay — chrome and highlight.js no longer freeze a Primer/light palette over live editor tokens, and switching the host theme drops a stale overlay (#4)

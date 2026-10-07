@@ -394,34 +394,32 @@ suite('preview toolbar UX (#66, #67, #69)', () => {
       const vscode = fakeVscode();
       loadWebviewModule<ToolbarModule>('toolbar.ts', document).initToolbar(vscode);
       assert.ok(
-        !document.body.classList.contains('preview-theme-dark'),
-        'follow-host init must not pin preview-theme-dark'
+        document.body.classList.contains('preview-theme-light'),
+        'init must default to the light overlay even under vscode-dark'
       );
-      assert.ok(
-        !document.body.classList.contains('preview-theme-light'),
-        'follow-host init must not pin preview-theme-light'
-      );
+      assert.strictEqual(vscode.state?.theme, undefined, 'the default must not be persisted');
 
       const themeButton = Array.from(document.querySelectorAll('.toolbar-button')).find(
-        (b) => b.getAttribute('aria-label') === 'Switch to light theme'
+        (b) => b.getAttribute('aria-label') === 'Switch to dark theme'
       )!;
       themeButton.click();
-      assert.strictEqual(vscode.state?.theme, 'light', 'toggle did not persist theme');
-      assert.ok(document.body.classList.contains('preview-theme-light'));
-      assert.strictEqual(themeButton.getAttribute('aria-pressed'), 'false');
-      assert.strictEqual(themeButton.getAttribute('aria-label'), 'Switch to dark theme');
+      assert.strictEqual(vscode.state?.theme, 'dark', 'toggle did not persist theme');
+      assert.ok(document.body.classList.contains('preview-theme-dark'));
+      assert.strictEqual(themeButton.getAttribute('aria-pressed'), 'true');
+      assert.strictEqual(themeButton.getAttribute('aria-label'), 'Switch to light theme');
       assert.strictEqual(
         themeButton.dataset.label,
-        'Switch to dark theme',
+        'Switch to light theme',
         'hover tooltip still announces the pre-toggle action'
       );
 
       // The write must merge — a scrollPosition stored by main.ts survives.
       vscode.state = { ...vscode.state, scrollPosition: 42 };
       themeButton.click();
-      assert.strictEqual(vscode.state?.theme, 'dark');
+      assert.strictEqual(vscode.state?.theme, 'light');
       assert.strictEqual(vscode.state?.scrollPosition, 42, 'setState clobbered scrollPosition');
-      assert.strictEqual(themeButton.getAttribute('aria-pressed'), 'true');
+      assert.strictEqual(themeButton.getAttribute('aria-pressed'), 'false');
+      vscode.state = { ...vscode.state, theme: 'dark' };
 
       // Reopen: a persisted choice wins over the host theme (no vscode-dark class here).
       const doc2 = makeDocument();
@@ -472,30 +470,23 @@ suite('preview toolbar UX (#66, #67, #69)', () => {
   });
 
   suite('GitHub Dark follow-host (#4)', () => {
-    test('vscode-dark with no persisted theme does not pin a preview-theme overlay', () => {
+    test('vscode-dark with no persisted theme still defaults to the light overlay', () => {
       const document = makeDocument();
       document.body.classList.add('vscode-dark');
       const vscode = fakeVscode();
       loadWebviewModule<ToolbarModule>('toolbar.ts', document).initToolbar(vscode);
 
       assert.ok(
-        !document.body.classList.contains('preview-theme-light'),
-        'GitHub Dark init pinned preview-theme-light'
+        document.body.classList.contains('preview-theme-light'),
+        'default theme must be light regardless of the host theme'
       );
-      assert.ok(
-        !document.body.classList.contains('preview-theme-dark'),
-        'GitHub Dark init pinned preview-theme-dark over host tokens'
-      );
-      assert.strictEqual(vscode.state?.theme, undefined, 'follow-host must not persist a theme');
+      assert.ok(!document.body.classList.contains('preview-theme-dark'));
+      assert.strictEqual(vscode.state?.theme, undefined, 'the default must not be persisted');
 
       const themeButton = Array.from(document.querySelectorAll('.toolbar-button')).find((b) =>
         (b.getAttribute('aria-label') || '').includes('theme')
       )!;
-      assert.strictEqual(
-        themeButton.getAttribute('aria-label'),
-        'Switch to light theme',
-        'toolbar chrome should reflect host dark without an overlay pin'
-      );
+      assert.strictEqual(themeButton.getAttribute('aria-label'), 'Switch to dark theme');
     });
 
     test('unpinned body keeps host editor tokens; Primer hex is overlay-only', () => {
@@ -550,7 +541,7 @@ suite('preview toolbar UX (#66, #67, #69)', () => {
       );
     });
 
-    test('follow-host vscode-dark class-swap resyncs theme button chrome', async () => {
+    test('default light overlay survives a host vscode-dark class-swap', async () => {
       const { document, window } = makeDom();
       document.body.classList.add('vscode-light');
       const vscode = fakeVscode();
@@ -571,21 +562,13 @@ suite('preview toolbar UX (#66, #67, #69)', () => {
       await sleep(renderer.THEME_CHANGE_DEBOUNCE + 40);
       observer.disconnect();
 
-      assert.strictEqual(
-        themeButton.getAttribute('aria-label'),
-        'Switch to light theme',
-        'aria-label still announces the pre-swap light action'
+      assert.ok(
+        document.body.classList.contains('preview-theme-light'),
+        'host class-swap dropped the default light overlay'
       );
-      assert.strictEqual(
-        themeButton.getAttribute('aria-pressed'),
-        'true',
-        'aria-pressed still reflects the pre-swap light state'
-      );
-      assert.strictEqual(
-        themeButton.dataset.label,
-        'Switch to light theme',
-        'hover tooltip still announces the pre-swap light action'
-      );
+      assert.strictEqual(themeButton.getAttribute('aria-label'), 'Switch to dark theme');
+      assert.strictEqual(themeButton.getAttribute('aria-pressed'), 'false');
+      assert.strictEqual(themeButton.dataset.label, 'Switch to dark theme');
     });
   });
 });

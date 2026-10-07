@@ -51,10 +51,6 @@ function applyTheme(theme: PreviewTheme): void {
   document.body.classList.toggle('preview-theme-light', theme === 'light');
 }
 
-function clearThemeOverlay(): void {
-  document.body.classList.remove('preview-theme-dark', 'preview-theme-light');
-}
-
 // The manual toggle's choice survives panel reloads via vscode.setState —
 // merged so the scroll position main.ts persists is never clobbered.
 function persistTheme(vscode: VsCodeApi, theme: PreviewTheme): void {
@@ -111,15 +107,11 @@ export function initToolbar(vscode: VsCodeApi): void {
   const toolbar = document.createElement('div');
   toolbar.className = 'preview-toolbar';
 
-  const override = persistedTheme(vscode);
-  if (override) {
-    setThemeFollowsHost(false);
-    applyTheme(override);
-  } else {
-    setThemeFollowsHost(true);
-    clearThemeOverlay();
-  }
-  const startTheme = override ?? (isDarkTheme() ? 'dark' : 'light');
+  // Light is the default; it is pinned but not persisted, so only an explicit
+  // toggle click is remembered across reloads.
+  const startTheme = persistedTheme(vscode) ?? 'light';
+  setThemeFollowsHost(false);
+  applyTheme(startTheme);
 
   const tocButton = createButton(listIcon, 'Toggle Table of Contents', toggleToc);
   setTocToggleButton(tocButton);
