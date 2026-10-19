@@ -306,22 +306,144 @@ suite('pele diagram rendering (#156)', () => {
       }
     });
 
+    type Rgb = [number, number, number];
+    const hexRgb = (hex: string): Rgb =>
+      [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16)) as Rgb;
+    const luminance = (rgb: Rgb): number => {
+      const [r, g, b] = rgb.map((v) => {
+        const c = v / 255;
+        return c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
+      });
+      return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+    };
+    const contrast = (a: Rgb, b: Rgb): number => {
+      const [hi, lo] = [luminance(a), luminance(b)].sort((x, y) => y - x);
+      return (hi + 0.05) / (lo + 0.05);
+    };
+    // `top` composited over `base` at `alpha` — also how color-mix(in srgb,
+    // top N%, base) resolves.
+    const over = (base: Rgb, top: Rgb, alpha: number): Rgb =>
+      base.map((v, i) => top[i] * alpha + v * (1 - alpha)) as Rgb;
+
+    // Editor background/foreground pairs a diagram is drawn on: the default
+    // VS Code themes, the toolbar pins (toolbar.css) and the export palette.
+    const THEMES: Array<{ name: string; bg: string; fg: string; dark: boolean }> = [
+      { name: 'Light Modern', bg: '#ffffff', fg: '#3b3b3b', dark: false },
+      { name: 'Light+', bg: '#ffffff', fg: '#000000', dark: false },
+      { name: 'light pin', bg: '#ffffff', fg: '#1f2328', dark: false },
+      { name: 'Dark Modern', bg: '#1f1f1f', fg: '#cccccc', dark: true },
+      { name: 'Dark+', bg: '#1e1e1e', fg: '#d4d4d4', dark: true },
+      { name: 'dark pin', bg: '#0d1117', fg: '#e6edf3', dark: true },
+      { name: 'High Contrast', bg: '#000000', fg: '#ffffff', dark: true },
+    ];
+    const darkRule = rules.find((r) => r.selectors.includes(DARK_SELECTORS[0]));
+    const seriesFor = (dark: boolean): Rgb[] =>
+      SERIES_VARS.map((name) =>
+        hexRgb((dark ? darkRule! : baseRule!).decls.get(`--pele-${name}`)!)
+      );
+    const mutedShare = (): number => {
+      const match = (baseRule!.decls.get('--pele-muted') || '').match(
+        /^color-mix\(in srgb, var\(--fg-primary\) (\d+)%, var\(--bg-primary\)\)$/
+      );
+      assert.ok(match, '--pele-muted is no longer a fg/bg color-mix');
+      return Number(match![1]) / 100;
+    };
+
     test('light series and status tones reach 4.5:1 against white (WCAG 1.4.3)', () => {
       // pele draws labels in --pele-bg on series/critical fills and error
       // text in --pele-error; the light palette is also what exports use.
-      const luminance = (hex: string): number => {
-        const [r, g, b] = [1, 3, 5].map((i) => {
-          const c = parseInt(hex.slice(i, i + 2), 16) / 255;
-          return c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
-        });
-        return 0.2126 * r + 0.7152 * g + 0.0722 * b;
-      };
-      const white = luminance('#ffffff');
+      const white = hexRgb('#ffffff');
       for (const name of [...SERIES_VARS, 'critical', 'error']) {
         const value = baseRule!.decls.get(`--pele-${name}`) || '';
         assert.ok(/^#[0-9a-f]{6}$/i.test(value), `--pele-${name} is not a #rrggbb hex: ${value}`);
-        const ratio = (white + 0.05) / (luminance(value) + 0.05);
+        const ratio = contrast(white, hexRgb(value));
         assert.ok(ratio >= 4.5, `--pele-${name} ${value} is only ${ratio.toFixed(2)}:1 on white`);
+      }
+    });
+
+    // Venn labels and eventmodeling frame ids sit on translucent series
+    // tints; stacked venn overlaps drop fg and muted text below 4.5:1 on
+    // several themes. mermaid.css gives that text a --pele-bg halo, so its
+    // immediate backdrop is the page colour whatever tints lie beneath.
+    const haloRule = rules.find(
+      (r) =>
+        r.selectors.includes('.mermaid-block .pele-venn-labels text') &&
+        r.selectors.includes('.mermaid-block .pele-em-frame')
+    );
+
+    test('venn labels and eventmodeling frame ids carry a --pele-bg halo', () => {
+      assert.ok(haloRule, 'no halo rule for venn labels and eventmodeling frame ids');
+      assert.strictEqual(haloRule!.decls.get('paint-order'), 'stroke');
+      assert.strictEqual(haloRule!.decls.get('stroke'), 'var(--pele-bg)');
+      const width = parseFloat(haloRule!.decls.get('stroke-width') || '0');
+      assert.ok(width >= 2, `halo stroke-width ${width} is too thin to separate text from tints`);
+    });
+
+    test('the halo selectors match the text pele draws over tints', () => {
+      const pele = loadPele();
+      const entries = readFixture<Ac2Entry[]>('pele-ac2-fixture.json');
+      const venn = entries.filter((e) => e.type === 'venn');
+      const em = entries.filter((e) => e.type === 'eventmodeling');
+      assert.ok(venn.length > 0 && em.length > 0, 'fixture lost its venn/eventmodeling samples');
+      for (const entry of venn) {
+        const doc = parseSvg(pele.render(entry.source, PREVIEW_OPTIONS).svg);
+        const allText = doc.querySelectorAll('text:not(.pele-title)').length;
+        const haloed = doc.querySelectorAll('.pele-venn-labels text').length;
+        assert.ok(haloed > 0, `${entry.name}: no .pele-venn-labels text`);
+        assert.strictEqual(haloed, allText, `${entry.name}: venn text outside the halo selector`);
+      }
+      // Frame ids appear only in pele's stacked layout, which a maxWidth
+      // narrower than the timeline selects.
+      let frames = 0;
+      for (const entry of em) {
+        for (const options of [PREVIEW_OPTIONS, { ...PREVIEW_OPTIONS, maxWidth: 300 }]) {
+          const doc = parseSvg(pele.render(entry.source, options).svg);
+          const muted = doc.querySelectorAll('.pele-node text[fill="var(--_m)"]').length;
+          const haloed = doc.querySelectorAll('.pele-node text.pele-em-frame').length;
+          assert.strictEqual(haloed, muted, `${entry.name}: muted node text outside the halo`);
+          frames += haloed;
+        }
+      }
+      assert.ok(frames > 0, 'no eventmodeling frame id rendered — pele markup changed?');
+    });
+
+    test('haloed text reaches 4.5:1 against the page in every theme (WCAG 1.4.3)', () => {
+      const share = mutedShare();
+      for (const theme of THEMES) {
+        const bg = hexRgb(theme.bg);
+        const fg = hexRgb(theme.fg);
+        const muted = over(bg, fg, share);
+        for (const [label, colour] of [
+          ['fg', fg],
+          ['muted', muted],
+        ] as Array<[string, Rgb]>) {
+          const ratio = contrast(colour, bg);
+          assert.ok(ratio >= 4.5, `${theme.name}: ${label} on bg is only ${ratio.toFixed(2)}:1`);
+        }
+      }
+    });
+
+    test('unhaloed eventmodeling node labels reach 4.5:1 on their tint', () => {
+      const pele = loadPele();
+      const em = readFixture<Ac2Entry[]>('pele-ac2-fixture.json').find(
+        (e) => e.type === 'eventmodeling'
+      )!;
+      const doc = parseSvg(pele.render(em.source, PREVIEW_OPTIONS).svg);
+      const opacities = Array.from(doc.querySelectorAll('.pele-node rect[fill-opacity]')).map(
+        (el) => Number(Array.from(el.attributes).find((a) => a.localName === 'fill-opacity')!.value)
+      );
+      assert.ok(opacities.length > 0, 'no tinted eventmodeling node rendered');
+      const alpha = Math.max(...opacities);
+      for (const theme of THEMES) {
+        const bg = hexRgb(theme.bg);
+        const fg = hexRgb(theme.fg);
+        for (const [i, tint] of seriesFor(theme.dark).entries()) {
+          const ratio = contrast(fg, over(bg, tint, alpha));
+          assert.ok(
+            ratio >= 4.5,
+            `${theme.name}: fg on series-${i + 1} tint is only ${ratio.toFixed(2)}:1`
+          );
+        }
       }
     });
 

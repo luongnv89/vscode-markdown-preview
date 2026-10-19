@@ -14,6 +14,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Links inside diagrams (`click … href`) are no longer clickable — pele is called with `links: false` everywhere (#156)
 - Export and landing-page diagram errors use the same readable format as the preview: a lead naming the document line plus the parser message in a details block (expanded in exports), built as text so a hostile message can never inject markup (#156)
 - Export rendering signals completion even if a diagram renderer is missing or throws unexpectedly, so a PDF export can no longer stall until its timeout (#156)
+- Excalidraw errors in HTML/PDF exports use the same readable, text-only format as Mermaid errors; the parser message was previously inserted as HTML (#156)
+- Venn diagram labels and eventmodeling frame ids get a background-coloured halo, so they stay readable (4.5:1) over overlapping tinted regions in every theme (#156)
 
 ## [0.9.7] - 2026-10-07
 

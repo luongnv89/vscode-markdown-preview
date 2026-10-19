@@ -78,6 +78,18 @@ body.vscode-high-contrast:not(.vscode-high-contrast-light):not(.preview-theme-li
   height: auto;
 }
 
+/* pele draws venn labels and eventmodeling frame ids over translucent
+   series tints, and stacked venn overlaps push fg and muted text below
+   4.5:1. A --pele-bg halo makes the page colour each glyph's immediate
+   backdrop, so the text keeps its on-page contrast in every theme. */
+.mermaid-block .pele-venn-labels text,
+.mermaid-block .pele-em-frame {
+  paint-order: stroke;
+  stroke: var(--pele-bg);
+  stroke-width: 3px;
+  stroke-linejoin: round;
+}
+
 /* Error state */
 .mermaid-error {
   color: var(--vscode-errorForeground, #f44747);
