@@ -280,6 +280,40 @@ suite('rendering placeholder + readable diagram errors (#68)', () => {
     assert.ok(error!.textContent!.includes('plain string failure'));
   });
 
+  test('an invalid diagram is replaced in place while the rest of the preview renders (#156)', async () => {
+    const { document, window } = makeDom('<div id="preview-content"></div>');
+    stubScrollTo(window);
+    window.pele = {
+      render: (code: string) => {
+        if (code.startsWith('bad')) {
+          throw new Error('Parse error on line 1');
+        }
+        return { svg: '<svg class="good-svg"></svg>' };
+      },
+    };
+    const mod = loadWebviewModule<RendererModule>('renderer.ts', document, window, {});
+    await mod.updateContent(
+      '<p class="code-line" data-line="0">Intro paragraph</p>' +
+        '<div class="mermaid-block" id="bad" data-processed="false" data-line="2" data-source="bad">' +
+        '<pre class="mermaid">bad diagram</pre></div>' +
+        '<div class="mermaid-block" id="good" data-processed="false" data-line="6" data-source="ok">' +
+        '<pre class="mermaid">graph TD; A--&gt;B</pre></div>' +
+        '<p class="code-line" data-line="10">Closing paragraph</p>'
+    );
+
+    const bad = document.querySelector('#bad')!;
+    assert.ok(bad.querySelector('.mermaid-error'), 'invalid diagram shows no readable error');
+    assert.ok(bad.textContent!.includes('document line 3'), `lead lost: ${bad.textContent}`);
+    const good = document.querySelector('#good')!;
+    assert.ok(
+      good.querySelector('svg.good-svg'),
+      'the diagram after the invalid one did not render'
+    );
+    assert.strictEqual(good.getAttribute('data-processed'), 'true');
+    const text = document.getElementById('preview-content')!.textContent || '';
+    assert.ok(text.includes('Intro paragraph') && text.includes('Closing paragraph'));
+  });
+
   test('a failing excalidraw block reports the document line and keeps raw output in <details>', async () => {
     const { document, window } = makeDom('<div id="preview-content"></div>');
     stubScrollTo(window);
