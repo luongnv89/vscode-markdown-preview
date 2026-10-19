@@ -335,13 +335,56 @@ suite('export asset gating (#74)', () => {
       const doc = new MarkdownEngine({ ...BASE_CONFIG }).render(EXCALIDRAW_MD).html;
       const html = await bare.buildForBrowser(doc, 'escaping-throw', docUri);
       const window = await runExportDocument(html, (w) => {
-        // A rejection with no .message breaks the per-block error handler
-        // itself; only the script-wide finally can still release pdfExporter.
+        // The renderer feature check runs outside every per-block try, so a
+        // throwing getter there reaches only the script-wide finally.
+        w.ExcalidrawUtils = {
+          get exportToSvg(): never {
+            throw new Error('renderer probe failed');
+          },
+        };
+      });
+      assert.strictEqual(window.__exportRenderComplete, true, 'render script stalled the export');
+      const block = window.document.querySelector('.excalidraw-block')!;
+      assert.strictEqual(block.getAttribute('data-processed'), 'false', 'a block handler ran');
+    });
+
+    test('an excalidraw rejection with no message yields a readable error', async () => {
+      const doc = new MarkdownEngine({ ...BASE_CONFIG }).render(EXCALIDRAW_MD).html;
+      const html = await bare.buildForBrowser(doc, 'null-rejection', docUri);
+      const window = await runExportDocument(html, (w) => {
         w.ExcalidrawUtils = {
           exportToSvg: () => Promise.reject(null),
         };
       });
-      assert.strictEqual(window.__exportRenderComplete, true, 'render script stalled the export');
+      assert.strictEqual(window.__exportRenderComplete, true);
+      const block = window.document.querySelector('.excalidraw-block')!;
+      assert.strictEqual(block.getAttribute('data-processed'), 'true');
+      const error = block.querySelector('.excalidraw-error')!;
+      assert.ok(error, 'no readable excalidraw error block');
+      assert.match(
+        error.querySelector('.excalidraw-error-lead')!.textContent || '',
+        /The `excalidraw` diagram at document line \d+ could not be rendered\./
+      );
+      const details = error.querySelector('details.excalidraw-error-details')!;
+      assert.strictEqual(details.open, true, 'raw message is collapsed in the export');
+      assert.strictEqual(details.querySelector('.excalidraw-error-raw')!.textContent, 'null');
+    });
+
+    test('a hostile excalidraw error message renders as text', async () => {
+      const doc = new MarkdownEngine({ ...BASE_CONFIG }).render(EXCALIDRAW_MD).html;
+      const html = await bare.buildForBrowser(doc, 'excalidraw-hostile', docUri);
+      const hostile = '<img src=x onerror=alert(1)><script>alert(2)</script>';
+      const window = await runExportDocument(html, (w) => {
+        w.ExcalidrawUtils = {
+          exportToSvg: () => Promise.reject(new Error(hostile)),
+        };
+      });
+      assert.strictEqual(window.__exportRenderComplete, true);
+      const error = window.document.querySelector('.excalidraw-error')!;
+      assert.ok(error, 'no readable excalidraw error block');
+      assert.strictEqual(error.querySelector('img'), null, 'error message injected an <img>');
+      assert.strictEqual(error.querySelector('script'), null, 'error message injected a <script>');
+      assert.strictEqual(error.querySelector('.excalidraw-error-raw')!.textContent, hostile);
     });
 
     test('real pele shows a syntax error in place, with the raw message open', async () => {

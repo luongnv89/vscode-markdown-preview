@@ -35,23 +35,23 @@ const EXPORT_RENDER_SCRIPT_BODY = `
   // webview/renderer.ts: the lead names the document line (data-line is the
   // 0-based source map), the raw parser message sits in a <details> that is
   // opened so a PDF shows it. textContent only — the message is untrusted.
-  function buildMermaidError(block, err) {
+  function buildDiagramError(block, engine, err) {
     var errorDiv = document.createElement('div');
-    errorDiv.className = 'mermaid-error';
+    errorDiv.className = engine + '-error';
     var lead = document.createElement('div');
-    lead.className = 'mermaid-error-lead';
+    lead.className = engine + '-error-lead';
     var lineAttr = block.getAttribute('data-line');
     var docLine = lineAttr ? Number(lineAttr) + 1 : NaN;
     lead.textContent = isFinite(docLine)
-      ? 'The \`mermaid\` diagram at document line ' + docLine + ' could not be rendered.'
-      : 'This \`mermaid\` diagram could not be rendered.';
+      ? 'The \`' + engine + '\` diagram at document line ' + docLine + ' could not be rendered.'
+      : 'This \`' + engine + '\` diagram could not be rendered.';
     var details = document.createElement('details');
-    details.className = 'mermaid-error-details';
+    details.className = engine + '-error-details';
     details.open = true;
     var summary = document.createElement('summary');
     summary.textContent = 'Diagram error details';
     var raw = document.createElement('pre');
-    raw.className = 'mermaid-error-raw';
+    raw.className = engine + '-error-raw';
     raw.textContent = err && err.message ? String(err.message) : String(err);
     details.appendChild(summary);
     details.appendChild(raw);
@@ -96,7 +96,7 @@ const EXPORT_RENDER_SCRIPT_BODY = `
           block.classList.add('mermaid-rendered');
         } catch(err) {
           block.textContent = '';
-          block.appendChild(buildMermaidError(block, err));
+          block.appendChild(buildDiagramError(block, 'mermaid', err));
         }
         block.setAttribute('data-processed', 'true');
       }
@@ -130,7 +130,8 @@ const EXPORT_RENDER_SCRIPT_BODY = `
           eBlock.setAttribute('data-processed', 'true');
           eBlock.classList.add('excalidraw-rendered');
         } catch(err) {
-          eBlock.innerHTML = '<div class="excalidraw-error">Diagram error: ' + err.message + '</div>';
+          eBlock.textContent = '';
+          eBlock.appendChild(buildDiagramError(eBlock, 'excalidraw', err));
           eBlock.setAttribute('data-processed', 'true');
         }
       }
