@@ -1,0 +1,22 @@
+{
+ "flowchart": "flowchart TD\n A[\"<img src=x onerror=alert(1)><script>alert(2)</script><iframe src=javascript:alert(3)></iframe>\"] --> B[\"ok\"]\n click A \"javascript:alert(1)\"\n click B href \"https://example.com\"",
+ "sequenceDiagram": "sequenceDiagram\n participant A as <img src=x onerror=alert(1)><script>alert(2)</script><iframe src=javascript:alert(3)></iframe>\n A->>B: <img src=x onerror=alert(1)><script>alert(2)</script><iframe src=javascript:alert(3)></iframe>\n Note over A: <img src=x onerror=alert(1)><script>alert(2)</script><iframe src=javascript:alert(3)></iframe>",
+ "classDiagram": "classDiagram\n class A {\n  +field\n }\n A : +method()\n note for A \"<img src=x onerror=alert(1)><script>alert(2)</script><iframe src=javascript:alert(3)></iframe>\"",
+ "stateDiagram": "stateDiagram-v2\n S1 : <img src=x onerror=alert(1)><script>alert(2)</script><iframe src=javascript:alert(3)></iframe>\n [*] --> S1",
+ "erDiagram": "erDiagram\n CUSTOMER ||--o{ ORDER : \"<img src=x onerror=alert(1)><script>alert(2)</script><iframe src=javascript:alert(3)></iframe>\"",
+ "gantt": "gantt\n title <img src=x onerror=alert(1)><script>alert(2)</script><iframe src=javascript:alert(3)></iframe>\n dateFormat YYYY-MM-DD\n section S\n Task <img src=x onerror=alert(1)><script>alert(2)</script><iframe src=javascript:alert(3)></iframe> :a1, 2024-01-01, 3d",
+ "pie": "pie title <img src=x onerror=alert(1)><script>alert(2)</script><iframe src=javascript:alert(3)></iframe>\n \"<img src=x onerror=alert(1)><script>alert(2)</script><iframe src=javascript:alert(3)></iframe>\" : 1\n \"B\" : 2",
+ "journey": "journey\n title <img src=x onerror=alert(1)><script>alert(2)</script><iframe src=javascript:alert(3)></iframe>\n section S\n  Do it: 5: Me",
+ "mindmap": "mindmap\n root((R))\n  A[\"<img src=x onerror=alert(1)><script>alert(2)</script><iframe src=javascript:alert(3)></iframe>\"]",
+ "timeline": "timeline\n title <img src=x onerror=alert(1)><script>alert(2)</script><iframe src=javascript:alert(3)></iframe>\n 2020 : <img src=x onerror=alert(1)><script>alert(2)</script><iframe src=javascript:alert(3)></iframe>",
+ "gitGraph": "gitGraph\n commit id: \"<img src=x onerror=alert(1)><script>alert(2)</script><iframe src=javascript:alert(3)></iframe>\"",
+ "quadrantChart": "quadrantChart\n title <img src=x onerror=alert(1)><script>alert(2)</script><iframe src=javascript:alert(3)></iframe>\n x-axis Low --> High\n y-axis Low --> High\n A: [0.3, 0.6]",
+ "kanban": "kanban\n todo[Todo]\n  t1[\"<img src=x onerror=alert(1)><script>alert(2)</script><iframe src=javascript:alert(3)></iframe>\"]",
+ "accTitle": "flowchart LR\n accTitle: <img src=x onerror=alert(1)><script>alert(2)</script><iframe src=javascript:alert(3)></iframe>\n accDescr: <img src=x onerror=alert(1)><script>alert(2)</script><iframe src=javascript:alert(3)></iframe>\n A --> B",
+ "C4Context": "C4Context\n title <img src=x onerror=alert(1)><script>alert(2)</script><iframe src=javascript:alert(3)></iframe>\n Person(a, \"<img src=x onerror=alert(1)><script>alert(2)</script><iframe src=javascript:alert(3)></iframe>\")\n System(b, \"B\")\n Rel(a, b, \"<img src=x onerror=alert(1)><script>alert(2)</script><iframe src=javascript:alert(3)></iframe>\")",
+ "linkFlow": "flowchart LR\n A --> B\n click A href \"javascript:alert(1)\"\n click B href \"https://example.com\" _blank",
+ "imageHttps": "flowchart TD\n A@{ img: \"https://example.com/x.png\", label: \"Pic\", pos: \"t\", w: 60, h: 60, constraint: \"on\" }\n A --> B",
+ "imageJavascript": "flowchart TD\n A@{ img: \"javascript:alert(1)\", label: \"Pic\", pos: \"t\", w: 60, h: 60, constraint: \"on\" }\n A --> B",
+ "imageData": "flowchart TD\n A@{ img: \"data:image/svg+xml,<svg onload=alert(1)>\", label: \"Pic\", pos: \"t\", w: 60, h: 60, constraint: \"on\" }\n A --> B",
+ "imageFile": "flowchart TD\n A@{ img: \"file:///etc/passwd\", label: \"Pic\", pos: \"t\", w: 60, h: 60, constraint: \"on\" }\n A --> B"
+}
