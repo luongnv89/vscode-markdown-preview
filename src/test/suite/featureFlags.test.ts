@@ -88,10 +88,8 @@ suite('feature flags enableMermaid / enableExcalidraw (#32)', () => {
       // A disabled feature ships no loading tag — the lazy-load data-vendor-*
       // URI attributes stay (they never fetch; #72 needs them if the flag is
       // toggled on later), so assert on the script/link tags, not substrings.
-      assert.ok(
-        !/<script[^>]*mermaid\.min\.js/.test(html),
-        'mermaid.min.js script tag still emitted'
-      );
+      // Mermaid fences render through pele (#156): its bundle is the runtime.
+      assert.ok(!/<script[^>]*pele\.min\.js/.test(html), 'pele.min.js script tag still emitted');
       assert.ok(
         !/<script[^>]*excalidraw-utils\.min\.js/.test(html),
         'excalidraw-utils.min.js script tag still emitted'
@@ -105,7 +103,7 @@ suite('feature flags enableMermaid / enableExcalidraw (#32)', () => {
 
     test('webview HTML keeps mermaid/excalidraw vendor scripts by default', () => {
       const html = buildWebviewHtml(STUB_WEBVIEW, vscode.Uri.file(repoRoot), ABOUT_INFO, false);
-      assert.ok(html.includes('mermaid.min.js'), 'mermaid.min.js missing by default');
+      assert.ok(html.includes('pele.min.js'), 'pele.min.js missing by default');
       assert.ok(
         html.includes('excalidraw-utils.min.js'),
         'excalidraw-utils.min.js missing by default'

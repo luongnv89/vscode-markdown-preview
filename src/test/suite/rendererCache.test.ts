@@ -9,8 +9,9 @@ import { JSDOM } from 'jsdom';
 // data-processed="false" and `mermaid-${Date.now()}-${i}` produced a fresh id
 // per render. Rendered output is now cached on a hash of the diagram source,
 // so an update that only touches an unrelated paragraph must not call the
-// render function again. Same jsdom + esbuild harness as
-// webviewModules.test.ts.
+// render function again. Mermaid fences render through pele (#156), stubbed
+// here as a synchronous window.pele that records each call's options. Same
+// jsdom + esbuild harness as webviewModules.test.ts.
 
 const repoRoot = path.resolve(__dirname, '..', '..', '..');
 const webviewDir = path.join(repoRoot, 'webview');
@@ -36,7 +37,7 @@ interface TestWindow {
   clearTimeout(id: number): void;
   scrollTo(options?: unknown): void;
   scrollY: number;
-  mermaid?: unknown;
+  pele?: unknown;
   ExcalidrawUtils?: unknown;
 }
 
@@ -125,12 +126,16 @@ function docWith(paragraph: string, blockHtml: string): string {
   return `<p class="code-line" data-line="0">${paragraph}</p>` + blockHtml;
 }
 
-function mermaidStub(calls: Array<{ id: string; code: string }>): unknown {
+interface PeleCall {
+  code: string;
+  opts: { idPrefix?: string; links?: boolean; fontFamily?: string };
+}
+
+function peleStub(calls: PeleCall[]): unknown {
   return {
-    initialize() {},
-    async render(id: string, code: string) {
-      calls.push({ id, code });
-      return { svg: `<svg data-render-id="${id}"><text>stub</text></svg>` };
+    render(code: string, opts: PeleCall['opts']) {
+      calls.push({ code, opts });
+      return { svg: `<svg data-id-prefix="${opts.idPrefix}"><text>stub</text></svg>` };
     },
   };
 }
@@ -147,12 +152,12 @@ function excalidrawStub(document: TestDocument, calls: number[]): unknown {
 suite('webview renderer diagram cache (#75)', () => {
   test('an unrelated paragraph change does not re-render mermaid', async () => {
     const { document, window } = makeDom('<div id="preview-content"></div>');
-    const calls: Array<{ id: string; code: string }> = [];
-    window.mermaid = mermaidStub(calls);
+    const calls: PeleCall[] = [];
+    window.pele = peleStub(calls);
     const mod = loadWebviewModule<RendererModule>('renderer.ts', document, window);
 
     await mod.updateContent(docWith('version one', mermaidBlock(MERMAID_SRC)));
-    assert.strictEqual(calls.length, 1, 'first render did not call mermaid.render');
+    assert.strictEqual(calls.length, 1, 'first render did not call pele.render');
 
     await mod.updateContent(docWith('version two', mermaidBlock(MERMAID_SRC)));
     assert.strictEqual(calls.length, 1, 'unchanged diagram was re-rendered on an unrelated edit');
@@ -164,26 +169,43 @@ suite('webview renderer diagram cache (#75)', () => {
     assert.ok(block.innerHTML.includes('<svg'), 'cached SVG was not re-injected');
   });
 
-  test('mermaid render ids are source-hash derived, not timestamps', async () => {
+  test('mermaid SVG id prefixes are source-hash derived, not timestamps', async () => {
     const { document, window } = makeDom('<div id="preview-content"></div>');
-    const calls: Array<{ id: string; code: string }> = [];
-    window.mermaid = mermaidStub(calls);
+    const calls: PeleCall[] = [];
+    window.pele = peleStub(calls);
     const mod = loadWebviewModule<RendererModule>('renderer.ts', document, window);
 
     await mod.updateContent(docWith('v1', mermaidBlock(MERMAID_SRC)));
     assert.strictEqual(calls.length, 1);
+    const prefix = calls[0].opts.idPrefix || '';
     assert.match(
-      calls[0].id,
-      /^mermaid-[0-9a-z]{4,24}$/,
-      `render id is not a base36 source hash: ${calls[0].id}`
+      prefix,
+      /^mermaid-[0-9a-z]{4,24}-$/,
+      `id prefix is not a base36 source hash: ${prefix}`
     );
-    assert.ok(!/^mermaid-\d{10,}/.test(calls[0].id), `render id is a timestamp: ${calls[0].id}`);
+    assert.ok(!/^mermaid-\d{10,}/.test(prefix), `id prefix is a timestamp: ${prefix}`);
+  });
+
+  test('pele renders with links disabled and the diagram font stack (#156)', async () => {
+    const { document, window } = makeDom('<div id="preview-content"></div>');
+    const calls: PeleCall[] = [];
+    window.pele = peleStub(calls);
+    const mod = loadWebviewModule<RendererModule>('renderer.ts', document, window);
+
+    await mod.updateContent(docWith('v1', mermaidBlock(MERMAID_SRC)));
+    assert.strictEqual(calls.length, 1);
+    assert.strictEqual(calls[0].code, MERMAID_SRC);
+    // links: false keeps a `click … href` directive from emitting an <a href>.
+    assert.strictEqual(calls[0].opts.links, false, 'pele.render called without links: false');
+    assert.match(calls[0].opts.fontFamily || '', /Segoe UI/);
+    const block = document.querySelector('.mermaid-block')!;
+    assert.ok(block.innerHTML.includes('<svg'), 'pele SVG was not injected');
   });
 
   test('a changed mermaid source still re-renders', async () => {
     const { document, window } = makeDom('<div id="preview-content"></div>');
-    const calls: Array<{ id: string; code: string }> = [];
-    window.mermaid = mermaidStub(calls);
+    const calls: PeleCall[] = [];
+    window.pele = peleStub(calls);
     const mod = loadWebviewModule<RendererModule>('renderer.ts', document, window);
 
     await mod.updateContent(docWith('v1', mermaidBlock(MERMAID_SRC)));
@@ -194,9 +216,8 @@ suite('webview renderer diagram cache (#75)', () => {
   test('a failed render is cached and the error block is rebuilt with data-line', async () => {
     const { document, window } = makeDom('<div id="preview-content"></div>');
     let calls = 0;
-    window.mermaid = {
-      initialize() {},
-      async render() {
+    window.pele = {
+      render() {
         calls++;
         throw new Error('Parse error on line 1');
       },
@@ -236,8 +257,8 @@ suite('webview renderer diagram cache (#75)', () => {
 
   test('queued updates coalesce and the drain applies the latest html', async () => {
     const { document, window } = makeDom('<div id="preview-content"></div>');
-    const calls: Array<{ id: string; code: string }> = [];
-    window.mermaid = mermaidStub(calls);
+    const calls: PeleCall[] = [];
+    window.pele = peleStub(calls);
     const mod = loadWebviewModule<RendererModule>('renderer.ts', document, window);
 
     // The second call lands while the first is still in postProcess — it

@@ -115,7 +115,7 @@ interface TestWindow {
   scrollTo(options?: unknown): void;
   scrollY: number;
   Event: new (type: string) => Event;
-  mermaid?: unknown;
+  pele?: unknown;
   ExcalidrawUtils?: unknown;
   katex?: unknown;
 }
@@ -261,7 +261,7 @@ suite('preview vendor gating (#72)', () => {
         !/<link[^>]*\bhref="[^"]*\/vendor\//.test(html),
         'vendor <link> emitted for a plain document'
       );
-      for (const bundle of ['katex.min.js', 'mermaid.min.js', 'excalidraw-utils.min.js']) {
+      for (const bundle of ['katex.min.js', 'pele.min.js', 'excalidraw-utils.min.js']) {
         assert.ok(
           !new RegExp(`<script[^>]*${bundle}`).test(html),
           `${bundle} script tag still emitted`
@@ -283,32 +283,32 @@ suite('preview vendor gating (#72)', () => {
       const mathHtml = htmlForMarkdown(MATH_MARKDOWN);
       assert.ok(/<script[^>]*katex\.min\.js/.test(mathHtml), 'katex missing for math doc');
       assert.ok(/<link[^>]*katex\.min\.css/.test(mathHtml), 'katex css missing for math doc');
-      assert.ok(!/<script[^>]*mermaid\.min\.js/.test(mathHtml), 'mermaid leaked into math doc');
+      assert.ok(!/<script[^>]*pele\.min\.js/.test(mathHtml), 'mermaid leaked into math doc');
       assert.ok(
         !/<script[^>]*excalidraw-utils\.min\.js/.test(mathHtml),
         'excalidraw leaked into math doc'
       );
 
       const mermaidHtml = htmlForMarkdown(MERMAID_MARKDOWN);
-      assert.ok(/<script[^>]*mermaid\.min\.js/.test(mermaidHtml), 'mermaid missing');
+      assert.ok(/<script[^>]*pele\.min\.js/.test(mermaidHtml), 'mermaid missing');
       assert.ok(!/<script[^>]*katex\.min\.js/.test(mermaidHtml), 'katex leaked');
       assert.ok(!/<link[^>]*katex\.min\.css/.test(mermaidHtml), 'katex css leaked');
 
       const excalidrawHtml = htmlForMarkdown(EXCALIDRAW_MARKDOWN);
       assert.ok(/<script[^>]*excalidraw-utils\.min\.js/.test(excalidrawHtml), 'excalidraw missing');
-      assert.ok(!/<script[^>]*mermaid\.min\.js/.test(excalidrawHtml), 'mermaid leaked');
+      assert.ok(!/<script[^>]*pele\.min\.js/.test(excalidrawHtml), 'mermaid leaked');
       assert.ok(!/<script[^>]*katex\.min\.js/.test(excalidrawHtml), 'katex leaked');
 
       const allHtml = htmlForMarkdown(MATH_MARKDOWN + MERMAID_MARKDOWN + EXCALIDRAW_MARKDOWN);
       assert.ok(/<script[^>]*katex\.min\.js/.test(allHtml));
-      assert.ok(/<script[^>]*mermaid\.min\.js/.test(allHtml));
+      assert.ok(/<script[^>]*pele\.min\.js/.test(allHtml));
       assert.ok(/<script[^>]*excalidraw-utils\.min\.js/.test(allHtml));
       assert.ok(/<link[^>]*katex\.min\.css/.test(allHtml));
     });
 
     test('every emitted vendor tag carries data-vendor for loader dedup', () => {
       const html = htmlForMarkdown(MERMAID_MARKDOWN);
-      const tag = html.match(/<script[^>]*mermaid\.min\.js[^>]*>/);
+      const tag = html.match(/<script[^>]*pele\.min\.js[^>]*>/);
       assert.ok(tag && /data-vendor="mermaid"/.test(tag[0]), `tag lacks data-vendor: ${tag}`);
     });
 
@@ -316,7 +316,7 @@ suite('preview vendor gating (#72)', () => {
       const html = htmlForMarkdown(PLAIN_MARKDOWN);
       assert.ok(/data-vendor-katex="[^"]*katex\.min\.js/.test(html));
       assert.ok(/data-vendor-katex-css="[^"]*katex\.min\.css/.test(html));
-      assert.ok(/data-vendor-mermaid="[^"]*mermaid\.min\.js/.test(html));
+      assert.ok(/data-vendor-mermaid="[^"]*pele\.min\.js/.test(html));
       assert.ok(/data-vendor-excalidraw="[^"]*excalidraw-utils\.min\.js/.test(html));
     });
 
@@ -329,7 +329,7 @@ suite('preview vendor gating (#72)', () => {
         { enableMermaid: false, enableExcalidraw: false, enableKatex: true },
         { mermaid: true, excalidraw: true, math: true }
       );
-      assert.ok(!/<script[^>]*mermaid\.min\.js/.test(html));
+      assert.ok(!/<script[^>]*pele\.min\.js/.test(html));
       assert.ok(!/<script[^>]*excalidraw-utils\.min\.js/.test(html));
       assert.ok(/<script[^>]*katex\.min\.js/.test(html));
     });
@@ -337,7 +337,7 @@ suite('preview vendor gating (#72)', () => {
     test('callers without detection keep the historical all-vendor payload', () => {
       const html = buildWebviewHtml(STUB_WEBVIEW, vscode.Uri.file(repoRoot), ABOUT_INFO, false);
       assert.ok(/<script[^>]*katex\.min\.js/.test(html));
-      assert.ok(/<script[^>]*mermaid\.min\.js/.test(html));
+      assert.ok(/<script[^>]*pele\.min\.js/.test(html));
       assert.ok(/<script[^>]*excalidraw-utils\.min\.js/.test(html));
     });
 
@@ -372,10 +372,10 @@ suite('preview vendor gating (#72)', () => {
         'getWebviewHtml still shipped vendor scripts for a plain document'
       );
       const mermaidHtml = manager.getWebviewHtml(STUB_WEBVIEW, fakeDocument(MERMAID_MARKDOWN));
-      assert.ok(/<script[^>]*mermaid\.min\.js/.test(mermaidHtml), 'mermaid missing');
+      assert.ok(/<script[^>]*pele\.min\.js/.test(mermaidHtml), 'mermaid missing');
       // No document → the webview bootstrap/rebuild path keeps all vendors.
       const fallbackHtml = manager.getWebviewHtml(STUB_WEBVIEW);
-      assert.ok(/<script[^>]*mermaid\.min\.js/.test(fallbackHtml), 'no-doc fallback lost mermaid');
+      assert.ok(/<script[^>]*pele\.min\.js/.test(fallbackHtml), 'no-doc fallback lost mermaid');
     });
   });
 
@@ -383,7 +383,7 @@ suite('preview vendor gating (#72)', () => {
     const DATA_ATTRS =
       'data-vendor-katex="https://res/katex.min.js" ' +
       'data-vendor-katex-css="https://res/katex.min.css" ' +
-      'data-vendor-mermaid="https://res/mermaid.min.js" ' +
+      'data-vendor-mermaid="https://res/pele.min.js" ' +
       'data-vendor-excalidraw="https://res/excalidraw-utils.min.js"';
 
     function loadLoader(
@@ -413,9 +413,9 @@ suite('preview vendor gating (#72)', () => {
         'script[data-vendor="mermaid"]'
       ) as HTMLScriptElement;
       assert.ok(script, 'vendor script not injected');
-      assert.strictEqual(script.src, 'https://res/mermaid.min.js');
+      assert.strictEqual(script.src, 'https://res/pele.min.js');
       assert.strictEqual(script.nonce, 'test-nonce');
-      (window as { mermaid?: unknown }).mermaid = { render: async () => ({ svg: '' }) };
+      (window as { pele?: unknown }).pele = { render: () => ({ svg: '' }) };
       script.dispatchEvent(new window.Event('load'));
       assert.strictEqual(await pending, true);
       // Second call short-circuits on the global — no duplicate tag.
@@ -437,7 +437,7 @@ suite('preview vendor gating (#72)', () => {
       const script = window.document.head.querySelector(
         'script[data-vendor="mermaid"]'
       ) as HTMLScriptElement;
-      (window as { mermaid?: unknown }).mermaid = {};
+      (window as { pele?: unknown }).pele = {};
       script.dispatchEvent(new window.Event('load'));
       assert.deepStrictEqual(await Promise.all([a, b]), [true, true]);
     });
@@ -451,7 +451,7 @@ suite('preview vendor gating (#72)', () => {
       // the 30 s timeout, once per update, stalling the render loop).
       const { window, loader } = loadLoader(
         true,
-        '<script data-vendor="mermaid" src="https://res/mermaid.min.js" nonce="test-nonce"></script>'
+        '<script data-vendor="mermaid" src="https://res/pele.min.js" nonce="test-nonce"></script>'
       );
       const pending = loader.ensureVendor('mermaid');
       await nextTick();
@@ -459,7 +459,7 @@ suite('preview vendor gating (#72)', () => {
       assert.strictEqual(tags.length, 1, 'expected exactly one managed tag');
       const injected = tags[0] as HTMLScriptElement;
       assert.strictEqual(injected.nonce, 'test-nonce', 'injected tag lost the CSP nonce');
-      (window as { mermaid?: unknown }).mermaid = {};
+      (window as { pele?: unknown }).pele = {};
       injected.dispatchEvent(new window.Event('load'));
       assert.strictEqual(await pending, true);
     });
@@ -526,7 +526,7 @@ suite('preview vendor gating (#72)', () => {
       const second = loader.ensureVendor('mermaid');
       const retry = window.document.head.querySelectorAll('script[data-vendor="mermaid"]');
       assert.strictEqual(retry.length, 1, 'retry did not inject a fresh tag');
-      (window as { mermaid?: unknown }).mermaid = {};
+      (window as { pele?: unknown }).pele = {};
       (retry[0] as HTMLScriptElement).dispatchEvent(new window.Event('load'));
       assert.strictEqual(await second, true);
     });
@@ -536,7 +536,7 @@ suite('preview vendor gating (#72)', () => {
     const BODY =
       'data-vendor-katex="https://res/katex.min.js" ' +
       'data-vendor-katex-css="https://res/katex.min.css" ' +
-      'data-vendor-mermaid="https://res/mermaid.min.js" ' +
+      'data-vendor-mermaid="https://res/pele.min.js" ' +
       'data-vendor-excalidraw="https://res/excalidraw-utils.min.js"';
 
     function loadRenderer(): {
@@ -566,9 +566,8 @@ suite('preview vendor gating (#72)', () => {
         'script[data-vendor="mermaid"]'
       ) as HTMLScriptElement;
       assert.ok(script, 'update did not trigger the mermaid lazy load');
-      (window as { mermaid?: unknown }).mermaid = {
-        initialize: () => {},
-        render: async () => ({ svg: '<svg>mermaid-svg</svg>' }),
+      (window as { pele?: unknown }).pele = {
+        render: () => ({ svg: '<svg>mermaid-svg</svg>' }),
       };
       script.dispatchEvent(new window.Event('load'));
       await pending;

@@ -67,7 +67,7 @@ interface TestWindow {
   scrollY: number;
   matchMedia(query: string): { matches: boolean };
   Event: new (type: string) => unknown;
-  mermaid?: unknown;
+  pele?: unknown;
   ExcalidrawUtils?: unknown;
 }
 
@@ -197,9 +197,11 @@ suite('rendering placeholder + readable diagram errors (#68)', () => {
   test('a failing mermaid block reports the document line and keeps raw output in <details>', async () => {
     const { document, window } = makeDom('<div id="preview-content"></div>');
     stubScrollTo(window);
-    window.mermaid = {
-      initialize: () => undefined,
-      render: async () => {
+    // pele throws synchronously (a PeleError) on bad input.
+    const opts: Array<{ links?: boolean }> = [];
+    window.pele = {
+      render: (_code: string, options: { links?: boolean }) => {
+        opts.push(options);
         throw new Error('Parse error on line 1: Expecting SEMI');
       },
     };
@@ -226,6 +228,56 @@ suite('rendering placeholder + readable diagram errors (#68)', () => {
       details!.textContent!.includes('Parse error on line 1'),
       `raw parser message missing: ${details!.textContent}`
     );
+    assert.deepStrictEqual(
+      opts.map((o) => o.links),
+      [false],
+      'pele.render not called with links: false'
+    );
+  });
+
+  test('a hostile pele error message renders as text, never as markup (#156)', async () => {
+    const { document, window } = makeDom('<div id="preview-content"></div>');
+    stubScrollTo(window);
+    window.pele = {
+      render: () => {
+        throw new Error('<img src=x onerror=alert(1)><script>alert(2)</script>');
+      },
+    };
+    const mod = loadWebviewModule<RendererModule>('renderer.ts', document, window, {});
+    await mod.updateContent(
+      '<div class="mermaid-block" data-processed="false" data-line="2" data-source="bad">' +
+        '<pre class="mermaid">bad</pre></div>'
+    );
+
+    const error = document.querySelector('.mermaid-error');
+    assert.ok(error, 'no .mermaid-error rendered');
+    assert.strictEqual(error!.querySelector('img'), null, 'error message injected an <img>');
+    assert.strictEqual(error!.querySelector('script'), null, 'error message injected a <script>');
+    const raw = error!.querySelector('.mermaid-error-raw');
+    assert.strictEqual(raw!.textContent, '<img src=x onerror=alert(1)><script>alert(2)</script>');
+  });
+
+  test('a non-Error pele throw still yields the readable error block (#156)', async () => {
+    const { document, window } = makeDom('<div id="preview-content"></div>');
+    stubScrollTo(window);
+    window.pele = {
+      render: () => {
+        throw 'plain string failure';
+      },
+    };
+    const mod = loadWebviewModule<RendererModule>('renderer.ts', document, window, {});
+    await mod.updateContent(
+      '<div class="mermaid-block" data-processed="false" data-source="bad">' +
+        '<pre class="mermaid">bad</pre></div>'
+    );
+
+    const error = document.querySelector('.mermaid-error');
+    assert.ok(error, 'no .mermaid-error rendered for a non-Error throw');
+    assert.ok(
+      error!.textContent!.includes('This `mermaid` diagram could not be rendered.'),
+      `no-line lead missing: ${error!.textContent}`
+    );
+    assert.ok(error!.textContent!.includes('plain string failure'));
   });
 
   test('a failing excalidraw block reports the document line and keeps raw output in <details>', async () => {

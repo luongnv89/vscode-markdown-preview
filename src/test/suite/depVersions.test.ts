@@ -2,9 +2,9 @@ import * as assert from 'assert';
 import * as path from 'path';
 import * as fs from 'fs';
 
-// Dependency-major regression pins (issues #45, #46, #47): the lockfile must
-// resolve each production dependency to the bumped major — the same check as
-// the issues' Verify commands:
+// Dependency-major regression pins (issues #45, #46, #47, #156): the lockfile
+// must resolve each production dependency to the bumped major — the same check
+// as the issues' Verify commands:
 //   node -p "require('./package-lock.json').packages['node_modules/<dep>'].version"
 
 const repoRoot = path.resolve(__dirname, '..', '..', '..');
@@ -22,9 +22,16 @@ function major(version: string): number {
   return Number(m[1]);
 }
 
-suite('production dependency majors (#45, #46, #47)', () => {
-  test('mermaid resolves to >= 12.0.0 (#45)', () => {
-    assert.ok(major(lockedVersion('mermaid')) >= 12, lockedVersion('mermaid'));
+suite('production dependency majors (#45, #46, #47, #156)', () => {
+  // #156 replaced mermaid (pinned >= 12 by #45) with pele as the renderer of
+  // Mermaid fences — the mermaid pin retires with the dependency.
+  test('pele resolves to >= 1.6.0 and mermaid is no longer a dependency (#156)', () => {
+    const v = lockedVersion('pele');
+    const [maj, min] = v.split('.').map(Number);
+    assert.ok(maj > 1 || (maj === 1 && min >= 6), v);
+    const pkg = JSON.parse(fs.readFileSync(path.join(repoRoot, 'package.json'), 'utf8'));
+    assert.ok(!pkg.dependencies?.mermaid, 'mermaid still declared in dependencies');
+    assert.ok(!pkg.devDependencies?.mermaid, 'mermaid still declared in devDependencies');
   });
 
   test('markdown-it resolves to >= 15.0.2 (#46)', () => {

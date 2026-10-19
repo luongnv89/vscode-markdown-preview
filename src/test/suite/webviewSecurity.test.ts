@@ -7,8 +7,11 @@ import { escapeHtml } from '../../utils/htmlEscape';
 import { findChromePath, ChromeNotFoundError } from '../../export/browserFinder';
 import { launchBrowser } from '../../export/pdfExporter';
 
-// Preview-webview security regression tests (issues #26, #29):
-// - #26: Mermaid securityLevel 'strict' + no 'unsafe-eval' in the preview CSP.
+// Preview-webview security regression tests (issues #26, #29, #156):
+// - #26: no 'unsafe-eval' in the preview CSP. Mermaid fences now render
+//   through pele (#156), which needs no eval and is called with
+//   `links: false` everywhere — the successor to Mermaid's
+//   securityLevel 'strict'.
 // - #29: <body data-*> metadata escaped on write, About popup built with
 //   textContent, and img-src restricted unless the documented opt-in is on.
 // - #55: one shared escapeHtml implementation — pinned here so the collapsed
@@ -175,17 +178,64 @@ suite('preview webview security (#26, #29)', () => {
     });
   });
 
-  suite('mermaid securityLevel (#26)', () => {
-    test('both call sites initialize Mermaid with strict, none with loose', () => {
-      const renderer = readRepoFile('webview/renderer.ts');
-      const exporter = readRepoFile('src/export/standaloneHtmlBuilder.ts');
-      for (const [name, src] of [
-        ['webview/renderer.ts', renderer],
-        ['src/export/standaloneHtmlBuilder.ts', exporter],
-      ] as const) {
-        assert.ok(/securityLevel:\s*'strict'/.test(src), `${name} missing 'strict'`);
-        assert.ok(!/securityLevel:\s*'loose'/.test(src), `${name} still uses 'loose'`);
+  suite('pele render options (#26, #156)', () => {
+    test('every pele call site disables links, none enables them', () => {
+      for (const file of [
+        'webview/renderer.ts',
+        'src/export/standaloneHtmlBuilder.ts',
+        'scripts/generate-landing.cjs',
+      ]) {
+        const src = readRepoFile(file);
+        assert.ok(/pele\.render\(/.test(src), `${file} no longer calls pele.render`);
+        assert.ok(/links:\s*false/.test(src), `${file} missing links: false`);
+        assert.ok(!/links:\s*true/.test(src), `${file} enables pele links`);
       }
+    });
+
+    test('no source still references the removed Mermaid bundle or global', () => {
+      // Needles are assembled so this file does not match itself; the one
+      // allowed occurrence is the dist-absence assertion below.
+      const bundleName = 'mermaid' + '.min.js';
+      const globalName = 'window.' + 'mermaid';
+      const hits: string[] = [];
+      const scan = (file: string): void => {
+        fs.readFileSync(file, 'utf8')
+          .split('\n')
+          .forEach((line, i) => {
+            if (line.includes(bundleName) || line.includes(globalName)) {
+              hits.push(`${path.relative(repoRoot, file)}:${i + 1}: ${line.trim()}`);
+            }
+          });
+      };
+      const walk = (dir: string): void => {
+        for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+          const full = path.join(dir, entry.name);
+          if (entry.isDirectory()) {
+            walk(full);
+          } else {
+            scan(full);
+          }
+        }
+      };
+      for (const root of ['src', 'webview', 'scripts']) {
+        walk(path.join(repoRoot, root));
+      }
+      scan(path.join(repoRoot, 'webpack.config.js'));
+      const allowed = hits.filter((hit) => /webviewSecurity\.test\.ts:\d+: .*existsSync/.test(hit));
+      assert.strictEqual(allowed.length, 1, `expected one dist-absence assertion: ${hits}`);
+      assert.deepStrictEqual(
+        hits.filter((hit) => !allowed.includes(hit)),
+        [],
+        'stale Mermaid bundle/global references remain'
+      );
+    });
+
+    test('the build no longer ships the Mermaid bundle', () => {
+      assert.ok(
+        fs.existsSync(path.join(repoRoot, 'dist', 'webview', 'vendor', 'pele.min.js')),
+        'dist/webview/vendor/pele.min.js missing after the build'
+      );
+      assert.ok(!fs.existsSync(path.join(repoRoot, 'dist/webview/vendor/mermaid.min.js')));
     });
 
     test('previewManager.ts carries no unsafe-eval in its CSP', () => {
@@ -195,52 +245,74 @@ suite('preview webview security (#26, #29)', () => {
     });
   });
 
-  suite('mermaid under the hardened CSP (headless Chromium, #26)', function () {
+  suite('pele under the hardened CSP (headless Chromium, #26, #156)', function () {
     this.timeout(60000);
 
-    test('renders a diagram with a click JS directive under strict + nonce-only CSP, attaching no handler', async function () {
+    test('renders hostile diagrams under the nonce-only CSP with no live markup', async function () {
       if (!chromeAvailable()) {
         return this.skip();
       }
-      const mermaidJs = readRepoFile('dist/webview/vendor/mermaid.min.js');
+      const peleJs = readRepoFile('dist/webview/vendor/pele.min.js');
       const browser = await launchBrowser();
       try {
         const page = await browser.newPage();
         // Same policy shape as the preview CSP: nonce-only script-src, no
-        // 'unsafe-eval' — proves Mermaid 11.x needs no eval to render.
+        // 'unsafe-eval' — proves pele needs no eval to render.
         const html = `<!DOCTYPE html><html><head>
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'nonce-t1'; style-src 'unsafe-inline'; img-src data:">
-<script nonce="t1">${mermaidJs}</script>
+<script nonce="t1">${peleJs}</script>
 </head><body><div id="out"></div>
 <script nonce="t1">
 window.__pwned = false;
 window.doPwn = function () { window.__pwned = true; };
 window.__result = (async () => {
-  mermaid.initialize({ startOnLoad: false, securityLevel: 'strict' });
-  const { svg, bindFunctions } = await mermaid.render(
-    'd1',
-    'graph TD; A["<img src=x onerror=doPwn()>"]-->B; click A doPwn "tip"'
-  );
-  document.getElementById('out').innerHTML = svg;
-  if (typeof bindFunctions === 'function') { bindFunctions(document.getElementById('out')); }
-  document.querySelectorAll('#out .node, #out a, #out g').forEach((el) => {
-    el.dispatchEvent(new MouseEvent('click', { bubbles: true }));
-  });
+  const sources = [
+    'graph TD; A["<img src=x onerror=doPwn()>"]-->B; click A doPwn "tip"',
+    'flowchart LR\\n A --> B\\n click A href "javascript:doPwn()"\\n click B href "https://example.com"',
+  ];
+  let svgLen = 0;
+  let hasJs = false;
+  let anchors = 0;
+  let live = 0;
+  for (const source of sources) {
+    // Same options as webview/renderer.ts.
+    const { svg } = pele.render(source, { idPrefix: 'd1-', links: false });
+    svgLen = Math.max(svgLen, svg.length);
+    hasJs = hasJs || /<script|javascript:|onerror=/i.test(svg);
+    const out = document.getElementById('out');
+    out.innerHTML = svg;
+    anchors += out.querySelectorAll('a').length;
+    live += out.querySelectorAll('img, script, iframe, foreignObject, object, embed').length;
+    out.querySelectorAll('*').forEach((el) => {
+      for (const attr of el.attributes) {
+        if (/^on/i.test(attr.name)) live++;
+      }
+    });
+    out.querySelectorAll('g, text, rect, path').forEach((el) => {
+      el.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    });
+  }
   await new Promise((res) => setTimeout(res, 200));
-  return {
-    svgLen: svg.length,
-    hasJs: /<script|javascript:|onerror=/i.test(svg),
-    pwned: window.__pwned,
-  };
+  return { svgLen, hasJs, anchors, live, pwned: window.__pwned, href: location.href };
 })();
 </script></body></html>`;
         await page.setContent(html, { waitUntil: 'domcontentloaded' });
         const result = (await page.evaluate(
           () => (globalThis as Record<string, unknown>).__result
-        )) as { svgLen: number; hasJs: boolean; pwned: boolean };
-        assert.ok(result.svgLen > 500, 'mermaid diagram did not render under nonce-only CSP');
+        )) as {
+          svgLen: number;
+          hasJs: boolean;
+          anchors: number;
+          live: number;
+          pwned: boolean;
+          href: string;
+        };
+        assert.ok(result.svgLen > 500, 'pele diagram did not render under nonce-only CSP');
         assert.strictEqual(result.hasJs, false, 'scriptable markup survived in rendered SVG');
+        assert.strictEqual(result.anchors, 0, 'links: false still emitted an <a>');
+        assert.strictEqual(result.live, 0, 'rendered SVG carries live elements or handlers');
         assert.strictEqual(result.pwned, false, 'click directive attached a live handler');
+        assert.strictEqual(result.href, 'about:blank', 'a diagram click navigated the page');
       } finally {
         await browser.close();
       }
