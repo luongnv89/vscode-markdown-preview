@@ -54,7 +54,7 @@ Code blocks are highlighted with highlight.js. The preview defaults to the light
 
 ### Mermaid Diagrams
 
-Write diagrams directly in your markdown using [Mermaid](https://mermaid.js.org/) syntax. They are rendered locally by [pele](https://github.com/obsidianmd/pele), a lightweight Mermaid renderer, and their colours follow the preview's light/dark theme:
+Write diagrams directly in your markdown using [Mermaid](https://mermaid.js.org/) syntax. They are rendered locally by [pele](https://github.com/obsidianmd/pele), a lightweight Mermaid renderer, and their colours follow the preview's light/dark theme. `click` links inside a diagram are not clickable in the preview or in exports, so put any link you need in the surrounding text:
 
 ````markdown
 ```mermaid
