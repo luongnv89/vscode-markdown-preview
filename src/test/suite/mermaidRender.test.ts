@@ -171,7 +171,7 @@ window.__result = { dark, light, sameNode: document.querySelector('#flow svg') =
       assert.ok(mean(result.light.text) < 60, `light text ${result.light.text}`);
       // Series colours switch to the dark-readable tone and back.
       assert.deepStrictEqual(result.dark.series1, [121, 166, 220]);
-      assert.deepStrictEqual(result.light.series1, [76, 120, 168]);
+      assert.deepStrictEqual(result.light.series1, [59, 106, 158]);
     } finally {
       await browser.close();
     }

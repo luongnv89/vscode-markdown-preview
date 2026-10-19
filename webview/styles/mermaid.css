@@ -20,22 +20,28 @@
   --pele-bg: var(--bg-primary);
   --pele-fg: var(--fg-primary);
   --pele-line: var(--fg-primary);
-  --pele-muted: color-mix(in srgb, var(--fg-primary) 65%, var(--bg-primary));
-  --pele-border: color-mix(in srgb, var(--fg-primary) 50%, var(--bg-primary));
+  /* Muted text and node outlines stay readable on the page and on the node
+     surface: muted >= 4.5:1 and border >= 3:1 (WCAG 1.4.3 / 1.4.11) on
+     Light Modern, the toolbar pins and the Dark themes. */
+  --pele-muted: color-mix(in srgb, var(--fg-primary) 78%, var(--bg-primary));
+  --pele-border: color-mix(in srgb, var(--fg-primary) 60%, var(--bg-primary));
   --pele-surface: color-mix(in srgb, var(--fg-primary) 6%, var(--bg-primary));
   --pele-surface-alt: color-mix(in srgb, var(--fg-primary) 12%, var(--bg-primary));
   --pele-accent: var(--link-color);
-  /* Status and series colours: pele's own light palette. */
-  --pele-critical: #e45756;
-  --pele-error: #e45756;
-  --pele-series-1: #4c78a8;
-  --pele-series-2: #f58518;
-  --pele-series-3: #54a24b;
-  --pele-series-4: #e45756;
-  --pele-series-5: #72b7b2;
-  --pele-series-6: #eeca3b;
-  --pele-series-7: #b279a2;
-  --pele-series-8: #9d755d;
+  /* Status and series colours: pele's palette, darkened so the text pele
+     draws on them in --pele-bg (slice labels, gantt :crit labels, branch
+     labels) and the error text it draws in --pele-error reach >= 4.5:1
+     against white — the light preview and every HTML/PDF export. */
+  --pele-critical: #991b1b;
+  --pele-error: #991b1b;
+  --pele-series-1: #3b6a9e;
+  --pele-series-2: #b45309;
+  --pele-series-3: #2f7d32;
+  --pele-series-4: #c62828;
+  --pele-series-5: #0f766e;
+  --pele-series-6: #8a6d00;
+  --pele-series-7: #8e4b80;
+  --pele-series-8: #7a5640;
   /* Must match MERMAID_FONT_FAMILY in webview/renderer.ts — pele measures
      text with that stack, so drawing with another would misfit labels. */
   --pele-font: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;

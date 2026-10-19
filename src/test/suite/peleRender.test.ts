@@ -18,7 +18,8 @@ import { JSDOM } from 'jsdom';
 //   src/test/fixtures/pele-hostile-fixture.json holds the hostile inputs.
 //   `links: false`, the option every call site passes, is shown to matter.
 // - AC3 (static): every colour pele reads is declared in
-//   webview/styles/mermaid.css, with dark-theme overrides.
+//   webview/styles/mermaid.css, with dark-theme overrides, and the light
+//   series/status tones reach 4.5:1 against white.
 
 const repoRoot = path.resolve(__dirname, '..', '..', '..');
 const PELE_BUNDLE = path.join(repoRoot, 'dist', 'webview', 'vendor', 'pele.min.js');
@@ -302,6 +303,25 @@ suite('pele diagram rendering (#156)', () => {
           !/--fg-muted|--code-bg|--panel-bg|--border-color|rgba\(/.test(value),
           `--pele-${name} uses a translucent token: ${value}`
         );
+      }
+    });
+
+    test('light series and status tones reach 4.5:1 against white (WCAG 1.4.3)', () => {
+      // pele draws labels in --pele-bg on series/critical fills and error
+      // text in --pele-error; the light palette is also what exports use.
+      const luminance = (hex: string): number => {
+        const [r, g, b] = [1, 3, 5].map((i) => {
+          const c = parseInt(hex.slice(i, i + 2), 16) / 255;
+          return c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
+        });
+        return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+      };
+      const white = luminance('#ffffff');
+      for (const name of [...SERIES_VARS, 'critical', 'error']) {
+        const value = baseRule!.decls.get(`--pele-${name}`) || '';
+        assert.ok(/^#[0-9a-f]{6}$/i.test(value), `--pele-${name} is not a #rrggbb hex: ${value}`);
+        const ratio = (white + 0.05) / (luminance(value) + 0.05);
+        assert.ok(ratio >= 4.5, `--pele-${name} ${value} is only ${ratio.toFixed(2)}:1 on white`);
       }
     });
 
