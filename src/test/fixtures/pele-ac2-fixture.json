@@ -1,0 +1,751 @@
+[
+ {
+  "name": "graph TD",
+  "type": "flowchart",
+  "labels": [
+   "A",
+   "B"
+  ],
+  "source": "graph TD\n A-->B"
+ },
+ {
+  "name": "flowchart LR",
+  "type": "flowchart",
+  "labels": [
+   "A",
+   "B"
+  ],
+  "source": "flowchart LR\n A-->B"
+ },
+ {
+  "name": "flowchart-elk TD",
+  "type": "flowchart",
+  "labels": [
+   "A",
+   "B"
+  ],
+  "source": "flowchart-elk TD\n A-->B"
+ },
+ {
+  "name": "sequenceDiagram",
+  "type": "sequence",
+  "labels": [
+   "hi",
+   "A",
+   "B"
+  ],
+  "source": "sequenceDiagram\n A->>B: hi"
+ },
+ {
+  "name": "classDiagram",
+  "type": "class",
+  "labels": [
+   "A",
+   "B"
+  ],
+  "source": "classDiagram\n class A\n A <|-- B"
+ },
+ {
+  "name": "classDiagram-v2",
+  "type": "class",
+  "labels": [
+   "A"
+  ],
+  "source": "classDiagram-v2\n class A"
+ },
+ {
+  "name": "stateDiagram",
+  "type": "state",
+  "labels": [
+   "S1"
+  ],
+  "source": "stateDiagram\n [*] --> S1"
+ },
+ {
+  "name": "stateDiagram-v2",
+  "type": "state",
+  "labels": [
+   "S1"
+  ],
+  "source": "stateDiagram-v2\n [*] --> S1\n S1 --> [*]"
+ },
+ {
+  "name": "erDiagram",
+  "type": "er",
+  "labels": [
+   "places",
+   "CUSTOMER",
+   "ORDER"
+  ],
+  "source": "erDiagram\n CUSTOMER ||--o{ ORDER : places"
+ },
+ {
+  "name": "journey",
+  "type": "journey",
+  "labels": [
+   "T",
+   "5",
+   "S"
+  ],
+  "source": "journey\n title T\n section S\n  Do: 5: Me"
+ },
+ {
+  "name": "gantt",
+  "type": "gantt",
+  "labels": [
+   "T",
+   "S",
+   "2024-01-01"
+  ],
+  "source": "gantt\n dateFormat YYYY-MM-DD\n section S\n T :a1, 2024-01-01, 3d"
+ },
+ {
+  "name": "pie",
+  "type": "pie",
+  "labels": [
+   "A",
+   "B"
+  ],
+  "source": "pie title P\n \"A\" : 1\n \"B\" : 2"
+ },
+ {
+  "name": "quadrantChart",
+  "type": "quadrantChart",
+  "labels": [
+   "Q",
+   "Low",
+   "High"
+  ],
+  "source": "quadrantChart\n title Q\n x-axis Low --> High\n y-axis Low --> High\n A: [0.3, 0.6]"
+ },
+ {
+  "name": "requirementDiagram",
+  "type": "requirement",
+  "labels": [
+   "r1",
+   "1",
+   "t"
+  ],
+  "source": "requirementDiagram\n requirement r1 {\n id: 1\n text: t\n risk: high\n verifymethod: test\n }"
+ },
+ {
+  "name": "gitGraph",
+  "type": "gitGraph",
+  "labels": [
+   "main",
+   "dev"
+  ],
+  "source": "gitGraph\n commit\n branch dev\n commit\n checkout main\n merge dev"
+ },
+ {
+  "name": "C4Context",
+  "type": "c4",
+  "labels": [
+   "A",
+   "B",
+   "uses"
+  ],
+  "source": "C4Context\n Person(a, \"A\")\n System(b, \"B\")\n Rel(a, b, \"uses\")"
+ },
+ {
+  "name": "C4Container",
+  "type": "c4",
+  "labels": [
+   "A"
+  ],
+  "source": "C4Container\n Person(a, \"A\")"
+ },
+ {
+  "name": "C4Component",
+  "type": "c4",
+  "labels": [
+   "A"
+  ],
+  "source": "C4Component\n Person(a, \"A\")"
+ },
+ {
+  "name": "C4Dynamic",
+  "type": "c4",
+  "labels": [
+   "A"
+  ],
+  "source": "C4Dynamic\n Person(a, \"A\")"
+ },
+ {
+  "name": "C4Deployment",
+  "type": "c4",
+  "labels": [
+   "N",
+   "C"
+  ],
+  "source": "C4Deployment\n Deployment_Node(n, \"N\") {\n Container(c, \"C\")\n }"
+ },
+ {
+  "name": "mindmap",
+  "type": "mindmap",
+  "labels": [
+   "A",
+   "B",
+   "R"
+  ],
+  "source": "mindmap\n root((R))\n  A\n  B"
+ },
+ {
+  "name": "timeline",
+  "type": "timeline",
+  "labels": [
+   "T",
+   "2020",
+   "A"
+  ],
+  "source": "timeline\n title T\n 2020 : A\n 2021 : B"
+ },
+ {
+  "name": "sankey-beta",
+  "type": "sankey",
+  "labels": [
+   "10",
+   "5"
+  ],
+  "source": "sankey-beta\n\nA,B,10\nB,C,5"
+ },
+ {
+  "name": "sankey",
+  "type": "sankey",
+  "labels": [
+   "10"
+  ],
+  "source": "sankey\n\nA,B,10"
+ },
+ {
+  "name": "xychart-beta",
+  "type": "xychart",
+  "labels": [
+   "0",
+   "10",
+   "a"
+  ],
+  "source": "xychart-beta\n x-axis [a, b]\n y-axis \"v\" 0 --> 10\n bar [3, 5]"
+ },
+ {
+  "name": "xychart",
+  "type": "xychart",
+  "labels": [
+   "3",
+   "5",
+   "a"
+  ],
+  "source": "xychart\n x-axis [a, b]\n bar [3, 5]"
+ },
+ {
+  "name": "block-beta",
+  "type": "block",
+  "labels": [
+   "a",
+   "b"
+  ],
+  "source": "block-beta\n columns 2\n a b"
+ },
+ {
+  "name": "block",
+  "type": "block",
+  "labels": [
+   "a",
+   "b"
+  ],
+  "source": "block\n columns 2\n a b"
+ },
+ {
+  "name": "packet-beta",
+  "type": "packet",
+  "labels": [
+   "Src",
+   "Dst",
+   "0"
+  ],
+  "source": "packet-beta\n 0-15: \"Src\"\n 16-31: \"Dst\""
+ },
+ {
+  "name": "packet",
+  "type": "packet",
+  "labels": [
+   "Src",
+   "0",
+   "15"
+  ],
+  "source": "packet\n 0-15: \"Src\""
+ },
+ {
+  "name": "kanban",
+  "type": "kanban",
+  "labels": [
+   "Todo",
+   "Task"
+  ],
+  "source": "kanban\n todo[Todo]\n  t1[Task]"
+ },
+ {
+  "name": "architecture-beta",
+  "type": "architecture",
+  "labels": [
+   "A",
+   "B"
+  ],
+  "source": "architecture-beta\n service a(server)[A]\n service b(database)[B]\n a:R -- L:b"
+ },
+ {
+  "name": "radar-beta",
+  "type": "radar",
+  "labels": [
+   "a",
+   "b",
+   "c"
+  ],
+  "source": "radar-beta\n axis a, b, c\n curve x{1, 2, 3}"
+ },
+ {
+  "name": "treemap-beta",
+  "type": "treemap",
+  "labels": [
+   "A",
+   "10",
+   "B"
+  ],
+  "source": "treemap-beta\n \"A\"\n  \"B\": 10"
+ },
+ {
+  "name": "treemap",
+  "type": "treemap",
+  "labels": [
+   "A",
+   "10",
+   "B"
+  ],
+  "source": "treemap\n \"A\"\n  \"B\": 10"
+ },
+ {
+  "name": "info",
+  "type": "info",
+  "labels": [],
+  "source": "info",
+  "labelPrefix": "Pele v"
+ },
+ {
+  "name": "ishikawa-beta",
+  "type": "ishikawa",
+  "labels": [
+   "Cause A",
+   "Sub",
+   "Problem"
+  ],
+  "source": "ishikawa-beta\n Problem\n  Cause A\n   Sub"
+ },
+ {
+  "name": "ishikawa",
+  "type": "ishikawa",
+  "labels": [
+   "Cause A",
+   "Problem"
+  ],
+  "source": "ishikawa\n Problem\n  Cause A"
+ },
+ {
+  "name": "venn-beta",
+  "type": "venn",
+  "labels": [
+   "A",
+   "B"
+  ],
+  "source": "venn-beta\n set A\n set B\n union A,B"
+ },
+ {
+  "name": "wardley-beta",
+  "type": "wardley",
+  "labels": [
+   "W",
+   "A"
+  ],
+  "source": "wardley-beta\n title W\n component A [0.5, 0.5]"
+ },
+ {
+  "name": "treeView-beta",
+  "type": "treeView",
+  "labels": [
+   "root",
+   "child"
+  ],
+  "source": "treeView-beta\n root\n  child"
+ },
+ {
+  "name": "eventmodeling",
+  "type": "eventmodeling",
+  "labels": [
+   "A"
+  ],
+  "source": "eventmodeling\n tf 01 cmd A"
+ },
+ {
+  "name": "agentflow-beta",
+  "type": "agentflow",
+  "labels": [
+   "A",
+   "B"
+  ],
+  "source": "agentflow-beta\n A --> B"
+ },
+ {
+  "name": "railroad-ebnf-beta",
+  "type": "railroad",
+  "labels": [
+   "r",
+   "a",
+   "b"
+  ],
+  "source": "railroad-ebnf-beta\n r = \"a\" | \"b\" ;"
+ },
+ {
+  "name": "usecase-beta",
+  "type": "usecase",
+  "labels": [
+   "User",
+   "Login"
+  ],
+  "source": "usecase-beta\n actor User\n User --> Login"
+ },
+ {
+  "name": "railroad-abnf-beta",
+  "type": "railroad",
+  "labels": [
+   "rule",
+   "a",
+   "b"
+  ],
+  "source": "railroad-abnf-beta\n rule = \"a\" / \"b\";"
+ },
+ {
+  "name": "railroad-peg-beta",
+  "type": "railroad",
+  "labels": [
+   "rule",
+   "a",
+   "b"
+  ],
+  "source": "railroad-peg-beta\n rule <- \"a\" / \"b\";"
+ },
+ {
+  "name": "test-sample.md#0",
+  "type": "flowchart",
+  "labels": [
+   "Markdown Source",
+   "markdown-it Parser",
+   "HTML Output"
+  ],
+  "source": "graph TD\n    A[Markdown Source] --> B[markdown-it Parser]\n    B --> C[HTML Output]\n    C --> D[Webview Panel]\n    D --> E[Live Preview]\n\n    F[Editor Events] --> G[Debounced Update]\n    G --> B\n\n    H[Scroll Events] --> I[Scroll Sync]\n    I --> D"
+ },
+ {
+  "name": "test-sample.md#1",
+  "type": "sequence",
+  "labels": [
+   "Document Changed",
+   "Debounce (300ms)",
+   "Render Markdown"
+  ],
+  "source": "sequenceDiagram\n    participant E as Editor\n    participant X as Extension\n    participant W as Webview\n\n    E->>X: Document Changed\n    X->>X: Debounce (300ms)\n    X->>X: Render Markdown\n    X->>W: updateContent\n    W->>W: Update DOM\n    W->>W: Render Mermaid\n    W->>W: Render KaTeX"
+ },
+ {
+  "name": "docs/landing.md#0",
+  "type": "flowchart",
+  "labels": [
+   "Markdown source",
+   "Markdown engine",
+   "Preview HTML"
+  ],
+  "source": "graph TD\n  A[Markdown source] --> B[Markdown engine]\n  B --> C[Preview HTML]\n  C --> D[Live webview]\n  D --> E[Export to HTML/PDF]"
+ },
+ {
+  "name": "src/test/fixtures/golden-render.md#0",
+  "type": "flowchart",
+  "labels": [
+   "A",
+   "B"
+  ],
+  "source": "graph TD; A-->B"
+ },
+ {
+  "name": "README.md#0",
+  "type": "flowchart",
+  "labels": [
+   "Yes",
+   "No",
+   "Start"
+  ],
+  "source": "graph TD\n    A[Start] --> B{Decision}\n    B -->|Yes| C[Action]\n    B -->|No| D[End]"
+ },
+ {
+  "name": "docs/USER_GUIDE.md#0",
+  "type": "flowchart",
+  "labels": [
+   "Yes",
+   "No",
+   "Start"
+  ],
+  "source": "graph TD\n    A[Start] --> B{Decision}\n    B -->|Yes| C[Action 1]\n    B -->|No| D[Action 2]\n    C --> E[End]\n    D --> E"
+ },
+ {
+  "name": "docs/USER_GUIDE.md#1",
+  "type": "sequence",
+  "labels": [
+   "HTTP Request",
+   "Query",
+   "Results"
+  ],
+  "source": "sequenceDiagram\n    participant Client\n    participant Server\n    participant Database\n\n    Client->>Server: HTTP Request\n    Server->>Database: Query\n    Database-->>Server: Results\n    Server-->>Client: Response"
+ },
+ {
+  "name": "docs/USER_GUIDE.md#2",
+  "type": "class",
+  "labels": [
+   "Animal",
+   "+String name",
+   "+makeSound()"
+  ],
+  "source": "classDiagram\n    class Animal {\n        +String name\n        +makeSound()\n    }\n    class Dog {\n        +fetch()\n    }\n    class Cat {\n        +purr()\n    }\n    Animal <|-- Dog\n    Animal <|-- Cat"
+ },
+ {
+  "name": "docs/USER_GUIDE.md#3",
+  "type": "state",
+  "labels": [
+   "Submit",
+   "Valid",
+   "Invalid"
+  ],
+  "source": "stateDiagram-v2\n    [*] --> Idle\n    Idle --> Processing: Submit\n    Processing --> Success: Valid\n    Processing --> Error: Invalid\n    Error --> Idle: Retry\n    Success --> [*]"
+ },
+ {
+  "name": "docs/USER_GUIDE.md#4",
+  "type": "pie",
+  "labels": [
+   "Development",
+   "Testing",
+   "Documentation"
+  ],
+  "source": "pie title Project Time Allocation\n    \"Development\" : 45\n    \"Testing\" : 25\n    \"Documentation\" : 15\n    \"Planning\" : 15"
+ },
+ {
+  "name": "docs/USER_GUIDE.md#5",
+  "type": "gantt",
+  "labels": [
+   "Project Timeline",
+   "Design",
+   "Prototype"
+  ],
+  "source": "gantt\n    title Project Timeline\n    dateFormat YYYY-MM-DD\n    section Phase 1\n    Design     :a1, 2026-01-01, 30d\n    Prototype  :a2, after a1, 20d\n    section Phase 2\n    Development :b1, after a2, 45d\n    Testing     :b2, after b1, 15d"
+ },
+ {
+  "name": "docs/ARCHITECTURE.md#0",
+  "type": "flowchart",
+  "labels": [
+   "VS Code",
+   "Webview - Browser Sandbox",
+   "Extension Host - Node.js"
+  ],
+  "source": "graph LR\n    subgraph VS Code\n        subgraph Extension Host - Node.js\n            EXT[extension.ts]\n            PM[previewManager.ts]\n            MR[messageRouter.ts]\n            EB[previewEventBindings.ts]\n            ME[MarkdownEngine]\n            CORE[markdownCore.ts]\n            SS1[ScrollSync]\n            CH1[checkboxHandler.ts]\n            subgraph Export Subsystem - src/export/\n                EM[exportManager.ts]\n                HB[standaloneHtmlBuilder.ts]\n                HS[htmlSanitizer.ts]\n                PDF[pdfExporter.ts]\n                BF[browserFinder.ts]\n            end\n        end\n        subgraph Webview - Browser Sandbox\n            MAIN[main.ts]\n            REN[renderer.ts]\n            DIFF[domDiff.ts]\n            VL[vendorLoader.ts]\n            TB[toolbar.ts + aboutPopup.ts]\n            TOC[toc.ts]\n            STB[statsBar.ts]\n            PRES[presentation.ts]\n            SS2[scrollSync.ts]\n            COPY[copyButton.ts]\n            BH[blockHighlighter.ts]\n            CH2[checkboxHandler.ts]\n            NAV[navigationHandler.ts]\n        end\n    end\n\n    EXT --> PM\n    EXT --> EM\n    PM --> MR\n    PM --> EB\n    PM --> ME\n    ME --> CORE\n    PM --> SS1\n    EM --> ME\n    EM --> HB\n    HB --> HS\n    EM --> PDF\n    PDF --> BF\n    MR -.->|executeCommand| EM\n    PM <-->|postMessage| MAIN\n    MAIN --> REN\n    REN --> DIFF\n    REN --> VL\n    MAIN --> TB\n    MAIN --> TOC\n    MAIN --> STB\n    TB --> PRES\n    MAIN --> SS2\n    MAIN --> COPY\n    MAIN --> BH\n    MAIN --> CH2\n    MAIN --> NAV"
+ },
+ {
+  "name": "docs/ARCHITECTURE.md#1",
+  "type": "sequence",
+  "labels": [
+   "ready",
+   "onDidChangeTextDocument",
+   "debounce (300ms)"
+  ],
+  "source": "sequenceDiagram\n    participant Editor\n    participant PreviewManager\n    participant MarkdownEngine\n    participant Webview\n\n    Note over Webview: Panel loads\n    Webview->>PreviewManager: ready\n\n    Note over Editor: User edits document\n    Editor->>PreviewManager: onDidChangeTextDocument\n    PreviewManager->>PreviewManager: debounce (300ms)\n    PreviewManager->>MarkdownEngine: render(text)\n    MarkdownEngine-->>PreviewManager: { html }\n    PreviewManager->>Webview: updateContent\n\n    Note over Webview: User clicks checkbox\n    Webview->>PreviewManager: toggleCheckbox(line, checked)\n    PreviewManager->>Editor: WorkspaceEdit (toggle [ ]/[x])\n\n    Note over Editor: User scrolls\n    Editor->>PreviewManager: onDidChangeVisibleRanges\n    PreviewManager->>Webview: scrollToLine(line)\n\n    Note over Webview: User scrolls preview\n    Webview->>PreviewManager: revealLine(line)\n    PreviewManager->>Editor: revealRange(line)"
+ },
+ {
+  "name": "docs/ARCHITECTURE.md#2",
+  "type": "flowchart",
+  "labels": [
+   "getVisibleLine",
+   "scrollToLine",
+   "revealLine"
+  ],
+  "source": "graph LR\n    A[Editor Scroll] -->|getVisibleLine| B[ScrollSync]\n    B -->|scrollToLine| C[Webview]\n    C -->|revealLine| D[ScrollSync]\n    D -->|revealEditorLine| A\n\n    B -->|lock 300ms| B\n    D -->|lock 300ms| D"
+ },
+ {
+  "name": "docs/ARCHITECTURE.md#3",
+  "type": "flowchart",
+  "labels": [
+   "Webpack",
+   "MiniCssExtract",
+   "CopyWebpackPlugin"
+  ],
+  "source": "graph TD\n    SRC[src/extension.ts] -->|Webpack| DIST1[dist/extension.js<br/>CommonJS / Node.js]\n    CORE[src/markdownCore.ts] -->|Webpack| DIST0[dist/markdownCore.js<br/>CommonJS / Node.js]\n    WEB[webview/main.ts] -->|Webpack| DIST2[dist/webview/main.js<br/>Browser bundle]\n    CSS[webview/styles/*.css] -->|MiniCssExtract| DIST3[dist/webview/main.css]\n    VENDOR[node_modules] -->|CopyWebpackPlugin| DIST4[dist/webview/vendor/<br/>katex, mermaid, hljs]\n    EXC[webview/excalidrawUtils.ts] -->|Webpack| DIST5[dist/webview/vendor/<br/>excalidraw-utils.min.js]"
+ },
+ {
+  "name": "docs/API.md#0",
+  "type": "flowchart",
+  "labels": [
+   "updateContent",
+   "scrollToLine",
+   "configChanged"
+  ],
+  "source": "graph LR\n    E[Extension Host] -->|updateContent| W[Webview]\n    E -->|scrollToLine| W\n    E -->|configChanged| W"
+ },
+ {
+  "name": "docs/API.md#1",
+  "type": "flowchart",
+  "labels": [
+   "ready",
+   "revealLine",
+   "toggleCheckbox"
+  ],
+  "source": "graph LR\n    W[Webview] -->|ready| E[Extension Host]\n    W -->|revealLine| E\n    W -->|toggleCheckbox| E\n    W -->|navigateToLine| E\n    W -->|openLink| E\n    W -->|exportToPdf| E\n    W -->|exportToHtml| E"
+ },
+ {
+  "name": "example:architecture-beta#0",
+  "type": "architecture",
+  "labels": [
+   "Disk",
+   "Gateway"
+  ],
+  "source": "architecture-beta\n    service left_disk(disk)[Disk]\n    service top_disk(disk)[Disk]\n    service bottom_disk(disk)[Disk]\n    service top_gateway(internet)[Gateway]\n    service bottom_gateway(internet)[Gateway]\n    junction junctionCenter\n    junction junctionRight\n\n    left_disk:R -- L:junctionCenter\n    top_disk:B -- T:junctionCenter\n    bottom_disk:T -- B:junctionCenter\n    junctionCenter:R -- L:junctionRight\n    top_gateway:B -- T:junctionRight\n    bottom_gateway:T -- B:junctionRight\n"
+ },
+ {
+  "name": "example:agentflow-beta#0",
+  "type": "agentflow",
+  "labels": [
+   "Output",
+   "Intake",
+   "Processing"
+  ],
+  "source": "agentflow-beta TB\n  flow intake[\"Intake\"]\n    receive[\"Receive request\"]@{ shape: input }\n  end\n\n  flow processing[\"Processing\"]\n    validate[\"Validate\"]@{ shape: task }\n    enrich[\"Enrich\"]@{ shape: task }\n    validate --> enrich\n  end\n  processing@{ view: \"collapsed\" }\n\n  flow output[\"Output\"]\n    publish[\"Publish\"]@{ shape: action }\n  end\n\n  receive --> validate\n  enrich --> publish\n"
+ },
+ {
+  "name": "example:---#6",
+  "type": "venn",
+  "labels": [
+   "What makes a good feature",
+   "Desirable",
+   "Feasible"
+  ],
+  "source": "---\nconfig:\n  theme: default\n  look: classic\n---\nvenn-beta\n  title What makes a good feature\n  set Desirable\n  set Feasible\n  set Viable\n  union Desirable,Feasible[\"Buildable\"]\n  union Feasible,Viable[\"Sustainable\"]\n  union Desirable,Viable[\"Marketable\"]\n  union Desirable,Feasible,Viable[\"Ship it\"]\n"
+ },
+ {
+  "name": "example:---#11",
+  "type": "xychart",
+  "labels": [
+   "Animals seen in reef survey of 2025",
+   "0",
+   "20"
+  ],
+  "source": "---\nconfig:\n    xyChart:\n        showDataLabel: true\n        showDataLabelOutsideBar: true\n---\nxychart\n    title \"Animals seen in reef survey of 2025\"\n    x-axis [turtles, eels, tangs, wrasses, \"parrot fish\", other]\n    y-axis \"Number of Animals\" 0 --> 30\n    bar [12,2,20,25,17,24]\n"
+ },
+ {
+  "name": "example:---#12",
+  "type": "treemap",
+  "labels": [
+   "Budget",
+   "Operations",
+   "Marketing"
+  ],
+  "source": "---\nconfig:\n  treemap:\n    valueFormat: '$0,0'\n---\ntreemap-beta\n\"Budget\"\n    \"Operations\"\n        \"Salaries\": 700000\n        \"Equipment\": 200000\n        \"Supplies\": 100000\n    \"Marketing\"\n        \"Advertising\": 400000\n        \"Events\": 100000\n"
+ },
+ {
+  "name": "example:---#13",
+  "type": "radar",
+  "labels": [
+   "Grades",
+   "Math",
+   "Science"
+  ],
+  "source": "---\ntitle: \"Grades\"\n---\nradar-beta\n  axis m[\"Math\"], s[\"Science\"], e[\"English\"]\n  axis h[\"History\"], g[\"Geography\"], a[\"Art\"]\n  curve a[\"Alice\"]{85, 90, 80, 70, 75, 90}\n  curve b[\"Bob\"]{70, 75, 85, 80, 90, 85}\n\n  max 100\n  min 0\n"
+ },
+ {
+  "name": "example:---#17",
+  "type": "sankey",
+  "labels": [
+   "Electricity grid",
+   "Heating and cooling - homes",
+   "Industry"
+  ],
+  "source": "---\nconfig:\n  sankey:\n    showValues: false\n    nodeWidth: 15\n    nodePadding: 20\n---\nsankey\n\nElectricity grid,Heating and cooling - homes,113.726\nElectricity grid,Industry,342.165\nElectricity grid,Losses,56.691\n"
+ },
+ {
+  "name": "example:swimlane-beta#0",
+  "type": "swimlane",
+  "labels": [
+   "System",
+   "Reviewer",
+   "Applicant"
+  ],
+  "source": "swimlane-beta LR\n  subgraph Applicant\n    apply[Submit application]\n    sign[Sign agreement]\n  end\n\n  subgraph Reviewer\n    screen[Screen application]\n    decide{Approved?}\n  end\n\n  subgraph System\n    create[Create account]\n    notify[Send welcome email]\n  end\n\n  apply -->|Application received| screen\n  screen --> decide\n  decide -->|Approved| create --> notify --> sign\n  decide -->|Needs changes| apply\n"
+ },
+ {
+  "name": "example:railroad-beta#0",
+  "type": "railroad",
+  "labels": [
+   "Expression Grammar",
+   "expression",
+   "term"
+  ],
+  "source": "railroad-beta\ntitle Expression Grammar\n\nexpression = sequence(\n    nonterminal(\"term\"),\n    zeroOrMore(sequence(\n        choice(terminal(\"+\"), terminal(\"-\")),\n        nonterminal(\"term\")\n    ))\n) ;\nterm = sequence(\n    nonterminal(\"factor\"),\n    zeroOrMore(sequence(\n        choice(terminal(\"*\"), terminal(\"/\")),\n        nonterminal(\"factor\")\n    ))\n) ;\nfactor = choice(\n    nonterminal(\"number\"),\n    sequence(terminal(\"(\"), nonterminal(\"expression\"), terminal(\")\"))\n) ;\nnumber = oneOrMore(nonterminal(\"digit\")) ;\ndigit = choice(terminal(\"0\"), terminal(\"1\"), terminal(\"2\"), terminal(\"3\"), terminal(\"4\"), terminal(\"5\"), terminal(\"6\"), terminal(\"7\"), terminal(\"8\"), terminal(\"9\")) ;\n"
+ },
+ {
+  "name": "example:timeline#0",
+  "type": "timeline",
+  "labels": [
+   "Timeline of the Hawaiian Islands",
+   "Older islands",
+   "Kaua\u02bbi"
+  ],
+  "source": "timeline\n    title Timeline of the Hawaiian Islands\n    section Older islands\n        Kaua\u02bbi : 5 million years old, Canyons, Sea <br>cliffs\n        O\u02bbahu : 3 million years old, Diamond Head, Surf breaks\n        Moloka\u02bbi : 2 million years old, Fishponds, Tall cliffs\n    section Younger islands\n        Maui : 1 million years old, Haleakal\u0101, Whale watching\n        Hawai\u02bbi : Still growing, Mauna Kea, K\u012blauea\n"
+ },
+ {
+  "name": "example:eventmodeling#0",
+  "type": "eventmodeling",
+  "labels": [
+   "CartUI",
+   "AddItem",
+   "description: 'john'"
+  ],
+  "source": "eventmodeling\n\ntimeframe 01 ui CartUI\ntimeframe 02 command AddItem [[AddItem01]]\ntimeframe 03 event ItemAdded [[ItemAdded]]\ntimeframe 04 command AddItem [[AddItem02]]\ntimeframe 05 event ItemAdded [[ItemAdded]]\n\ndata AddItem01 {\n  description: 'john'\n  image: 'avatar_john'\n  price: 20.4\n}\n\ndata AddItem02 {\n  description: 'jack'\n  image: 'avatar_jack'\n  price: 12.5\n}\n\ndata ItemAdded {\n  description: string\n  image: string\n  price: number\n}\n"
+ },
+ {
+  "name": "example:wardley-beta#0",
+  "type": "wardley",
+  "labels": [
+   "Tea Shop Value Chain",
+   "Business",
+   "Cup of Tea"
+  ],
+  "source": "wardley-beta\ntitle Tea Shop Value Chain\n\nanchor Business [0.95, 0.63]\ncomponent Cup of Tea [0.79, 0.61]\ncomponent Tea [0.63, 0.81]\ncomponent Hot Water [0.52, 0.80]\ncomponent Kettle [0.43, 0.35]\ncomponent Power [0.10, 0.70]\n\nBusiness -> Cup of Tea\nCup of Tea -> Tea\nCup of Tea -> Hot Water\nHot Water -> Kettle\nKettle -> Power\n\nevolve Kettle 0.62\nevolve Power 0.89\n\nnote \"Standardizing power allows Kettles to evolve faster\" [0.30, 0.49]\n"
+ },
+ {
+  "name": "example:mindmap#0",
+  "type": "mindmap",
+  "labels": [
+   "History",
+   "Old legends",
+   "Voyaging"
+  ],
+  "source": "mindmap\n  root((Hawai\u02bbi))\n    History\n      Old legends\n      ::icon(fa fa-book)\n      Voyaging\n        Polynesian navigators who sailed by the stars\n    Nature\n      Mountains<br/>and volcanoes\n      Ocean life\n        Reef\n            Sea turtles\n            Monk seals\n            Parrotfish\n    Culture\n      Hula and lei\n      \u02bbUkulele\n"
+ },
+ {
+  "name": "example:block#0",
+  "type": "block",
+  "labels": [
+   "Label"
+  ],
+  "source": "block\n  blockArrowId<[\"Label\"]>(right)\n  blockArrowId2<[\"Label\"]>(left)\n  blockArrowId3<[\"Label\"]>(up)\n  blockArrowId4<[\"Label\"]>(down)\n  blockArrowId5<[\"Label\"]>(x)\n  blockArrowId6<[\"Label\"]>(y)\n  blockArrowId7<[\"Label\"]>(x, down)\n"
+ },
+ {
+  "name": "example:cynefin-beta#0",
+  "type": "cynefin",
+  "labels": [
+   "Strategy Categorization",
+   "Market research",
+   "Competitive analysis"
+  ],
+  "source": "cynefin-beta\n  title Strategy Categorization\n\n  complex\n    \"Market research\"\n\n  complicated\n    \"Competitive analysis\"\n\n  clear\n    \"Standard pricing\"\n\n  chaotic\n    \"Crisis management\"\n\n  complex --> complicated : \"Pattern identified\"\n  complicated --> clear : \"Best practice codified\"\n  clear --> chaotic : \"Complacency\"\n  chaotic --> complex : \"Stabilized\"\n"
+ }
+]

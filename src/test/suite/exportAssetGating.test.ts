@@ -3,6 +3,7 @@ import * as fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';
 import * as vscode from 'vscode';
+import { JSDOM, VirtualConsole } from 'jsdom';
 import { MarkdownEngine } from '../../markdownEngine';
 import { StandaloneHtmlBuilder } from '../../export/standaloneHtmlBuilder';
 import { generatePdf, renderInBrowser } from '../../export/pdfExporter';
@@ -12,7 +13,8 @@ import { PreviewConfig } from '../../types/messages';
 // Export asset gating regression tests (issue #74): an export must embed only
 // the vendor runtimes the rendered document actually uses. A document with no
 // math embeds no KaTeX script, stylesheet or base64 fonts; a document with no
-// mermaid/excalidraw blocks reads neither diagram bundle from disk.
+// mermaid/excalidraw blocks reads neither diagram bundle from disk. Mermaid
+// fences render through pele (#156), so pele.min.js is the mermaid bundle.
 
 const repoRoot = path.resolve(__dirname, '..', '..', '..');
 
@@ -33,7 +35,7 @@ const MERMAID_MD = '```mermaid\ngraph TD; A["start"]-->B["end"]\n```\n';
 const EXCALIDRAW_MD = '```excalidraw\n{"elements": []}\n```\n';
 const PLAIN_MD = '# Title\n\nSome plain text with `code` and a list:\n\n- one\n- two\n';
 
-const VENDOR_BUNDLE = /(?:^|[/\\])(katex\.min\.js|mermaid\.min\.js|excalidraw-utils\.min\.js)$/;
+const VENDOR_BUNDLE = /(?:^|[/\\])(katex\.min\.js|pele\.min\.js|excalidraw-utils\.min\.js)$/;
 const KATEX_CSS = /(?:^|[/\\])katex\.min\.css$/;
 const FONT_FILE = /[/\\]fonts[/\\]/;
 
@@ -59,6 +61,43 @@ function chromeAvailable(): boolean {
 
 function countDataFontUrls(doc: string): number {
   return (doc.match(/url\(data:font\//g) || []).length;
+}
+
+// The slice of a jsdom window the export render-script tests read and stub.
+interface ExportElement {
+  textContent: string | null;
+  innerHTML: string;
+  open?: boolean;
+  classList: { contains(c: string): boolean };
+  getAttribute(name: string): string | null;
+  querySelector(sel: string): ExportElement | null;
+}
+interface ExportWindow {
+  __exportRenderComplete?: boolean;
+  pele?: unknown;
+  ExcalidrawUtils?: unknown;
+  document: { querySelector(sel: string): ExportElement | null };
+}
+
+// Run a buildForBrowser document in jsdom with its scripts live (jsdom
+// ignores the CSP and nonces) and wait for the render script's completion
+// flag — the same flag pdfExporter waits on. `setup` runs before parsing, so
+// a stubbed renderer is in place when the inlined scripts execute.
+async function runExportDocument(
+  html: string,
+  setup?: (window: ExportWindow) => void
+): Promise<ExportWindow> {
+  const dom = new JSDOM(html, {
+    runScripts: 'dangerously',
+    virtualConsole: new VirtualConsole(),
+    beforeParse: (window) => setup?.(window as unknown as ExportWindow),
+  });
+  const window = dom.window as unknown as ExportWindow;
+  const deadline = Date.now() + 10000;
+  while (window.__exportRenderComplete !== true && Date.now() < deadline) {
+    await new Promise((resolve) => setTimeout(resolve, 10));
+  }
+  return window;
 }
 
 suite('export asset gating (#74)', () => {
@@ -99,7 +138,7 @@ suite('export asset gating (#74)', () => {
       );
       await builder.buildForBrowser(html, 'full', docUri);
 
-      for (const name of ['katex.min.js', 'mermaid.min.js', 'excalidraw-utils.min.js']) {
+      for (const name of ['katex.min.js', 'pele.min.js', 'excalidraw-utils.min.js']) {
         assert.ok(
           reads.some((p) => p.endsWith(name)),
           `expected ${name} to be read, saw: ${JSON.stringify(reads)}`
@@ -211,6 +250,162 @@ suite('export asset gating (#74)', () => {
       for (const p of reads) {
         assert.ok(!VENDOR_BUNDLE.test(p), `vendor bundle read on prose mention: ${p}`);
       }
+    });
+  });
+
+  suite('export render script (jsdom, #156)', function () {
+    this.timeout(30000);
+    // No dist/ here: every vendor read fails and embeds an empty script, so
+    // a test controls the renderer through its beforeParse stub alone.
+    const bare = new StandaloneHtmlBuilder(vscode.Uri.file('/nonexistent-extension-dir'));
+    const MERMAID_DOC = new MarkdownEngine({ ...BASE_CONFIG }).render(MERMAID_MD).html;
+
+    test('without pele the export still signals completion and keeps the source', async () => {
+      const html = await bare.buildForBrowser(MERMAID_DOC, 'no-pele', docUri);
+      const window = await runExportDocument(html);
+      assert.strictEqual(window.__exportRenderComplete, true, 'export never signalled completion');
+      const block = window.document.querySelector('.mermaid-block')!;
+      assert.strictEqual(block.getAttribute('data-processed'), 'false');
+      assert.ok(block.querySelector('pre.mermaid'), 'source <pre> lost without a renderer');
+    });
+
+    test('pele is called with links disabled and an export id prefix', async () => {
+      const calls: Array<{ code: string; opts: { idPrefix?: string; links?: boolean } }> = [];
+      const html = await bare.buildForBrowser(MERMAID_DOC, 'stub', docUri);
+      const window = await runExportDocument(html, (w) => {
+        w.pele = {
+          render(code: string, opts: { idPrefix?: string; links?: boolean }) {
+            calls.push({ code, opts });
+            return { svg: '<svg class="stub-svg"></svg>' };
+          },
+        };
+      });
+      assert.strictEqual(window.__exportRenderComplete, true);
+      assert.strictEqual(calls.length, 1);
+      assert.strictEqual(calls[0].opts.links, false, 'export rendered without links: false');
+      assert.strictEqual(calls[0].opts.idPrefix, 'mermaid-export-0-');
+      const block = window.document.querySelector('.mermaid-block')!;
+      assert.ok(block.classList.contains('mermaid-rendered'), 'block not marked rendered');
+      assert.ok(block.querySelector('svg.stub-svg'), 'rendered svg not injected');
+    });
+
+    test('a non-PeleError throw yields a readable, textContent-only error', async () => {
+      const html = await bare.buildForBrowser(MERMAID_DOC, 'string-throw', docUri);
+      const window = await runExportDocument(html, (w) => {
+        w.pele = {
+          render() {
+            throw '<b>bold</b> plain string failure';
+          },
+        };
+      });
+      assert.strictEqual(window.__exportRenderComplete, true);
+      const error = window.document.querySelector('.mermaid-error')!;
+      assert.ok(error, 'no readable error block');
+      assert.ok(error.querySelector('.mermaid-error-lead'), 'error lead missing');
+      const raw = error.querySelector('details.mermaid-error-details .mermaid-error-raw')!;
+      assert.strictEqual(raw.textContent, '<b>bold</b> plain string failure');
+      assert.strictEqual(error.querySelector('b'), null, 'thrown text was parsed as markup');
+    });
+
+    test('a hostile error message renders as text with the document-line lead', async () => {
+      const html = await bare.buildForBrowser(MERMAID_DOC, 'hostile', docUri);
+      const window = await runExportDocument(html, (w) => {
+        w.pele = {
+          render() {
+            throw new Error('<img src=x onerror=alert(1)><script>alert(2)</script>');
+          },
+        };
+      });
+      assert.strictEqual(window.__exportRenderComplete, true);
+      const error = window.document.querySelector('.mermaid-error')!;
+      assert.ok(error, 'no readable error block');
+      assert.strictEqual(error.querySelector('img'), null, 'error message injected an <img>');
+      assert.strictEqual(error.querySelector('script'), null, 'error message injected a <script>');
+      assert.ok(
+        error.querySelector('.mermaid-error-lead')!.textContent!.includes('document line 1'),
+        `lead does not name the fence line: ${error.textContent}`
+      );
+      assert.strictEqual(
+        error.querySelector('.mermaid-error-raw')!.textContent,
+        '<img src=x onerror=alert(1)><script>alert(2)</script>'
+      );
+    });
+
+    test('a throw that escapes every block handler still signals completion', async () => {
+      const doc = new MarkdownEngine({ ...BASE_CONFIG }).render(EXCALIDRAW_MD).html;
+      const html = await bare.buildForBrowser(doc, 'escaping-throw', docUri);
+      const window = await runExportDocument(html, (w) => {
+        // The renderer feature check runs outside every per-block try, so a
+        // throwing getter there reaches only the script-wide finally.
+        w.ExcalidrawUtils = {
+          get exportToSvg(): never {
+            throw new Error('renderer probe failed');
+          },
+        };
+      });
+      assert.strictEqual(window.__exportRenderComplete, true, 'render script stalled the export');
+      const block = window.document.querySelector('.excalidraw-block')!;
+      assert.strictEqual(block.getAttribute('data-processed'), 'false', 'a block handler ran');
+    });
+
+    test('an excalidraw rejection with no message yields a readable error', async () => {
+      const doc = new MarkdownEngine({ ...BASE_CONFIG }).render(EXCALIDRAW_MD).html;
+      const html = await bare.buildForBrowser(doc, 'null-rejection', docUri);
+      const window = await runExportDocument(html, (w) => {
+        w.ExcalidrawUtils = {
+          exportToSvg: () => Promise.reject(null),
+        };
+      });
+      assert.strictEqual(window.__exportRenderComplete, true);
+      const block = window.document.querySelector('.excalidraw-block')!;
+      assert.strictEqual(block.getAttribute('data-processed'), 'true');
+      const error = block.querySelector('.excalidraw-error')!;
+      assert.ok(error, 'no readable excalidraw error block');
+      assert.match(
+        error.querySelector('.excalidraw-error-lead')!.textContent || '',
+        /The `excalidraw` diagram at document line \d+ could not be rendered\./
+      );
+      const details = error.querySelector('details.excalidraw-error-details')!;
+      assert.strictEqual(details.open, true, 'raw message is collapsed in the export');
+      assert.strictEqual(details.querySelector('.excalidraw-error-raw')!.textContent, 'null');
+    });
+
+    test('a hostile excalidraw error message renders as text', async () => {
+      const doc = new MarkdownEngine({ ...BASE_CONFIG }).render(EXCALIDRAW_MD).html;
+      const html = await bare.buildForBrowser(doc, 'excalidraw-hostile', docUri);
+      const hostile = '<img src=x onerror=alert(1)><script>alert(2)</script>';
+      const window = await runExportDocument(html, (w) => {
+        w.ExcalidrawUtils = {
+          exportToSvg: () => Promise.reject(new Error(hostile)),
+        };
+      });
+      assert.strictEqual(window.__exportRenderComplete, true);
+      const error = window.document.querySelector('.excalidraw-error')!;
+      assert.ok(error, 'no readable excalidraw error block');
+      assert.strictEqual(error.querySelector('img'), null, 'error message injected an <img>');
+      assert.strictEqual(error.querySelector('script'), null, 'error message injected a <script>');
+      assert.strictEqual(error.querySelector('.excalidraw-error-raw')!.textContent, hostile);
+    });
+
+    test('real pele shows a syntax error in place, with the raw message open', async () => {
+      const broken = new MarkdownEngine({ ...BASE_CONFIG }).render(
+        '# Broken\n\n```mermaid\nflowchart LR\n  A -->\n```\n'
+      ).html;
+      const builder = new StandaloneHtmlBuilder(vscode.Uri.file(repoRoot));
+      const html = await builder.buildForBrowser(broken, 'syntax', docUri);
+      const window = await runExportDocument(html);
+      assert.strictEqual(window.__exportRenderComplete, true);
+      assert.ok(window.pele, 'pele.min.js was not inlined into the export');
+      const error = window.document.querySelector('.mermaid-error')!;
+      assert.ok(error, 'syntax error did not produce a readable error block');
+      assert.ok(
+        error.querySelector('.mermaid-error-lead')!.textContent!.includes('document line 3'),
+        `lead does not name the fence line: ${error.textContent}`
+      );
+      const details = error.querySelector('details.mermaid-error-details')!;
+      assert.strictEqual(details.open, true, 'raw message is collapsed in the export');
+      assert.match(details.textContent || '', /Parse error/);
+      assert.ok(window.document.querySelector('h1'), 'rest of the document did not render');
     });
   });
 

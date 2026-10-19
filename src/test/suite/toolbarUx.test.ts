@@ -68,6 +68,7 @@ interface ToolbarModule {
 }
 interface RendererModule {
   watchThemeChanges(): { disconnect(): void };
+  updateContent(html: string): Promise<void>;
   THEME_CHANGE_DEBOUNCE: number;
 }
 interface TocModule {
@@ -83,6 +84,7 @@ interface TestWindow {
   IntersectionObserver?: unknown;
   setTimeout(handler: () => void, timeout: number): number;
   clearTimeout(id: number): void;
+  pele?: unknown;
 }
 
 interface FakeVscodeState {
@@ -569,6 +571,43 @@ suite('preview toolbar UX (#66, #67, #69)', () => {
       assert.strictEqual(themeButton.getAttribute('aria-label'), 'Switch to dark theme');
       assert.strictEqual(themeButton.getAttribute('aria-pressed'), 'false');
       assert.strictEqual(themeButton.dataset.label, 'Switch to dark theme');
+    });
+  });
+
+  suite('pele diagrams follow the theme (#156)', () => {
+    test('a host theme switch recolours mermaid via CSS without re-rendering it', async () => {
+      const { document, window } = makeDom();
+      document.body.classList.add('vscode-light');
+      const content = document.createElement('div');
+      content.setAttribute('id', 'preview-content');
+      document.body.appendChild(content);
+      Object.defineProperty(window, 'scrollTo', { configurable: true, value: () => undefined });
+      let renders = 0;
+      window.pele = {
+        render() {
+          renders++;
+          return { svg: '<svg class="pele-stub"></svg>' };
+        },
+      };
+      const renderer = loadWebviewModule<RendererModule>('renderer.ts', document, window);
+      await renderer.updateContent(
+        '<div class="mermaid-block" data-processed="false" data-source="graph TD; A--&gt;B">' +
+          '<pre class="mermaid">graph TD; A--&gt;B</pre></div>'
+      );
+      assert.strictEqual(renders, 1, 'initial render did not call pele.render');
+      const svg = document.querySelector('.mermaid-block svg');
+      assert.ok(svg, 'pele SVG not injected');
+
+      const observer = renderer.watchThemeChanges();
+      document.body.classList.remove('vscode-light');
+      document.body.classList.add('vscode-dark');
+      await sleep(renderer.THEME_CHANGE_DEBOUNCE + 40);
+      observer.disconnect();
+
+      assert.strictEqual(renders, 1, 'theme switch re-rendered the mermaid diagram');
+      assert.strictEqual(document.querySelector('.mermaid-block svg'), svg, 'SVG node replaced');
+      const block = document.querySelector('.mermaid-block')!;
+      assert.strictEqual(block.getAttribute('data-processed'), 'true');
     });
   });
 });

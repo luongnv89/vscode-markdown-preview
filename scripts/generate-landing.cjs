@@ -255,13 +255,11 @@ async function getFaviconDataUri() {
 // The vendor payloads the page links as separate cacheable files, selected by
 // the shared content probe (detectVendorNeeds — the same gate the preview and
 // export use). A landing document with no math ships neither KaTeX's script,
-// stylesheet nor fonts, and one with no diagrams drops mermaid's ~5.5 MB
-// bundle entirely (issue #78).
+// stylesheet nor fonts, and one with no diagrams drops the ~0.7 MB pele
+// bundle (the Mermaid renderer) entirely (issue #78).
 function planVendorAssets(needs) {
   return {
-    scripts: [needs.math ? 'katex.min.js' : '', needs.mermaid ? 'mermaid.min.js' : ''].filter(
-      Boolean
-    ),
+    scripts: [needs.math ? 'katex.min.js' : '', needs.mermaid ? 'pele.min.js' : ''].filter(Boolean),
     styles: needs.math ? ['katex.min.css'] : [],
     dirs: needs.math ? ['fonts'] : [],
   };
@@ -387,8 +385,8 @@ ${jsonLd}
 
 // The client-side script shipped as assets/landing.js: theme toolbar with
 // localStorage persistence, copy buttons on code blocks, KaTeX rendering,
-// Mermaid rendering. Loaded with `defer` after the gated vendor scripts, so
-// their globals are defined when this IIFE runs.
+// Mermaid rendering through pele. Loaded with `defer` after the gated vendor
+// scripts, so their globals are defined when this IIFE runs.
 const LANDING_SCRIPT = `
 const COPY_ICON = '<svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="5" y="5" width="8" height="8" rx="1" stroke="currentColor" stroke-width="1.2"/><path d="M3 11V3C3 2.44772 3.44772 2 4 2H10" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>';
 const CHECK_ICON = '<svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M3 8.5L6.5 12L13 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>';
@@ -483,37 +481,66 @@ function ensureThemeToolbar(initialTheme) {
   toolbar.appendChild(button);
   document.body.appendChild(toolbar);
   setTheme(initialTheme, button);
-  button.addEventListener('click', async () => {
+  // No diagram re-render on toggle: pele's SVG reads its colours from the
+  // --pele-* custom properties the stylesheet derives from the
+  // body.preview-theme-* tokens, so the class swap alone recolours it.
+  button.addEventListener('click', () => {
     const nextTheme = document.body.classList.contains('preview-theme-dark') ? 'light' : 'dark';
     setTheme(nextTheme, button);
-    await renderMermaid(nextTheme);
   });
 }
 
-async function renderMermaid(theme) {
-  if (typeof mermaid === 'undefined') return;
-  mermaid.initialize({ startOnLoad: false, theme: theme === 'dark' ? 'dark' : 'default', securityLevel: 'strict', layout: 'dagre', look: 'classic' });
-  var blocks = document.querySelectorAll('.mermaid-block');
+// Readable, textContent-only diagram error (the parser message is untrusted
+// text): the same mermaid-error / -lead / -details / -raw structure the
+// preview builds.
+function buildMermaidError(err) {
+  var errorDiv = document.createElement('div');
+  errorDiv.className = 'mermaid-error';
+  var lead = document.createElement('div');
+  lead.className = 'mermaid-error-lead';
+  lead.textContent = 'This \`mermaid\` diagram could not be rendered.';
+  var details = document.createElement('details');
+  details.className = 'mermaid-error-details';
+  var summary = document.createElement('summary');
+  summary.textContent = 'Diagram error details';
+  var raw = document.createElement('pre');
+  raw.className = 'mermaid-error-raw';
+  raw.textContent = err && err.message ? String(err.message) : String(err);
+  details.appendChild(summary);
+  details.appendChild(raw);
+  errorDiv.appendChild(lead);
+  errorDiv.appendChild(details);
+  return errorDiv;
+}
+
+// Render each unprocessed .mermaid-block once through pele (synchronous;
+// throws a PeleError on bad input). links: false drops the <a href> a click
+// directive would otherwise emit.
+function renderMermaid() {
+  if (typeof pele === 'undefined') return;
+  var blocks = document.querySelectorAll('.mermaid-block[data-processed="false"]');
   for (var i = 0; i < blocks.length; i++) {
     var block = blocks[i];
     var pre = block.querySelector('pre.mermaid');
-    var code = block.getAttribute('data-mermaid-source') || (pre ? pre.textContent || '' : '');
+    var code = pre ? pre.textContent || '' : '';
     if (!code) continue;
-    block.setAttribute('data-mermaid-source', code);
-    var id = 'mermaid-export-' + theme + '-' + i;
     try {
-      var result = await mermaid.render(id, code);
+      var result = pele.render(code, {
+        idPrefix: 'mermaid-landing-' + i + '-',
+        fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif",
+        links: false
+      });
       block.innerHTML = result.svg;
-      block.setAttribute('data-processed', 'true');
       block.classList.add('mermaid-rendered');
     } catch (err) {
-      block.innerHTML = '<div class="mermaid-error">Diagram error: ' + err.message + '</div>';
-      block.setAttribute('data-processed', 'true');
+      block.textContent = '';
+      block.appendChild(buildMermaidError(err));
     }
+    block.setAttribute('data-processed', 'true');
   }
 }
 
-(async function() {
+(function() {
   const initialTheme = getStoredTheme();
   setTheme(initialTheme);
   ensureThemeToolbar(initialTheme);
@@ -526,7 +553,7 @@ async function renderMermaid(theme) {
     });
   }
   wrapCodeBlocks();
-  await renderMermaid(initialTheme);
+  renderMermaid();
 })();
 `;
 
@@ -597,9 +624,11 @@ async function main() {
 // Exported for tests (src/test/suite/buildDeps.test.ts,
 // src/test/suite/sharedEngine.test.ts, src/test/suite/landingPage.test.ts) —
 // the landing generator renders through the compiled shared engine, which
-// must keep producing checkbox markup without markdown-it-task-lists, and the
-// asset plan pins the content gate's mapping without a second full build.
-module.exports = { createLandingRenderer, planVendorAssets, generateLanding: main };
+// must keep producing checkbox markup without markdown-it-task-lists, the
+// asset plan pins the content gate's mapping without a second full build, and
+// LANDING_SCRIPT is run in jsdom to pin the diagram render options and error
+// path.
+module.exports = { createLandingRenderer, planVendorAssets, generateLanding: main, LANDING_SCRIPT };
 
 if (require.main === module) {
   main().catch((error) => {

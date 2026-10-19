@@ -23,9 +23,11 @@ const VENDORS: Record<VendorKey, VendorSpec> = {
     stylesheetAttr: 'vendorKatexCss',
     isReady: () => typeof window.katex !== 'undefined',
   },
+  // Keyed by the fence language: ```mermaid blocks render through pele,
+  // whose IIFE bundle defines window.pele.
   mermaid: {
     uriAttr: 'vendorMermaid',
-    isReady: () => typeof window.mermaid !== 'undefined',
+    isReady: () => !!window.pele,
   },
   excalidraw: {
     uriAttr: 'vendorExcalidraw',

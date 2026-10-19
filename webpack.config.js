@@ -141,6 +141,9 @@ const webviewConfig = {
   output: {
     path: path.resolve(__dirname, 'dist', 'webview'),
     filename: '[name].js',
+    // Wipe dist/webview before emitting so a vendor file the build no longer
+    // copies (e.g. the pre-pele mermaid bundle) cannot linger and ship.
+    clean: true,
   },
   resolve: {
     extensions: ['.ts', '.js'],
@@ -176,7 +179,9 @@ const webviewConfig = {
         { from: 'node_modules/katex/dist/katex.min.css', to: 'vendor/' },
         { from: 'node_modules/katex/dist/katex.min.js', to: 'vendor/' },
         { from: 'node_modules/katex/dist/fonts', to: 'vendor/fonts' },
-        { from: 'node_modules/mermaid/dist/mermaid.min.js', to: 'vendor/' },
+        // pele's prebuilt IIFE defines the global `pele` (Mermaid-syntax
+        // renderer, zero deps); shipped under a .min.js name like its peers.
+        { from: 'node_modules/pele/dist/pele.global.js', to: 'vendor/pele.min.js' },
         { from: 'node_modules/highlight.js/styles/github-dark.min.css', to: 'vendor/' },
       ],
     }),

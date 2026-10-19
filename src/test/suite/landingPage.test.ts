@@ -1,11 +1,13 @@
 import * as assert from 'assert';
 import * as fs from 'fs';
 import * as path from 'path';
+import { JSDOM } from 'jsdom';
 
 // Landing page build tests (issues #71 and #78). The generator runs once per
 // suite through the compiled dist/markdownCore.js shared engine (pretest has
 // already built it), emitting docs/index.html plus the docs/assets/ files the
-// page now links instead of inlining vendor runtimes.
+// page now links instead of inlining vendor runtimes. Mermaid fences render
+// through pele (#156), so pele.min.js is the diagram runtime the page links.
 
 const repoRoot = path.resolve(__dirname, '..', '..', '..');
 const docsDir = path.join(repoRoot, 'docs');
@@ -28,6 +30,47 @@ interface LandingGenerator {
     mermaid: boolean;
     excalidraw: boolean;
   }) => VendorAssetPlan;
+  LANDING_SCRIPT: string;
+}
+
+// The slice of a jsdom window the landing-script tests read and stub.
+interface LandingElement {
+  textContent: string | null;
+  innerHTML: string;
+  classList: { contains(c: string): boolean };
+  getAttribute(name: string): string | null;
+  querySelector(sel: string): LandingElement | null;
+  click(): void;
+}
+interface LandingWindow {
+  pele?: unknown;
+  eval(code: string): unknown;
+  document: {
+    body: LandingElement;
+    querySelector(sel: string): LandingElement | null;
+  };
+}
+
+interface PeleCall {
+  code: string;
+  opts: { idPrefix?: string; links?: boolean };
+}
+
+// Run assets/landing.js against one diagram block in jsdom, with `pele`
+// stubbed by `render` — the vendor script the page loads ahead of it.
+function runLandingScript(
+  render: (code: string, opts: PeleCall['opts']) => { svg: string }
+): LandingWindow {
+  const dom = new JSDOM(
+    '<!doctype html><html><body class="preview-theme-dark"><div id="preview-content">' +
+      '<div class="mermaid-block" data-processed="false" data-line="4">' +
+      '<pre class="mermaid">graph TD; A--&gt;B</pre></div></div></body></html>',
+    { runScripts: 'outside-only', url: 'https://landing.test/' }
+  );
+  const window = dom.window as unknown as LandingWindow;
+  window.pele = { render };
+  window.eval(generator().LANDING_SCRIPT);
+  return window;
 }
 
 function generator(): LandingGenerator {
@@ -136,13 +179,13 @@ suite('landing page build (#71, #78)', function () {
       }
     });
 
-    test('the demo document emits katex and mermaid as separate files', () => {
+    test('the demo document emits katex and pele (mermaid) as separate files', () => {
       for (const file of [
         'landing.js',
         'ld.json',
         'katex.min.js',
         'katex.min.css',
-        'mermaid.min.js',
+        'pele.min.js',
       ]) {
         assert.ok(fs.existsSync(path.join(assetsDir, file)), `docs/assets/${file} was not emitted`);
         assert.ok(html.includes(`assets/${file}`), `page does not reference assets/${file}`);
@@ -159,9 +202,65 @@ suite('landing page build (#71, #78)', function () {
 
     test('the asset plan drops katex assets when the page has no math', () => {
       const plan = generator().planVendorAssets({ math: false, mermaid: true, excalidraw: false });
-      assert.deepStrictEqual(plan.scripts, ['mermaid.min.js']);
+      assert.deepStrictEqual(plan.scripts, ['pele.min.js']);
       assert.deepStrictEqual(plan.styles, []);
       assert.deepStrictEqual(plan.dirs, []);
+    });
+
+    test('a page with neither math nor diagrams links no vendor asset', () => {
+      const plan = generator().planVendorAssets({ math: false, mermaid: false, excalidraw: false });
+      assert.deepStrictEqual(plan, { scripts: [], styles: [], dirs: [] });
+    });
+  });
+
+  suite('diagram rendering through pele (#156)', () => {
+    test('landing.js renders each block once with links disabled', () => {
+      const calls: PeleCall[] = [];
+      const window = runLandingScript((code, opts) => {
+        calls.push({ code, opts });
+        return { svg: '<svg class="stub-svg"></svg>' };
+      });
+      assert.strictEqual(calls.length, 1);
+      assert.strictEqual(calls[0].code, 'graph TD; A-->B');
+      assert.strictEqual(calls[0].opts.links, false, 'landing rendered without links: false');
+      assert.strictEqual(calls[0].opts.idPrefix, 'mermaid-landing-0-');
+      const block = window.document.querySelector('.mermaid-block')!;
+      assert.ok(block.classList.contains('mermaid-rendered'), 'block not marked rendered');
+      assert.strictEqual(block.getAttribute('data-processed'), 'true');
+      assert.ok(block.querySelector('svg.stub-svg'), 'rendered svg not injected');
+    });
+
+    test('the theme toggle recolours through CSS without re-rendering diagrams', () => {
+      const calls: PeleCall[] = [];
+      const window = runLandingScript((code, opts) => {
+        calls.push({ code, opts });
+        return { svg: '<svg class="stub-svg"></svg>' };
+      });
+      const svg = window.document.querySelector('.mermaid-block svg');
+      const wasDark = window.document.body.classList.contains('preview-theme-dark');
+      window.document.querySelector('.preview-toolbar .toolbar-button')!.click();
+      assert.notStrictEqual(
+        window.document.body.classList.contains('preview-theme-dark'),
+        wasDark,
+        'toolbar click did not switch the theme'
+      );
+      assert.strictEqual(calls.length, 1, 'theme toggle re-rendered the diagram');
+      assert.strictEqual(window.document.querySelector('.mermaid-block svg'), svg);
+    });
+
+    test('a render error is shown as readable text, never as markup', () => {
+      const window = runLandingScript(() => {
+        throw new Error('<img src=x onerror=alert(1)><script>alert(2)</script>');
+      });
+      const error = window.document.querySelector('.mermaid-error')!;
+      assert.ok(error, 'no readable error block');
+      assert.ok(error.querySelector('.mermaid-error-lead'), 'error lead missing');
+      assert.strictEqual(error.querySelector('img'), null, 'error message injected an <img>');
+      assert.strictEqual(error.querySelector('script'), null, 'error message injected a <script>');
+      assert.strictEqual(
+        error.querySelector('details.mermaid-error-details .mermaid-error-raw')!.textContent,
+        '<img src=x onerror=alert(1)><script>alert(2)</script>'
+      );
     });
   });
 

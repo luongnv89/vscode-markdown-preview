@@ -15,7 +15,7 @@ import { detectVendorNeeds, ALL_VENDOR_NEEDS, VendorNeeds } from './vendorNeeds'
  * runtime on first use, so this gate never needs a webview reload.
  *
  * CSP and <body data-*> metadata live in buildWebviewHtml: nonce-only
- * script-src (Mermaid renders without eval — verified in headless Chromium),
+ * script-src (pele renders Mermaid diagrams without eval — verified in headless Chromium),
  * img-src restricted to webview resources + data: unless the documented
  * markdownPreviewPro.allowRemoteImages opt-in is enabled, and all data-*
  * values attribute-escaped on write.

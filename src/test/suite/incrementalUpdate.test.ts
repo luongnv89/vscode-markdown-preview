@@ -50,7 +50,7 @@ interface TestWindow {
   scrollTo(options?: unknown): void;
   scrollY: number;
   Event: new (type: string) => unknown;
-  mermaid?: unknown;
+  pele?: unknown;
 }
 interface FakeVscode {
   posted: Array<{ type: string; line?: number; source?: string }>;
@@ -237,12 +237,11 @@ suite('incremental preview update patching (#77)', () => {
   test('an unchanged mermaid block keeps its node and rendered SVG', async () => {
     const { document, window } = makeDom('<div id="preview-content"></div>');
     stubScrollTo(window);
-    const calls: Array<{ id: string; code: string }> = [];
-    window.mermaid = {
-      initialize() {},
-      async render(id: string, code: string) {
-        calls.push({ id, code });
-        return { svg: `<svg data-render-id="${id}"></svg>` };
+    const calls: Array<{ code: string; opts: { idPrefix?: string; links?: boolean } }> = [];
+    window.pele = {
+      render(code: string, opts: { idPrefix?: string; links?: boolean }) {
+        calls.push({ code, opts });
+        return { svg: `<svg data-id-prefix="${opts.idPrefix}"></svg>` };
       },
     };
     const load = makeLoader(document, window);
@@ -256,6 +255,8 @@ suite('incremental preview update patching (#77)', () => {
     await mod.updateContent(para(0, 'v2') + block);
 
     assert.strictEqual(calls.length, 1, 'unchanged diagram re-rendered');
+    assert.strictEqual(calls[0].opts.links, false, 'pele.render called without links: false');
+    assert.match(calls[0].opts.idPrefix || '', /^mermaid-[0-9a-z]{4,24}-$/);
     assert.strictEqual(
       container.querySelector('.mermaid-block'),
       mermaidNode,
@@ -517,10 +518,9 @@ suite('incremental preview update patching (#77)', () => {
   test('a config flag toggle still rebuilds the whole render', async () => {
     const { document, window } = makeDom('<div id="preview-content"></div>');
     stubScrollTo(window);
-    window.mermaid = {
-      initialize() {},
-      async render(id: string) {
-        return { svg: `<svg data-render-id="${id}"></svg>` };
+    window.pele = {
+      render(_code: string, opts: { idPrefix?: string }) {
+        return { svg: `<svg data-id-prefix="${opts.idPrefix}"></svg>` };
       },
     };
     const load = makeLoader(document, window);

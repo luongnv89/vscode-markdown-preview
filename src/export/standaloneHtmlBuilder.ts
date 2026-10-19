@@ -31,82 +31,125 @@ function buildExportContentSecurityPolicy(nonce: string): string {
 // byte-identical to the former inline literal.
 const EXPORT_RENDER_SCRIPT_BODY = `
 (async function() {
-  // Render KaTeX
-  if (typeof katex !== 'undefined') {
-    document.querySelectorAll('.katex-inline[data-math]').forEach(function(el) {
-      try {
-        katex.render(el.getAttribute('data-math'), el, { throwOnError: false, displayMode: false });
-      } catch(e) {}
-    });
-    document.querySelectorAll('.katex-block[data-math]').forEach(function(el) {
-      try {
-        katex.render(el.getAttribute('data-math'), el, { throwOnError: false, displayMode: true });
-      } catch(e) {}
-    });
+  // Readable diagram error, mirroring buildDiagramError in
+  // webview/renderer.ts: the lead names the document line (data-line is the
+  // 0-based source map), the raw parser message sits in a <details> that is
+  // opened so a PDF shows it. textContent only — the message is untrusted.
+  function buildDiagramError(block, engine, err) {
+    var errorDiv = document.createElement('div');
+    errorDiv.className = engine + '-error';
+    var lead = document.createElement('div');
+    lead.className = engine + '-error-lead';
+    var lineAttr = block.getAttribute('data-line');
+    var docLine = lineAttr ? Number(lineAttr) + 1 : NaN;
+    lead.textContent = isFinite(docLine)
+      ? 'The \`' + engine + '\` diagram at document line ' + docLine + ' could not be rendered.'
+      : 'This \`' + engine + '\` diagram could not be rendered.';
+    var details = document.createElement('details');
+    details.className = engine + '-error-details';
+    details.open = true;
+    var summary = document.createElement('summary');
+    summary.textContent = 'Diagram error details';
+    var raw = document.createElement('pre');
+    raw.className = engine + '-error-raw';
+    raw.textContent = err && err.message ? String(err.message) : String(err);
+    details.appendChild(summary);
+    details.appendChild(raw);
+    errorDiv.appendChild(lead);
+    errorDiv.appendChild(details);
+    return errorDiv;
   }
 
-  // Render Mermaid
-  if (typeof mermaid !== 'undefined') {
-    mermaid.initialize({ startOnLoad: false, theme: 'default', securityLevel: 'strict', layout: 'dagre', look: 'classic' });
-    var blocks = document.querySelectorAll('.mermaid-block[data-processed="false"]');
-    for (var i = 0; i < blocks.length; i++) {
-      var block = blocks[i];
-      var pre = block.querySelector('pre.mermaid');
-      if (!pre) continue;
-      var code = pre.textContent || '';
-      var id = 'mermaid-export-' + i;
-      try {
-        var result = await mermaid.render(id, code);
-        block.innerHTML = result.svg;
-        block.setAttribute('data-processed', 'true');
-        block.classList.add('mermaid-rendered');
-      } catch(err) {
-        block.innerHTML = '<div class="mermaid-error">Diagram error: ' + err.message + '</div>';
-        block.setAttribute('data-processed', 'true');
-      }
+  try {
+    // Render KaTeX
+    if (typeof katex !== 'undefined') {
+      document.querySelectorAll('.katex-inline[data-math]').forEach(function(el) {
+        try {
+          katex.render(el.getAttribute('data-math'), el, { throwOnError: false, displayMode: false });
+        } catch(e) {}
+      });
+      document.querySelectorAll('.katex-block[data-math]').forEach(function(el) {
+        try {
+          katex.render(el.getAttribute('data-math'), el, { throwOnError: false, displayMode: true });
+        } catch(e) {}
+      });
     }
-  }
 
-  // Render Excalidraw
-  if (typeof ExcalidrawUtils !== 'undefined' && ExcalidrawUtils.exportToSvg) {
-    var eBlocks = document.querySelectorAll('.excalidraw-block[data-processed="false"]');
-    for (var j = 0; j < eBlocks.length; j++) {
-      var eBlock = eBlocks[j];
-      var ePre = eBlock.querySelector('pre.excalidraw-source');
-      if (!ePre) continue;
-      var eJson = ePre.textContent || '';
-      try {
-        var eData = JSON.parse(eJson);
-        if (!eData.elements || !Array.isArray(eData.elements)) {
-          throw new Error('Invalid Excalidraw data');
+    // Render Mermaid fences through pele: synchronous, throws a PeleError on
+    // bad input. No theme option — the export stays light through the
+    // --pele-* custom properties in the inlined stylesheet; links: false
+    // drops the <a href> a click directive would otherwise emit.
+    if (typeof pele !== 'undefined') {
+      var blocks = document.querySelectorAll('.mermaid-block[data-processed="false"]');
+      for (var i = 0; i < blocks.length; i++) {
+        var block = blocks[i];
+        var pre = block.querySelector('pre.mermaid');
+        if (!pre) continue;
+        var code = pre.textContent || '';
+        try {
+          var result = pele.render(code, {
+            idPrefix: 'mermaid-export-' + i + '-',
+            fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif",
+            links: false
+          });
+          block.innerHTML = result.svg;
+          block.classList.add('mermaid-rendered');
+        } catch(err) {
+          block.textContent = '';
+          block.appendChild(buildDiagramError(block, 'mermaid', err));
         }
-        var eSvg = await ExcalidrawUtils.exportToSvg({
-          data: {
-            elements: eData.elements,
-            appState: Object.assign({
-              exportWithDarkMode: false,
-              viewBackgroundColor: '#ffffff'
-            }, eData.appState || {}),
-            files: eData.files || null
-          }
-        });
-        eBlock.innerHTML = '';
-        eBlock.appendChild(eSvg);
-        eBlock.setAttribute('data-processed', 'true');
-        eBlock.classList.add('excalidraw-rendered');
-      } catch(err) {
-        eBlock.innerHTML = '<div class="excalidraw-error">Diagram error: ' + err.message + '</div>';
-        eBlock.setAttribute('data-processed', 'true');
+        block.setAttribute('data-processed', 'true');
       }
     }
-  }
 
-  // Signal completion
-  window.__exportRenderComplete = true;
+    // Render Excalidraw
+    if (typeof ExcalidrawUtils !== 'undefined' && ExcalidrawUtils.exportToSvg) {
+      var eBlocks = document.querySelectorAll('.excalidraw-block[data-processed="false"]');
+      for (var j = 0; j < eBlocks.length; j++) {
+        var eBlock = eBlocks[j];
+        var ePre = eBlock.querySelector('pre.excalidraw-source');
+        if (!ePre) continue;
+        var eJson = ePre.textContent || '';
+        try {
+          var eData = JSON.parse(eJson);
+          if (!eData.elements || !Array.isArray(eData.elements)) {
+            throw new Error('Invalid Excalidraw data');
+          }
+          var eSvg = await ExcalidrawUtils.exportToSvg({
+            data: {
+              elements: eData.elements,
+              appState: Object.assign({
+                exportWithDarkMode: false,
+                viewBackgroundColor: '#ffffff'
+              }, eData.appState || {}),
+              files: eData.files || null
+            }
+          });
+          eBlock.innerHTML = '';
+          eBlock.appendChild(eSvg);
+          eBlock.setAttribute('data-processed', 'true');
+          eBlock.classList.add('excalidraw-rendered');
+        } catch(err) {
+          eBlock.textContent = '';
+          eBlock.appendChild(buildDiagramError(eBlock, 'excalidraw', err));
+          eBlock.setAttribute('data-processed', 'true');
+        }
+      }
+    }
+  } catch (err) {
+    // Report in the page console rather than as an unhandled rejection.
+    console.error('Markdown Preview Pro: export render failed', err);
+  } finally {
+    // Signal completion even when a renderer is missing or throws something
+    // unexpected — pdfExporter waits on this flag and would otherwise stall
+    // until its timeout.
+    window.__exportRenderComplete = true;
+  }
 })();
 </script>`;
 
-// Script that renders Mermaid and KaTeX client-side, then signals completion.
+// Script that renders KaTeX, Mermaid (via pele) and Excalidraw client-side,
+// then signals completion.
 // Nonced so the document CSP allows it while blocking any markup-borne script.
 function buildRenderScript(nonce: string): string {
   return `\n<script nonce="${nonce}">${EXPORT_RENDER_SCRIPT_BODY}`;
@@ -124,7 +167,7 @@ interface VendorScriptContents {
 type ExportFeatureFlags = VendorFeatureFlags;
 
 // Which client-side runtimes the exported document actually uses. Each
-// renderer's vendor bundle (~26 MB combined) is read from disk and inlined
+// renderer's vendor bundle (~21 MB combined) is read from disk and inlined
 // only when the document carries its placeholder markup; KaTeX additionally
 // gates its stylesheet and the base64 font embedding (~1.4 MB of output).
 type ExportAssetNeeds = VendorNeeds;
@@ -249,9 +292,10 @@ ${sanitizedHtml}
     }
     if (needs.mermaid) {
       try {
-        mermaidJs = (await this.readFile(path.join(vendorDir, 'mermaid.min.js'))).toString('utf-8');
+        // Mermaid fences render through pele's IIFE bundle (window.pele).
+        mermaidJs = (await this.readFile(path.join(vendorDir, 'pele.min.js'))).toString('utf-8');
       } catch {
-        // Mermaid not available
+        // pele not available — the blocks keep their source text
       }
     }
     if (needs.excalidraw) {

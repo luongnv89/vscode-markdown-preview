@@ -1,5 +1,13 @@
 /* Markdown Preview Pro - Mermaid diagram styles */
 
+/* Mermaid fences render through pele, whose SVG reads every colour from a
+   --pele-* custom property (falling back to its built-in light palette).
+   They are all declared here, derived from the theme tokens, so a diagram
+   follows the active light/dark theme — and recolours on a theme switch —
+   by inheritance alone, with no re-render. The derived tones mix the
+   foreground into the background so they stay opaque and distinct from the
+   page in every theme; the translucent panel/border/code tokens are never
+   used here. The same rules theme HTML/PDF exports and the landing page. */
 .mermaid-block {
   margin: 1.5em 0;
   padding: 1em;
@@ -8,6 +16,56 @@
   border: 1px solid var(--border-color);
   background-color: var(--panel-bg);
   overflow-x: auto;
+
+  --pele-bg: var(--bg-primary);
+  --pele-fg: var(--fg-primary);
+  --pele-line: var(--fg-primary);
+  /* Muted text and node outlines stay readable on the page and on the node
+     surface: muted >= 4.5:1 and border >= 3:1 (WCAG 1.4.3 / 1.4.11) on
+     Light Modern, the toolbar pins and the Dark themes. */
+  --pele-muted: color-mix(in srgb, var(--fg-primary) 78%, var(--bg-primary));
+  --pele-border: color-mix(in srgb, var(--fg-primary) 60%, var(--bg-primary));
+  --pele-surface: color-mix(in srgb, var(--fg-primary) 6%, var(--bg-primary));
+  --pele-surface-alt: color-mix(in srgb, var(--fg-primary) 12%, var(--bg-primary));
+  --pele-accent: var(--link-color);
+  /* Status and series colours: pele's palette, darkened so the text pele
+     draws on them in --pele-bg (slice labels, gantt :crit labels, branch
+     labels) and the error text it draws in --pele-error reach >= 4.5:1
+     against white — the light preview and every HTML/PDF export. */
+  --pele-critical: #991b1b;
+  --pele-error: #991b1b;
+  --pele-series-1: #3b6a9e;
+  --pele-series-2: #b45309;
+  --pele-series-3: #2f7d32;
+  --pele-series-4: #c62828;
+  --pele-series-5: #0f766e;
+  --pele-series-6: #8a6d00;
+  --pele-series-7: #8e4b80;
+  --pele-series-8: #7a5640;
+  /* Must match MERMAID_FONT_FAMILY in webview/renderer.ts — pele measures
+     text with that stack, so drawing with another would misfit labels. */
+  --pele-font: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+  --pele-font-mono: var(--vscode-editor-font-family, monospace);
+}
+
+/* Dark themes: lighter status/series tones that stay readable on a dark
+   background (pele draws slice labels in the background colour on top of
+   them). Covers the toolbar's dark pin and an unpinned dark or dark
+   high-contrast host theme. */
+body.preview-theme-dark .mermaid-block,
+body.vscode-dark:not(.preview-theme-light) .mermaid-block,
+body.vscode-high-contrast:not(.vscode-high-contrast-light):not(.preview-theme-light)
+  .mermaid-block {
+  --pele-critical: #ff7b72;
+  --pele-error: #ff7b72;
+  --pele-series-1: #79a6dc;
+  --pele-series-2: #ffa94d;
+  --pele-series-3: #7cc674;
+  --pele-series-4: #ff8a89;
+  --pele-series-5: #8fd3ce;
+  --pele-series-6: #f5d76e;
+  --pele-series-7: #d29bc3;
+  --pele-series-8: #c4a189;
 }
 
 .mermaid-rendered {
@@ -18,6 +76,18 @@
 .mermaid-rendered svg {
   max-width: 100%;
   height: auto;
+}
+
+/* pele draws venn labels and eventmodeling frame ids over translucent
+   series tints, and stacked venn overlaps push fg and muted text below
+   4.5:1. A --pele-bg halo makes the page colour each glyph's immediate
+   backdrop, so the text keeps its on-page contrast in every theme. */
+.mermaid-block .pele-venn-labels text,
+.mermaid-block .pele-em-frame {
+  paint-order: stroke;
+  stroke: var(--pele-bg);
+  stroke-width: 3px;
+  stroke-linejoin: round;
 }
 
 /* Error state */

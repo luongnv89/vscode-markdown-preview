@@ -34,7 +34,7 @@ Every code block has a **Copy** button in the top-right corner. Click it to copy
 
 ## Mermaid Diagrams
 
-Use fenced code blocks with the `mermaid` language to render diagrams.
+Use fenced code blocks with the `mermaid` language to render diagrams. Diagrams are drawn by [pele](https://github.com/obsidianmd/pele), a lightweight renderer for Mermaid syntax that supports 33 diagram types.
 
 ### Flowchart
 
@@ -127,9 +127,11 @@ gantt
 ```
 ````
 
-For the full syntax reference, see the [Mermaid documentation](https://mermaid.js.org/intro/).
+For the full syntax reference, see the [Mermaid documentation](https://mermaid.js.org/intro/). `click` links inside a diagram are not clickable in the preview or in exports.
 
-**Theme:** Diagrams automatically adapt to your VS Code theme (dark or light).
+**Errors:** A diagram with invalid syntax is replaced by a short message naming its document line, with the parser's details in a collapsible section; the rest of the preview still renders.
+
+**Theme:** Diagram colours follow your VS Code theme (light, dark or high contrast) and the toolbar's light/dark toggle, and update instantly when the theme changes.
 
 ## KaTeX Math
 
@@ -272,7 +274,7 @@ Allow remote `https:` images in the preview. Off by default so a document cannot
 
 ### Export to HTML
 
-Generate a standalone HTML file with all styles, fonts, and scripts embedded. Mermaid diagrams are rendered to SVG and KaTeX math is fully resolved.
+Generate a standalone HTML file with all styles, fonts, and scripts embedded. Mermaid diagrams are rendered to SVG (in the light theme) and KaTeX math is fully resolved.
 
 **How to export:**
 
@@ -314,7 +316,7 @@ The output file is saved alongside the source markdown file with the `.pdf` exte
 - **Navigate to source:** Double-click any element in the preview to jump to its line in the editor
 - **Code blocks:** Specify the language for faster, more accurate syntax highlighting
 - **Large files:** Disable Mermaid if you don't use diagrams to speed up rendering
-- **Theme switching:** Mermaid diagrams automatically re-render when you change your VS Code theme
+- **Theme switching:** Mermaid diagram colours adapt instantly when you change your VS Code theme — no re-render needed
 
 ## Related Docs
 

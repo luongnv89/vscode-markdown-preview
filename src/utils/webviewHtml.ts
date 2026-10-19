@@ -51,9 +51,10 @@ export const escapeHtmlAttr = (value: string): string => escapeHtml(value).repla
  * Build the webview HTML document.
  *
  * CSP notes:
- * - `script-src` is nonce-only. Mermaid 11.x (vendored in dist/webview/vendor)
- *   renders without `eval`/`new Function` under `securityLevel: 'strict'`, so
- *   `'unsafe-eval'` is intentionally absent (verified in headless Chromium).
+ * - `script-src` is nonce-only. Mermaid diagrams render through pele
+ *   (vendored in dist/webview/vendor as pele.min.js), which uses no
+ *   `eval`/`new Function`/workers, so `'unsafe-eval'` is intentionally absent
+ *   (verified in headless Chromium).
  * - `img-src` is the webview scheme plus `data:` for embedded images. Remote
  *   `https:` images are blocked by default (a document could otherwise beacon
  *   its open + the viewer's IP); the documented opt-in
@@ -64,7 +65,7 @@ export const escapeHtmlAttr = (value: string): string => escapeHtml(value).repla
  * feature flag is on AND `needs` says the rendered markup actually uses the
  * runtime — a document with no math and no diagrams ships zero vendor
  * bundles, so its parsed payload is just main.js + main.css (~102 KB)
- * instead of ~4.9 MB. The same gate drops the KaTeX stylesheet for
+ * instead of every runtime (~21 MB). The same gate drops the KaTeX stylesheet for
  * math-free documents.
  *
  * A live document can grow a feature after this HTML shipped (the user types
@@ -190,7 +191,7 @@ function resolveWebviewAssetUris(
     ),
     katexStyle: webview.asWebviewUri(vscode.Uri.joinPath(vendorUri, 'katex.min.css')),
     katexScript: webview.asWebviewUri(vscode.Uri.joinPath(vendorUri, 'katex.min.js')),
-    mermaidScript: webview.asWebviewUri(vscode.Uri.joinPath(vendorUri, 'mermaid.min.js')),
+    mermaidScript: webview.asWebviewUri(vscode.Uri.joinPath(vendorUri, 'pele.min.js')),
     excalidrawScript: webview.asWebviewUri(
       vscode.Uri.joinPath(vendorUri, 'excalidraw-utils.min.js')
     ),

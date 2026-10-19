@@ -13,7 +13,12 @@ import type { PreviewConfig } from './types/messages';
 // mutations, so the diagram re-render waits for both to settle.
 export const THEME_CHANGE_DEBOUNCE = 50;
 
-let mermaidInitialized = false;
+// The diagram font stack: passed to pele.render so its text measurement
+// matches what the page draws, and mirrored verbatim by --pele-font in
+// styles/mermaid.css (the SVG's font-family reads that custom property).
+const MERMAID_FONT_FAMILY =
+  "-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif";
+
 let updateInProgress = false;
 let pendingUpdate: string | null = null;
 let themeObserver: MutationObserver | null = null;
@@ -42,7 +47,9 @@ let pendingFullRebuild = false;
 // by a hash of the diagram source — never by block index, which shifts as the
 // document is edited — and the stored source is compared on lookup so a hash
 // collision can never inject the wrong SVG. The whole cache clears on theme
-// change, since dark/light changes what the same source renders to.
+// change: excalidraw bakes dark/light into its SVG. (pele's mermaid SVG is
+// theme-independent — its colours are CSS custom properties — so dropping
+// those entries only costs a future re-render.)
 interface DiagramCacheEntry {
   source: string;
   kind: 'svg' | 'error';
@@ -51,9 +58,9 @@ interface DiagramCacheEntry {
 const diagramCache = new Map<string, DiagramCacheEntry>();
 const DIAGRAM_CACHE_LIMIT = 64;
 
-// cyrb53 — a small 53-bit string hash — derives stable mermaid render ids and
-// cache keys from diagram source (replacing the per-render timestamp ids that
-// defeated any caching and orphaned Mermaid's per-id <style> blocks).
+// cyrb53 — a small 53-bit string hash — derives stable mermaid SVG id
+// prefixes and cache keys from diagram source (replacing the per-render
+// timestamp ids that defeated any caching).
 function hashSource(str: string): string {
   let h1 = 0xdeadbeef;
   let h2 = 0x41c6ce57;
@@ -202,30 +209,6 @@ async function postProcessRenderedContent(
   refreshScrollAnchors(container);
 }
 
-// One-time mermaid.initialize with the pinned pre-v12 look — re-runs after a
-// theme change flips mermaidInitialized back to false.
-function ensureMermaidInitialized(mermaid: NonNullable<typeof window.mermaid>): void {
-  if (mermaidInitialized) {
-    return;
-  }
-  const isDark = isDarkTheme();
-
-  mermaid.initialize({
-    startOnLoad: false,
-    theme: isDark ? 'dark' : 'default',
-    // 'strict': labels are sanitized and `click` JS directives are never
-    // bound — diagram text comes straight from the untrusted document.
-    securityLevel: 'strict',
-    // Mermaid 12 changed its defaults to the ELK layout engine and the
-    // `neo` look — pin dagre + classic to keep the pre-v12 rendering.
-    layout: 'dagre',
-    look: 'classic',
-    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif',
-  });
-
-  mermaidInitialized = true;
-}
-
 // Build a readable diagram error (issue #68): lead with the block type and
 // the document line the fence starts on — data-line is the 0-based source
 // map, so +1 names the editor line — and keep the raw parser output inside a
@@ -258,14 +241,11 @@ function buildDiagramError(block: Element, engine: string, err: unknown): HTMLEl
   return errorDiv;
 }
 
-// Render one .mermaid-block: swap its <pre> for the rendered SVG, or show a
-// readable error div (buildDiagramError keeps the raw parser output behind a
-// <details> and names the document line). Output is cached on the source
-// hash — an unchanged diagram skips mermaid.render entirely (issue #75).
-async function renderMermaidBlock(
-  mermaid: NonNullable<typeof window.mermaid>,
-  block: Element
-): Promise<void> {
+// Render one .mermaid-block through pele: swap its <pre> for the rendered
+// SVG, or show a readable error div (buildDiagramError keeps the raw parser
+// output behind a <details> and names the document line). Output is cached on
+// the source hash — an unchanged diagram skips pele.render entirely (#75).
+function renderMermaidBlock(pele: PeleGlobal, block: Element): void {
   const pre = block.querySelector('pre.mermaid');
   const code = pre ? pre.textContent || '' : (block as HTMLElement).dataset.source || '';
   if (!code) {
@@ -277,9 +257,16 @@ async function renderMermaidBlock(
   }
 
   try {
-    // The render id is derived from the source hash: identical sources reuse
-    // the id (and its styles) instead of orphaning a fresh set each update.
-    const { svg } = await mermaid.render(`mermaid-${hash}`, code);
+    // pele renders synchronously and emits no script, handlers or
+    // foreignObject. The id prefix is derived from the source hash, so
+    // identical sources reuse their SVG ids instead of minting fresh ones;
+    // `links: false` drops the <a href> a `click … href` directive would
+    // otherwise emit — diagram text comes straight from the untrusted document.
+    const { svg } = pele.render(code, {
+      idPrefix: `mermaid-${hash}-`,
+      fontFamily: MERMAID_FONT_FAMILY,
+      links: false,
+    });
     block.innerHTML = svg;
     block.setAttribute('data-processed', 'true');
     (block as HTMLElement).classList.add('mermaid-rendered');
@@ -303,22 +290,20 @@ async function renderMermaid(): Promise<void> {
     return;
   }
 
-  // Mermaid comes from global scope — either shipped in the gated initial
+  // pele comes from global scope — either shipped in the gated initial
   // HTML or, for a document that grew its first diagram block on update,
   // lazy-injected by the vendor loader (issue #72) without a webview reload.
-  let mermaid = window.mermaid;
-  if (!mermaid && (await ensureVendor('mermaid'))) {
-    mermaid = window.mermaid;
+  let pele = window.pele;
+  if (!pele && (await ensureVendor('mermaid'))) {
+    pele = window.pele;
   }
-  if (!mermaid) {
-    console.warn('Mermaid library not available on window');
+  if (!pele) {
+    console.warn('pele (Mermaid renderer) not available on window');
     return;
   }
 
-  ensureMermaidInitialized(mermaid);
-
   for (let i = 0; i < mermaidBlocks.length; i++) {
-    await renderMermaidBlock(mermaid, mermaidBlocks[i]);
+    renderMermaidBlock(pele, mermaidBlocks[i]);
   }
 }
 
@@ -478,17 +463,12 @@ function handleHostThemeClassChange(): void {
     document.body.classList.remove('preview-theme-dark', 'preview-theme-light');
     syncThemeButtonFromHost();
   }
-  mermaidInitialized = false;
-  // Dark/light changes what every diagram renders to — cached output is
-  // only valid under the theme that produced it.
+  // Dark/light changes what an excalidraw diagram renders to — cached output
+  // is only valid under the theme that produced it. Mermaid blocks are left
+  // alone: pele's SVG reads its colours from the --pele-* custom properties
+  // styles/mermaid.css derives from the theme tokens, so the body class swap
+  // alone recolours them without a re-render.
   diagramCache.clear();
-
-  if (currentConfig.enableMermaid) {
-    document.querySelectorAll('.mermaid-block').forEach((block) => {
-      block.setAttribute('data-processed', 'false');
-    });
-    renderMermaid();
-  }
 
   if (currentConfig.enableExcalidraw) {
     document.querySelectorAll('.excalidraw-block').forEach((block) => {
@@ -498,7 +478,7 @@ function handleHostThemeClassChange(): void {
   }
 }
 
-// Watch for theme changes to reinitialize mermaid and excalidraw
+// Watch for theme changes to re-render excalidraw (mermaid recolours via CSS)
 export function watchThemeChanges(): MutationObserver {
   if (themeObserver) {
     themeObserver.disconnect();
