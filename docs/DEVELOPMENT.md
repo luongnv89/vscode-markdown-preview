@@ -97,7 +97,7 @@ In the Extension Development Host window:
 
 - **Changes not appearing**: Make sure `npm run watch` is running
 - **Webview blank**: Check the DevTools console for errors
-- **Mermaid not rendering**: Mermaid renders client-side; check the webview console
+- **Mermaid not rendering**: Mermaid fences render client-side through pele, which webpack copies from `node_modules/pele/dist/pele.global.js` to `dist/webview/vendor/pele.min.js`; check the webview console and that `window.pele` is defined
 
 ## Adding a New Feature
 

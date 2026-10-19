@@ -236,10 +236,10 @@ Resolves image `src` attributes:
 
 ### `renderer.ts`
 
-| Function              | Description                                                                                                                   |
-| --------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
-| `updateContent(html)` | Updates the DOM, renders Mermaid/KaTeX, refreshes copy buttons. Queues updates if one is already in progress.                 |
-| `watchThemeChanges()` | Observes `class` attribute changes on `<body>` to detect VS Code theme switches and re-render Mermaid with the correct theme. |
+| Function              | Description                                                                                                                                                                                           |
+| --------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `updateContent(html)` | Updates the DOM, renders Mermaid (via pele)/KaTeX, refreshes copy buttons. Queues updates if one is already in progress.                                                                              |
+| `watchThemeChanges()` | Observes `class` attribute changes on `<body>` to detect VS Code theme switches and re-render Excalidraw with the correct theme; Mermaid diagrams recolour through CSS variables without a re-render. |
 
 ### `scrollSync.ts`
 

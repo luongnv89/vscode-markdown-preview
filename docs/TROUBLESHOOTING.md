@@ -36,9 +36,9 @@ Common issues and solutions when using or developing Markdown Preview Pro.
 
 ## Mermaid Diagrams
 
-### Diagram shows "Mermaid diagram error"
+### Diagram shows "could not be rendered"
 
-**Symptoms:** A red error message appears instead of the diagram.
+**Symptoms:** A red box reading "The `mermaid` diagram at document line N could not be rendered." appears instead of the diagram. Expand **Diagram error details** for the parser message (in exports it is already expanded).
 
 **Solutions:**
 
@@ -50,7 +50,7 @@ Common issues and solutions when using or developing Markdown Preview Pro.
        A --> B
    ```
    ````
-3. Check for unsupported diagram types - Mermaid v10 supports: flowchart, sequence, class, state, ER, journey, gantt, pie, mindmap, timeline, quadrant, sankey, xy, block
+3. Check for unsupported diagram types - diagrams are rendered by [pele](https://github.com/obsidianmd/pele), which supports: flowchart, sequence, class, state, ER, journey, gantt, pie, quadrantChart, requirement, gitGraph, C4, mindmap, timeline, sankey, xychart, block, packet, kanban, architecture, radar, treemap, info, ishikawa, venn, wardley, treeView, eventmodeling, agentflow, railroad, usecase, swimlane and cynefin
 
 ### Diagram renders with wrong colors
 
@@ -58,8 +58,8 @@ Common issues and solutions when using or developing Markdown Preview Pro.
 
 **Solutions:**
 
-- Switch your VS Code theme, then switch back - this triggers a re-render
-- Mermaid follows `vscode-dark` and `vscode-high-contrast` when the preview is following the host theme
+- Diagram colours are CSS custom properties (`--pele-*`, declared in `webview/styles/mermaid.css`) derived from the theme's editor background and foreground, so they change with the theme without a re-render
+- Diagrams follow `vscode-dark` and `vscode-high-contrast` when the preview is following the host theme
 - An explicit toolbar light overlay blocks host dark detection until you toggle again
 - Reload the window if theme detection fails
 
@@ -70,7 +70,7 @@ Common issues and solutions when using or developing Markdown Preview Pro.
 **Solutions:**
 
 1. Ensure `markdownPreviewPro.enableMermaid` is `true` in settings
-2. Open webview DevTools and check if `mermaid` is available on `window`
+2. Open webview DevTools and check if `pele` (the Mermaid renderer, `vendor/pele.min.js`) is available on `window`
 3. Rebuild the extension: `npm run compile`
 
 ## KaTeX Math

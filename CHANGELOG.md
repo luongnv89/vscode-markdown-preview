@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Mermaid diagrams now render through [pele](https://github.com/obsidianmd/pele) instead of the `mermaid` package, in the preview, HTML/PDF exports and the landing page; every diagram type that rendered before still renders, and the vendored diagram runtime shrinks from ~5.5 MB to ~0.7 MB (#156)
+- Diagram colours follow the active light/dark (and high-contrast) theme through CSS variables, so a theme switch recolours diagrams instantly without re-rendering them (#156)
+- Links inside diagrams (`click … href`) are no longer clickable — pele is called with `links: false` everywhere (#156)
+- Export and landing-page diagram errors use the same readable format as the preview: a lead naming the document line plus the parser message in a details block (expanded in exports), built as text so a hostile message can never inject markup (#156)
+- Export rendering signals completion even if a diagram renderer is missing or throws unexpectedly, so a PDF export can no longer stall until its timeout (#156)
+
 ## [0.9.7] - 2026-10-07
 
 - Includes the 0.9.6 fixes below (TOC click navigation, host theme following), which were never tagged or published on their own

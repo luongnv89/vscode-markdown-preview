@@ -83,6 +83,8 @@ print(render_markdown("Markdown Preview Pro", ["Mermaid", "KaTeX", "HTML export"
 
 ### Mermaid diagram
 
+Rendered in the browser by [pele](https://github.com/obsidianmd/pele); its colours follow the page's light/dark toggle.
+
 ```mermaid
 graph TD
   A[Markdown source] --> B[Markdown engine]
@@ -186,16 +188,16 @@ VS Code already has a markdown preview, but developers often want something shar
 
 ## Core features
 
-| Feature                | What it does                                                            |
-| ---------------------- | ----------------------------------------------------------------------- |
-| Syntax highlighting    | Renders fenced code blocks with highlighted syntax and readable styling |
-| Mermaid diagrams       | Supports flowcharts, sequence diagrams, and other Mermaid blocks        |
-| KaTeX math             | Renders inline and block math formulas                                  |
-| Interactive task lists | Lets task lists behave like real checkboxes inside preview              |
-| Export to HTML         | Generates a standalone HTML document                                    |
-| Export to PDF          | Exports using Chrome / Chromium                                         |
-| Frontmatter card       | Parses YAML frontmatter into a styled metadata card                     |
-| Image support          | Handles local images and common markdown image flows                    |
+| Feature                | What it does                                                                |
+| ---------------------- | --------------------------------------------------------------------------- |
+| Syntax highlighting    | Renders fenced code blocks with highlighted syntax and readable styling     |
+| Mermaid diagrams       | Renders flowcharts, sequence diagrams and 30+ other Mermaid types with pele |
+| KaTeX math             | Renders inline and block math formulas                                      |
+| Interactive task lists | Lets task lists behave like real checkboxes inside preview                  |
+| Export to HTML         | Generates a standalone HTML document                                        |
+| Export to PDF          | Exports using Chrome / Chromium                                             |
+| Frontmatter card       | Parses YAML frontmatter into a styled metadata card                         |
+| Image support          | Handles local images and common markdown image flows                        |
 
 ## Commands
 
@@ -211,7 +213,7 @@ VS Code already has a markdown preview, but developers often want something shar
 | Setting                                | Default | Description                                 |
 | -------------------------------------- | ------- | ------------------------------------------- |
 | `markdownPreviewPro.scrollSync`        | `true`  | Bidirectional scroll synchronization        |
-| `markdownPreviewPro.enableMermaid`     | `true`  | Enable Mermaid rendering                    |
+| `markdownPreviewPro.enableMermaid`     | `true`  | Enable Mermaid rendering (via pele)         |
 | `markdownPreviewPro.enableKatex`       | `true`  | Enable math rendering                       |
 | `markdownPreviewPro.enableCheckboxes`  | `true`  | Enable interactive checkboxes               |
 | `markdownPreviewPro.typographer`       | `true`  | Enable smart typography                     |
