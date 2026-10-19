@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.9.8] - 2026-10-19
+
 ### Changed
 
 - Mermaid diagrams now render through [pele](https://github.com/obsidianmd/pele) instead of the `mermaid` package, in the preview, HTML/PDF exports and the landing page; every diagram type that rendered before still renders, and the vendored diagram runtime shrinks from ~5.5 MB to ~0.7 MB (#156)
