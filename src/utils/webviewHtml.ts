@@ -65,7 +65,7 @@ export const escapeHtmlAttr = (value: string): string => escapeHtml(value).repla
  * feature flag is on AND `needs` says the rendered markup actually uses the
  * runtime — a document with no math and no diagrams ships zero vendor
  * bundles, so its parsed payload is just main.js + main.css (~102 KB)
- * instead of ~4.9 MB. The same gate drops the KaTeX stylesheet for
+ * instead of every runtime (~21 MB). The same gate drops the KaTeX stylesheet for
  * math-free documents.
  *
  * A live document can grow a feature after this HTML shipped (the user types

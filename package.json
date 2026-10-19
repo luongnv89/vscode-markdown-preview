@@ -235,8 +235,5 @@
     "pele": "^1.6.0",
     "puppeteer-core": "^25.11.0",
     "yaml": "^2.9.1"
-  },
-  "overrides": {
-    "lodash-es": "^4.18.1"
   }
 }

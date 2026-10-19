@@ -166,7 +166,7 @@ interface VendorScriptContents {
 type ExportFeatureFlags = VendorFeatureFlags;
 
 // Which client-side runtimes the exported document actually uses. Each
-// renderer's vendor bundle (~26 MB combined) is read from disk and inlined
+// renderer's vendor bundle (~21 MB combined) is read from disk and inlined
 // only when the document carries its placeholder markup; KaTeX additionally
 // gates its stylesheet and the base64 font embedding (~1.4 MB of output).
 type ExportAssetNeeds = VendorNeeds;
