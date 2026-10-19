@@ -67,7 +67,7 @@ npx tsc --noEmit -p tsconfig.webview.json  # webview (webview/)
 
 ### `npm test`
 
-`npm test` runs the `pretest` hook first (`npm run compile && npm run compile:test`), which builds the extension with Webpack and compiles `src/test/` with `tsconfig.test.json` into `out/test/` (source modules the tests import are loose-compiled alongside it under `out/`). `out/test/runTest.js` then uses `@vscode/test-electron` to download VS Code into `.vscode-test/` (gitignored), launches an Extension Development Host, and runs the Mocha suite in `src/test/suite/` (TDD `suite`/`test` style). The first run downloads VS Code (~300 MB); later runs reuse the cached copy. Recorded baseline: **35/35 passing**.
+`npm test` runs the `pretest` hook first (`npm run compile && npm run compile:test`), which builds the extension with Webpack and compiles `src/test/` with `tsconfig.test.json` into `out/test/` (source modules the tests import are loose-compiled alongside it under `out/`). `out/test/runTest.js` then uses `@vscode/test-electron` to download VS Code into `.vscode-test/` (gitignored), launches an Extension Development Host, and runs the Mocha suite in `src/test/suite/` (TDD `suite`/`test` style). The first run downloads VS Code (~300 MB); later runs reuse the cached copy. Recorded baseline: **377/377 passing**.
 
 ### `npm run coverage`
 
