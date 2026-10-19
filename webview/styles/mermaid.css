@@ -1,5 +1,13 @@
 /* Markdown Preview Pro - Mermaid diagram styles */
 
+/* Mermaid fences render through pele, whose SVG reads every colour from a
+   --pele-* custom property (falling back to its built-in light palette).
+   They are all declared here, derived from the theme tokens, so a diagram
+   follows the active light/dark theme — and recolours on a theme switch —
+   by inheritance alone, with no re-render. The derived tones mix the
+   foreground into the background so they stay opaque and distinct from the
+   page in every theme; the translucent panel/border/code tokens are never
+   used here. The same rules theme HTML/PDF exports and the landing page. */
 .mermaid-block {
   margin: 1.5em 0;
   padding: 1em;
@@ -8,6 +16,50 @@
   border: 1px solid var(--border-color);
   background-color: var(--panel-bg);
   overflow-x: auto;
+
+  --pele-bg: var(--bg-primary);
+  --pele-fg: var(--fg-primary);
+  --pele-line: var(--fg-primary);
+  --pele-muted: color-mix(in srgb, var(--fg-primary) 65%, var(--bg-primary));
+  --pele-border: color-mix(in srgb, var(--fg-primary) 50%, var(--bg-primary));
+  --pele-surface: color-mix(in srgb, var(--fg-primary) 6%, var(--bg-primary));
+  --pele-surface-alt: color-mix(in srgb, var(--fg-primary) 12%, var(--bg-primary));
+  --pele-accent: var(--link-color);
+  /* Status and series colours: pele's own light palette. */
+  --pele-critical: #e45756;
+  --pele-error: #e45756;
+  --pele-series-1: #4c78a8;
+  --pele-series-2: #f58518;
+  --pele-series-3: #54a24b;
+  --pele-series-4: #e45756;
+  --pele-series-5: #72b7b2;
+  --pele-series-6: #eeca3b;
+  --pele-series-7: #b279a2;
+  --pele-series-8: #9d755d;
+  /* Must match MERMAID_FONT_FAMILY in webview/renderer.ts — pele measures
+     text with that stack, so drawing with another would misfit labels. */
+  --pele-font: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+  --pele-font-mono: var(--vscode-editor-font-family, monospace);
+}
+
+/* Dark themes: lighter status/series tones that stay readable on a dark
+   background (pele draws slice labels in the background colour on top of
+   them). Covers the toolbar's dark pin and an unpinned dark or dark
+   high-contrast host theme. */
+body.preview-theme-dark .mermaid-block,
+body.vscode-dark:not(.preview-theme-light) .mermaid-block,
+body.vscode-high-contrast:not(.vscode-high-contrast-light):not(.preview-theme-light)
+  .mermaid-block {
+  --pele-critical: #ff7b72;
+  --pele-error: #ff7b72;
+  --pele-series-1: #79a6dc;
+  --pele-series-2: #ffa94d;
+  --pele-series-3: #7cc674;
+  --pele-series-4: #ff8a89;
+  --pele-series-5: #8fd3ce;
+  --pele-series-6: #f5d76e;
+  --pele-series-7: #d29bc3;
+  --pele-series-8: #c4a189;
 }
 
 .mermaid-rendered {
